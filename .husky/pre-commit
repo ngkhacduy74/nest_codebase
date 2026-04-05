@@ -1,14 +1,42 @@
-BRANCH=$(git rev-parse --abbrev-ref HEAD)
-REGEX="^(feature|bugfix|hotfix|release|merge)\.([a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*)$"
-
 RED='\033[0;31m'
 GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
 NC='\033[0m'
-echo "Branch name: ${GREEN}$BRANCH${NC}"
-if ! echo "$BRANCH" | grep -qE "$REGEX"; then
-  echo "${RED}Your commit was rejected due to branching name"
-  echo "Please rename your branch with '(feature|bugfix|hotfix|release|merge)(.<ticket>?).<subject-example>' syntax${NC}"
+
+echo "${YELLOW}🔍 Running code quality checks...${NC}"
+
+# Chạy các kiểm tra code trước
+echo "${YELLOW}1. Running lint-staged...${NC}"
+if ! pnpm lint-staged; then
+  echo "${RED}❌ Lint-staged failed${NC}"
   exit 1
 fi
 
-pnpm lint-staged
+echo "${YELLOW}2. Running typecheck...${NC}"
+if ! pnpm typecheck; then
+  echo "${RED}❌ Typecheck failed${NC}"
+  exit 1
+fi
+
+echo "${YELLOW}3. Running spellcheck...${NC}"
+if ! pnpm spellcheck; then
+  echo "${RED}❌ Spellcheck failed${NC}"
+  exit 1
+fi
+
+echo "${GREEN}✅ All code checks passed!${NC}"
+
+# Kiểm tra tên branch sau cùng
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+REGEX="^(feature|bugfix|hotfix|release|merge)\.([a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*)$"
+
+echo "${YELLOW}🔍 Checking branch name...${NC}"
+echo "Branch name: ${GREEN}$BRANCH${NC}"
+if ! echo "$BRANCH" | grep -qE "$REGEX"; then
+  echo "${RED}⚠️  Branch name doesn't follow convention${NC}"
+  echo "Please rename your branch with '(feature|bugfix|hotfix|release|merge).<subject>' syntax${NC}"
+  echo "${YELLOW}Note: Code checks passed, but branch naming is recommended${NC}"
+  exit 1
+fi
+
+echo "${GREEN}✅ All checks passed! Ready to commit.${NC}"
