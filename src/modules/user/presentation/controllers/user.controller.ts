@@ -7,6 +7,8 @@ import {
   HttpStatus,
   HttpCode,
   Param,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
 import { CreateUserDto } from '../dtos/create-user.dto';
@@ -85,6 +87,11 @@ export class UserController {
     description: 'User registration data',
     required: true 
   })
+  @UsePipes(new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
+  }))
   async createUser(@Body() createUserDto: CreateUserDto): Promise<BaseResponse<UserResponse>> {
     // This would call the user creation use case
     const newUser: UserResponse = {

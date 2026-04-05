@@ -21,78 +21,212 @@
   <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+# 🚀 NestJS SaaS Enterprise Boilerplate
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Enterprise-grade NestJS SaaS template designed for teams of 5-15 developers. This codebase follows strict **Domain-Driven Design (DDD)** principles and is built for scalability, maintainability, and observability.
 
-## Project setup
+---
 
-```bash
-$ pnpm install
+## 🏗️ Architecture Overview
+
+```
+┌─────────────────┬──────────────────┬─────────────────┐
+│   Presentation  │   Application   │   Domain       │
+│   (Controllers) │   (Use-cases)  │   (Entities)    │
+│                 │                  │                 │
+│ • HTTP API     │ • Business Logic │ • Value Objects │
+│ • DTOs        │ • Cache/Events  │ • Repo Interface│
+│ • Swagger      │ • Orchestration │ • Domain Events │
+└─────────────────┴──────────────────┴─────────────────┘
+                      ↑
+              Infrastructure
+          (Repositories, DB, Redis)
 ```
 
-## Compile and run the project
+---
 
+## 🚀 Quick Start
+
+### 1. Clone & Install
 ```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+git clone <repo-url>
+cd nest_codebase
+pnpm install
 ```
 
-## Run tests
-
+### 2. Environment Setup
 ```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+cp .env.example .env
+# Edit .env with your values
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
+### 3. Start Services
 ```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+# Using Docker Compose (recommended)
+docker-compose up -d postgres redis
+
+# Or start services manually
+# Start PostgreSQL and Redis
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### 4. Database Setup
+```bash
+pnpm prisma generate
+pnpm prisma migrate dev
+```
 
-## Resources
+### 5. Run Application
+```bash
+# Development mode
+pnpm start:dev
 
-Check out a few resources that may come in handy when working with NestJS:
+# Production mode  
+pnpm build
+pnpm start:prod
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+---
 
-## Support
+## 📋 Prerequisites
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Before you begin, ensure you have the following installed:
+- **Node.js**: v20 or later
+- **pnpm**: v9 or later (`npm install -g pnpm`)
+- **Docker & Docker Compose**: For local infrastructure (Postgres, Redis)
 
-## Stay in touch
+---
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## ⚡ Quick Start (3 Steps)
 
-## License
+Get the application running locally in minutes:
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+1. **Setup Environment & Infrastructure**:
+   ```bash
+   cp .env.example .env
+   docker-compose up -d
+   ```
+
+2. **Install & Sync Database**:
+   ```bash
+   pnpm install
+   pnpx prisma migrate dev
+   ```
+
+3. **Start Development Server**:
+   ```bash
+   pnpm run start:dev
+   ```
+   *API will be available at http://localhost:3000/api/v1*  
+   *Swagger docs at http://localhost:3000/api/v1/docs*
+
+---
+
+## 📁 Folder Structure Overview
+
+```bash
+src/
+├── common/           # Shared logic (interceptors, filters, guards, domain base)
+├── config/           # Centralized configuration (Joi validation)
+├── constants/        # Global constants and DI Tokens (Symbols)
+├── modules/          # Domain-driven feature modules
+│   ├── auth/         # Authentication, Token Store, Session management
+│   ├── user/         # Core User domain (Entities, Use-cases, Repositories)
+│   └── notification/ # Event listeners and BullMQ background workers
+├── main.ts           # App entry point (Helmet, CORS, Versioning, Graceful Shutdown)
+└── app.module.ts     # Root module (Module registration)
+```
+
+> [!TIP]
+> Each module under `src/modules/` follows the 4-layer architecture:
+> **Presentation** → **Application** → **Domain** ← **Infrastructure**
+
+---
+
+## 📜 Coding Conventions
+
+We follow strict architectural rules to ensure the codebase remains "clean" and database-swappable.
+
+**READ THIS BEFORE CODING:**  
+� **[CONVENTION.md](./CONVENTION.md)** - Complete architectural rules and module creation guide
+
+---
+
+## ✅ Development Checklist
+
+**Before committing code, run these checks:**
+
+```bash
+# 1. Code Quality
+pnpm typecheck      # No TypeScript errors
+pnpm lint:check     # No ESLint warnings
+pnpm spellcheck      # No typos in comments/docs
+
+# 2. Testing
+pnpm test:cov       # All tests pass, coverage ≥ 70%
+```
+
+**Manual Checklist:**
+- [ ] Domain layer has **NO** framework imports (Prisma/NestJS)
+- [ ] Use-cases inject via **DI Tokens**, not concrete classes
+- [ ] Cache is invalidated after Update/Delete operations
+- [ ] Swagger documentation is complete (`@ApiBody`, `@ApiResponse`)
+- [ ] Error types are correct (`DomainError`, `ApplicationError`, `InfrastructureError`)
+- [ ] Code is formatted with Prettier
+- [ ] New module follows folder structure in CONVENTION.md
+
+**Quick Commands:**
+```bash
+# Create new module (example: Product)
+mkdir -p src/modules/product/{domain/{entities,repositories},application/use-cases,infrastructure/repositories,presentation/{controllers,dtos}}
+
+# Add new repository token
+# Edit src/constants/injection-tokens.ts
+
+# Register module
+# Edit src/modules/app.module.ts
+```
+
+---
+
+## 🔑 Architecture Decision Records (ADR)
+
+### 1. Why Domain-Driven Design (DDD)?
+To prevent the "Big Ball of Mud". By isolating business logic (Domain) from external concerns (Prisma/TypeORM), we ensure the core logic is testable and robust.
+
+### 2. Why the Repository Pattern?
+To allow switching databases (e.g., Prisma to TypeORM) by simply changing a Dependency Injection token in the Module, without touching any business logic in Use-cases.
+
+### 3. Why BullMQ (Redis)?
+For handling heavy tasks (like Sending Emails) asynchronously. This prevents blocking the main request loop, improves user experience, and provides automatic retries.
+
+---
+
+## 🔑 Environment Variables
+
+| Variable | Description | Default |
+| :--- | :--- | :--- |
+| `NODE_ENV` | Environment (development/production) | `development` |
+| `PORT` | API Port | `3000` |
+| `DATABASE_URL` | PostgreSQL connection string | - |
+| `REDIS_URL` | Redis connection string | `redis://localhost:6379` |
+| `JWT_SECRET` | Secret for signing Access Tokens | - |
+| `REFRESH_SECRET` | Secret for signing Refresh Tokens | - |
+
+---
+
+## 🛠 Available Scripts
+
+- `pnpm run start:dev`: Start development server with hot reload.
+- `pnpm run build`: Build the production bundle.
+- `pnpm run test`: Run unit tests.
+- `pnpm run typecheck`: Run TypeScript compiler checks.
+- `pnpm run lint`: Run ESLint and Prettier checks.
+
+---
+
+## 🤝 Contributing
+
+1. Ensure you've read [CONVENTION.md](./CONVENTION.md).
+2. Write unit tests for every new Use-case.
+3. Keep the Domain layer free of external dependencies.
+4. Open a PR and ensure the CI passes.

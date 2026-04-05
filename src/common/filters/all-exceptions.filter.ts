@@ -6,14 +6,14 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
-import { FastifyReply, FastifyRequest } from 'fastify';
+import { Request, Response } from 'express';
 import { ClsService } from 'nestjs-cls';
-import { DomainError } from '@/shared/domain/errors/domain.error';
-import { ApplicationError } from '@/shared/domain/errors/application.error';
-import { InfrastructureError } from '@/shared/domain/errors/infrastructure.error';
-import { ValidationError } from '@/shared/domain/errors/validation.error';
+
 import { AppClsStore } from '@/modules/cls/cls.module';
-import { NodeEnv } from '@/config';
+import { ApplicationError } from '../domain/errors/application.error';
+import { ValidationError } from '../domain/errors/validation.error';
+import { DomainError } from '../domain/errors/domain.error';
+import { InfrastructureError } from '../domain/errors/infrastructure.error';
 
 
 interface ErrorResponse {
@@ -38,11 +38,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
-    const reply = ctx.getResponse<FastifyReply>();
-    const request = ctx.getRequest<FastifyRequest>();
+    const reply = ctx.getResponse<Response>();
+    const request = ctx.getRequest<Request>();
 
     const { statusCode, code, message, errors, layer } = this.classify(exception);
-    const isProd = process.env['NODE_ENV'] === NodeEnv.Production;
+    const isProd = process.env['NODE_ENV'] === 'production';
 
     const body: ErrorResponse = {
       success: false,
@@ -65,7 +65,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       exception instanceof Error ? exception.stack : undefined,
     );
 
-    void reply.status(statusCode).send(body);
+    reply.status(statusCode).json(body);
   }
 
   private classify(exception: unknown): {
@@ -101,30 +101,33 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     // 2. Application errors (use-case failures) — Application layer
     if (exception instanceof ApplicationError) {
+      const appError = exception as ApplicationError;
       return {
-        statusCode: exception.statusCode,
-        code: exception.code,
-        message: exception.message,
+        statusCode: appError.statusCode,
+        code: appError.code,
+        message: appError.message,
         layer: 'Application',
       };
     }
 
     // 3. Validation errors — DTO/Value Object validation → 400 Bad Request
     if (exception instanceof ValidationError) {
+      const validationError = exception as ValidationError;
       return {
         statusCode: HttpStatus.BAD_REQUEST,
-        code: exception.code,
-        message: exception.message,
+        code: validationError.code,
+        message: validationError.message,
         layer: 'Validation',
       };
     }
 
     // 4. Domain errors — business rule violations → Domain layer
     if (exception instanceof DomainError) {
+      const domainError = exception as DomainError;
       return {
         statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-        code: exception.code,
-        message: exception.message,
+        code: domainError.code,
+        message: domainError.message,
         layer: 'Domain',
       };
     }

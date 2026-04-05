@@ -1,50 +1,60 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './modules/app.module';
+import { Logger, VersioningType, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ValidationPipe, VersioningType, Logger } from '@nestjs/common';
-import {
-  FastifyAdapter,
-  NestFastifyApplication,
-} from '@nestjs/platform-fastify';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { Logger as PinoLogger } from 'nestjs-pino';
-import { ClsService } from 'nestjs-cls';
-import compression from '@fastify/compress';
-import helmet from '@fastify/helmet';
-import { APP_CONFIG_KEY, AppConfig, NodeEnv, SECURITY_CONFIG_KEY, SecurityConfig } from './config';
+import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
+import { AppModule } from './modules/app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { AppClsStore } from './modules/cls/cls.module';
+import { ClsService } from 'nestjs-cls';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { Logger as PinoLoggerService } from 'nestjs-pino';
 
 async function bootstrap(): Promise<void> {
   const logger = new Logger('Bootstrap');
 
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter({ logger: false, trustProxy: true }),
+    new FastifyAdapter({ logger: true }),
     { bufferLogs: true },
   );
 
-  app.useLogger(app.get(PinoLogger));
+  app.useLogger(app.get(PinoLoggerService));
 
   const configService = app.get(ConfigService);
-  const appConf = configService.get<AppConfig>(APP_CONFIG_KEY)!;
-  const secConf = configService.get<SecurityConfig>(SECURITY_CONFIG_KEY)!;
 
-  // ── Helmet ──────────────────────────────────────────────────────────────────
-  await app.register(helmet, {
-    contentSecurityPolicy: secConf.helmet.contentSecurityPolicy,
-    hsts: secConf.helmet.hsts
+  const port = configService.get<number>('app.port') || 3000;
+  const apiPrefix = configService.get<string>('app.apiPrefix') || 'api/v1';
+  const nodeEnv = configService.get<string>('app.nodeEnv') || 'development';
+  const shutdownTimeout = configService.get<number>('app.shutdownTimeout') || 30000;
+  const apiVersion = configService.get<string>('app.apiVersion') || '1';
+
+  const corsOrigins = configService.get<string[]>('security.cors.allowedOrigins') || ['*'];
+  const corsMethods = configService.get<string[]>('security.cors.allowedMethods') || ['GET'];
+  const corsHeaders = configService.get<string[]>('security.cors.allowedHeaders') || [];
+  const corsCredentials = configService.get<boolean>('security.cors.credentials') || false;
+  const corsMaxAge = configService.get<number>('security.cors.maxAge') || 86400;
+
+  const helmetCsp = configService.get<boolean>('security.helmet.contentSecurityPolicy') !== false;
+  const helmetHsts = configService.get<boolean>('security.helmet.hsts') !== false;
+  const helmetNoSniff = configService.get<boolean>('security.helmet.noSniff') !== false;
+
+  // ── Fastify Helmet Plugin ─────────────────────────────────────────────────────
+  await app.register(import('@fastify/helmet'), {
+    contentSecurityPolicy: helmetCsp,
+    hsts: helmetHsts
       ? { maxAge: 31536000, includeSubDomains: true }
       : false,
-    noSniff: secConf.helmet.noSniff,
+    noSniff: helmetNoSniff,
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
     permittedCrossDomainPolicies: { permittedPolicies: 'none' },
     crossOriginEmbedderPolicy: false,
   });
 
-  // ── Compression ─────────────────────────────────────────────────────────────
-  await app.register(compression, { encodings: ['gzip', 'deflate'] });
+  // ── Fastify Compression Plugin ───────────────────────────────────────────────────
+  await app.register(import('@fastify/compress'), {
+    encodings: ['gzip', 'deflate', 'br'],
+  });
 
   // ── CORS — strict origin matching ──────────────────────────────────────────
   app.enableCors({
@@ -54,7 +64,7 @@ async function bootstrap(): Promise<void> {
 
       try {
         const url = new URL(origin);
-        const isAllowed = secConf.cors.allowedOrigins.some((allowed) => {
+        const isAllowed = corsOrigins.some((allowed) => {
           const allowedUrl = new URL(allowed);
           return (
             url.protocol === allowedUrl.protocol &&
@@ -72,25 +82,20 @@ async function bootstrap(): Promise<void> {
         callback(new Error(`CORS: malformed origin "${origin}"`), false);
       }
     },
-    methods: secConf.cors.allowedMethods,
-    allowedHeaders: secConf.cors.allowedHeaders,
-    credentials: secConf.cors.credentials,
-    maxAge: secConf.cors.maxAge,
+    methods: corsMethods,
+    allowedHeaders: corsHeaders,
+    credentials: corsCredentials,
+    maxAge: corsMaxAge,
   });
 
-  // ── API prefix & versioning ─────────────────────────────────────────────────
-  app.setGlobalPrefix(appConf.apiPrefix);
   app.enableVersioning({ type: VersioningType.URI });
-
-  // ── Global Validation Pipe — STRICT ────────────────────────────────────────
+  
+  // ── Global Pipes ────────────────────────────────────────────────────────────
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
-      forbidUnknownValues: true, // ← FIXED: was missing
-      stopAtFirstError: false, // ← collect ALL errors, not just first
       transform: true,
-      transformOptions: { enableImplicitConversion: false },
     }),
   );
 
@@ -99,29 +104,25 @@ async function bootstrap(): Promise<void> {
   app.useGlobalFilters(new AllExceptionsFilter(clsService));
 
   // ── Global Interceptors ─────────────────────────────────────────────────────
-  // const auditService = app.get(AuditService);
-  app.useGlobalInterceptors(
-    new ResponseInterceptor(),
-    // new AuditLogInterceptor( clsService),
-  );
+  app.useGlobalInterceptors(new ResponseInterceptor());
 
   // ── Swagger ─────────────────────────────────────────────────────────────────
-  if (appConf.nodeEnv !== NodeEnv.Production) {
+  if (nodeEnv !== 'production') {
     const doc = new DocumentBuilder()
       .setTitle('NestJS SaaS API')
       .setDescription('Enterprise-grade SaaS backend — full API reference')
-      .setVersion(appConf.apiVersion)
+      .setVersion(apiVersion)
       .addBearerAuth()
-      .addServer(`http://localhost:${appConf.port}`, 'Local')
+      .addServer(`http://localhost:${port}`, 'Local')
       .build();
     SwaggerModule.setup(
-      `${appConf.apiPrefix}/docs`,
+      `${apiPrefix}/docs`,
       app,
       SwaggerModule.createDocument(app, doc),
       { swaggerOptions: { persistAuthorization: true } },
     );
     logger.log(
-      `📚 Swagger: http://localhost:${appConf.port}/${appConf.apiPrefix}/docs`,
+      `📚 Swagger: http://localhost:${port}/${apiPrefix}/docs`,
     );
   }
 
@@ -130,19 +131,19 @@ async function bootstrap(): Promise<void> {
   (['SIGTERM', 'SIGINT'] as NodeJS.Signals[]).forEach((signal) => {
     process.on(signal, async () => {
       logger.log(
-        `[${signal}] Shutting down gracefully (${appConf.shutdownTimeout}ms)...`,
+        `[${signal}] Shutting down gracefully (${shutdownTimeout}ms)...`,
       );
-      setTimeout(() => process.exit(1), appConf.shutdownTimeout).unref();
+      setTimeout(() => process.exit(1), shutdownTimeout).unref();
       await app.close();
       process.exit(0);
     });
   });
 
-  await app.listen(appConf.port, '0.0.0.0');
+  await app.listen({ port, host: '0.0.0.0' });
   logger.log(
-    `🚀 Running: http://localhost:${appConf.port}/${appConf.apiPrefix}`,
+    `🚀 Running: http://localhost:${port}/${apiPrefix}`,
   );
-  logger.log(`🌍 Env: ${appConf.nodeEnv}`);
+  logger.log(`🌍 Env: ${nodeEnv}`);
 }
 
 bootstrap().catch((err: unknown) => {

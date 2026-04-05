@@ -2,6 +2,7 @@ import {
   Inject,
   Injectable,
   Logger,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -10,24 +11,33 @@ import { v4 as uuidv4 } from 'uuid';
 import { ClsService } from 'nestjs-cls';
 import type { Role } from '../../../user/domain/enums/role.enum';
 import type { AppClsStore } from '@/modules/cls/cls.module';
-import type { UserEntity } from '../../../user/domain/entities/user.entity';
 import type { IUserRepository } from '../../../user/domain/repositories/user.repository.interface';
 import {
   type ITokenStore,
   TOKEN_STORE,
 } from '../../infrastructure/token-store/redis-token-store';
-import { AUTH_CONFIG_KEY, type AuthConfig } from '@/config/auth.config';
+import { USER_REPOSITORY } from '@/constants/injection-tokens';
 import {
-  AccountInactiveError,
   AccountDeletedError,
+  AccountInactiveError,
+  InvalidCredentialsError,
   InvalidTokenStructureError,
-} from '@/shared/domain/errors/application.error';
+  TokenExpiredError,
+  TokenRevokedError,
+} from '@/common/domain/errors/application.error';
+
+export interface AuthConfig {
+  accessToken: { secret: string; expiresIn: string };
+  refreshToken: { secret: string; expiresIn: string };
+  tokenBlacklistTtlSeconds: number;
+}
+const AUTH_CONFIG_KEY = 'auth';
 
 export interface JwtPayload {
-  sub: string | number; // userId
+  sub: string; // userId
   email: string;
   role: Role;
-  jti: string; // unique token id — used for blacklisting
+  jti: string; // unique token id
   iat?: number;
   exp?: number;
 }
@@ -35,7 +45,6 @@ export interface JwtPayload {
 export interface TokenPair {
   accessToken: string;
   refreshToken: string;
-  refreshTokenId: string;
 }
 
 export interface AuthUserPayload {
@@ -45,32 +54,43 @@ export interface AuthUserPayload {
   isActive: boolean;
 }
 
+import { InjectMetric } from '@willsoto/nestjs-prometheus';
+import { Gauge } from 'prom-client';
+
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
   constructor(
-    private readonly userRepository: IUserRepository,
+    @Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository,
     private readonly jwtService: JwtService,
     private readonly cls: ClsService<AppClsStore>,
     @Inject(TOKEN_STORE) private readonly tokenStore: ITokenStore,
     private readonly configService: ConfigService,
+    @InjectMetric('active_sessions_total') private readonly sessionsGauge: Gauge<string>,
   ) {}
 
   private get authConf(): AuthConfig {
-    return this.configService.get<AuthConfig>(AUTH_CONFIG_KEY)!;
+    const auth = this.configService.get<any>(AUTH_CONFIG_KEY);
+    return {
+      accessToken: auth?.jwt?.accessToken || { secret: 'secret', expiresIn: '15m' },
+      refreshToken: auth?.jwt?.refreshToken || { secret: 'secret', expiresIn: '7d' },
+      tokenBlacklistTtlSeconds: auth?.tokenBlacklistTtlSeconds || 604800,
+    };
   }
 
   async validateUser(
     email: string,
     password: string,
-  ): Promise<AuthUserPayload | null> {
+  ): Promise<AuthUserPayload> {
     const user = await this.userRepository.findByEmail(email);
   
-    if (!user || !user.isActive || user.isDeleted) return null;
+    if (!user) throw new InvalidCredentialsError();
+    if (user.isDeleted) throw new AccountDeletedError(user.id);
+    if (!user.isActive) throw new AccountInactiveError(user.id);
 
     const isValid = await user.validatePassword(password);
-    if (!isValid) return null;
+    if (!isValid) throw new InvalidCredentialsError();
 
     return {
       id: user.id,
@@ -85,72 +105,87 @@ export class AuthService {
     this.cls.set('userId', user.id);
     this.cls.set('userRole', user.role);
     this.logger.log(
-      `[Auth] Login: userId=${user.id} traceId=${this.cls.get('traceId')}`,
+      `[Auth] Login success: userId=${user.id} traceId=${this.cls.get('traceId')}`,
     );
     return tokens;
   }
 
-  async refreshTokens(
-    userId: string,
-    refreshTokenId: string,
-  ): Promise<TokenPair> {
-    const user = await this.userRepository.findById(userId);
-
-    if (!user?.isActive || user.isDeleted) {
-      if (!user) {
-        throw new AccountDeletedError(userId);
-      }
-      if (!user.isActive) {
-        throw new AccountInactiveError(userId);
-      }
+  async refreshTokens(refreshToken: string): Promise<TokenPair> {
+    let payload: JwtPayload;
+    try {
+      payload = await this.jwtService.verifyAsync<JwtPayload>(refreshToken, {
+        secret: this.authConf.refreshToken.secret,
+      });
+    } catch (e) {
+      this.logger.warn(`Refresh token verification failed: ${e.message}`);
+      throw new TokenRevokedError();
     }
 
-    // This call detects reuse — throws if token was already consumed
-    await this.tokenStore.revokeRefreshToken(userId, refreshTokenId);
+    const userId = payload.sub;
+    const tokenId = payload.jti;
 
+    // Verify against Redis (existence and hash)
+    const isValid = await this.tokenStore.verify(userId, tokenId, refreshToken);
+    if (!isValid) {
+      this.logger.warn(`Refresh token reuse or invalid: userId=${userId} tokenId=${tokenId}`);
+      await this.tokenStore.revokeAll(userId);
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    // Get user to ensure they still exist and are active
+    const user = await this.userRepository.findById(userId);
+    if (!user || !user.isActive || user.isDeleted) {
+      await this.tokenStore.revokeAll(userId);
+      throw new UnauthorizedException('User no longer active');
+    }
+
+    // Revoke OLD token (Rotation)
+    await this.tokenStore.revoke(userId, tokenId);
+
+    // Issue NEW pair
     return this.issueTokenPair({
       id: user.id,
       email: user.email,
       role: user.role,
-      isActive: true,
+      isActive: user.isActive,
     });
   }
 
-  async logout(
-    userId: string,
-    jti: string,
-    accessTokenTtlSeconds: number,
-  ): Promise<void> {
-    // Blacklist current access token so it cannot be reused before expiry
-    await this.tokenStore.blacklistAccessToken(jti, accessTokenTtlSeconds);
-    // Revoke all refresh tokens for this user
-    await this.tokenStore.revokeAllUserTokens(userId);
+  async logout(userId: string, jti: string, refreshTokenId: string): Promise<void> {
+    // 1. Blacklist access token (until it expires)
+    // We assume 15 mins for now if not provided, or better to extract from payload
+    await this.tokenStore.blacklistAccessToken(jti, 900);
+    
+    await this.tokenStore.revoke(userId, refreshTokenId);
+    this.sessionsGauge.dec();
+    
     this.logger.log(`[Auth] Logout: userId=${userId}`);
   }
 
   async logoutAllDevices(userId: string): Promise<void> {
-    await this.tokenStore.revokeAllUserTokens(userId);
+    await this.tokenStore.revokeAll(userId);
     this.logger.warn(`[Auth] Logout all devices: userId=${userId}`);
   }
 
   private async issueTokenPair(user: AuthUserPayload): Promise<TokenPair> {
-    const jti = uuidv4();
+    const accessTokenId = uuidv4();
     const refreshTokenId = uuidv4();
 
-    const payload: JwtPayload = {
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-      jti,
-    };
-
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload as any, {
-        secret: this.authConf.accessToken.secret,
-        expiresIn: this.authConf.accessToken.expiresIn,
-      } as any),
       this.jwtService.signAsync(
-        { sub: parseInt(user.id), jti: refreshTokenId },
+        {
+          sub: user.id,
+          email: user.email,
+          role: user.role,
+          jti: accessTokenId,
+        },
+        {
+          secret: this.authConf.accessToken.secret,
+          expiresIn: this.authConf.accessToken.expiresIn,
+        } as any,
+      ),
+      this.jwtService.signAsync(
+        { sub: user.id, jti: refreshTokenId },
         {
           secret: this.authConf.refreshToken.secret,
           expiresIn: this.authConf.refreshToken.expiresIn,
@@ -158,14 +193,18 @@ export class AuthService {
       ),
     ]);
 
-    // Store refresh token in Redis (TTL = 7 days)
-    await this.tokenStore.storeRefreshToken(
+    // Store refresh token (TTL = 7 days)
+    // The store hashes it before saving
+    await this.tokenStore.save(
       user.id,
       refreshTokenId,
-      this.authConf.tokenBlacklistTtlSeconds,
+      refreshToken,
+      604800, // 7 days in seconds
     );
 
-    return { accessToken, refreshToken, refreshTokenId };
+    this.sessionsGauge.inc();
+
+    return { accessToken, refreshToken };
   }
 
   decodePayload(token: string): JwtPayload {

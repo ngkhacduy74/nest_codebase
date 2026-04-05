@@ -1,5 +1,6 @@
-import { BaseValueObject } from '@/shared/domain/base.value-object';
-import { InvalidEmailError } from '@/shared/domain/errors/domain.error';
+import { BaseValueObject } from "@/common/domain/base.value-object";
+import { InvalidEmailError } from "@/common/domain/errors/domain.error";
+
 
 type EmailProps = {
   value: string;

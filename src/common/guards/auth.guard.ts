@@ -6,11 +6,11 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
-import { FastifyRequest } from 'fastify';
+import { Request } from 'express';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { IS_OPTIONAL_KEY } from '../decorators/optional.decorator';
 
-interface AuthenticatedRequest extends FastifyRequest {
+interface AuthenticatedRequest extends Request {
   user?: any;
 }
 

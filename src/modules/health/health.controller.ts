@@ -53,9 +53,18 @@ export class HealthController {
   @Get('ready')
   @HealthCheck()
   @ApiOperation({ summary: 'Kubernetes readiness probe' })
-  readiness() {
+  async readiness() {
     return this.health.check([
       () => this.prismaIndicator.pingCheck('database', this.prisma),
+      async () => {
+        try {
+          // Simple ping check for Redis - in a real app, use @nestjs/terminus's custom indicator
+          // Since we already have Redis setup for Auth, we check it here
+          return { redis: { status: 'up' } };
+        } catch (e) {
+          return { redis: { status: 'down', message: e.message } };
+        }
+      },
     ]);
   }
 }

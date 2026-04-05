@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from './prisma.service';
-import { DatabaseError } from '@/shared/domain/errors/infrastructure.error';
+import { DatabaseError } from '@/common/domain/errors/infrastructure.error';
+
 
 export type PrismaTransactionClient = Prisma.TransactionClient;
 export type TransactionCallback<T> = (

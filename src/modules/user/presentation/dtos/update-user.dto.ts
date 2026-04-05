@@ -1,22 +1,30 @@
-import { IsString, IsOptional, MinLength, MaxLength } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { StringField } from '@/decorators/field.decorators';
+import { EnumField } from '@/decorators/field.decorators';
+import { Role } from '../../domain/enums/role.enum';
 
 export class UpdateUserDto {
-  @IsOptional()
-  @IsString()
-  @MinLength(2)
-  @MaxLength(50)
-  @Transform(({ value }) => value?.trim())
+  @StringField({
+    description: 'User first name',
+    example: 'John',
+    minLength: 2,
+    maxLength: 50,
+    required: false,
+  })
   firstName?: string;
 
-  @IsOptional()
-  @IsString()
-  @MinLength(2)
-  @MaxLength(50)
-  @Transform(({ value }) => value?.trim())
+  @StringField({
+    description: 'User last name',
+    example: 'Doe',
+    minLength: 2,
+    maxLength: 50,
+    required: false,
+  })
   lastName?: string;
 
-  @IsOptional()
-  @IsString()
-  role?: string;
+  @EnumField(Role, {
+    description: 'User role',
+    example: 'user',
+    required: false,
+  })
+  role?: Role;
 }

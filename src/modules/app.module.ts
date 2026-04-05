@@ -1,43 +1,59 @@
 import { Module } from '@nestjs/common';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { BullModule } from '@nestjs/bullmq';
 import { CacheModule } from '@nestjs/cache-manager';
 import { LoggerModule } from 'nestjs-pino';
 import { redisStore } from 'cache-manager-redis-yet';
-import { ConfigService } from '@nestjs/config';
-import { buildConfigModule } from '@config/config.registry';
-import { LOGGER_CONFIG_KEY, LoggerConfig } from '@config/logger.config';
-import { CACHE_CONFIG_KEY, CacheConfig } from '@config/cache.config';
-import { QUEUE_CONFIG_KEY, QueueConfig } from '@config/queue.config';
-import { SECURITY_CONFIG_KEY, SecurityConfig } from '@config/security.config';
+import { randomUUID } from 'crypto';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import appConfig from '@config/app/app.config';
+import databaseConfig from '@config/database/database.config';
+import redisConfig from '@config/redis/redis.config';
+import authConfig from '@config/auth/auth.config';
 import { AppClsModule } from '@modules/cls/cls.module';
 import { PrismaModule } from '@modules/prisma/prisma.module';
+import { GlobalExceptionFilter } from '@common/filters/global-exception.filter';
+import { LoggingInterceptor } from '@common/interceptors/logging.interceptor';
 
 import { HealthModule } from '@modules/health/health.module';
 import { MetricsModule } from '@modules/metrics/metrics.module';
 import { AuthModule } from '@modules/auth/auth.module';
 import { UserModule } from '@modules/user/user.module';
+import { NotificationModule } from '@modules/notification/notification.module';
 
 @Module({
   imports: [
-    // ── Config (must be first) ────────────────────────────────────────────────
-    buildConfigModule(),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [appConfig, databaseConfig, redisConfig, authConfig],
+      envFilePath: ['.env.local', '.env'],
+      expandVariables: true,
+    }),
 
-    // ── Request Context ───────────────────────────────────────────────────────
     AppClsModule,
 
-    // ── Structured Logging ────────────────────────────────────────────────────
     LoggerModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (cs: ConfigService) => {
-        const conf = cs.get<LoggerConfig>(LOGGER_CONFIG_KEY)!;
+      useFactory: (config: ConfigService) => {
+        const level = config.get('logger.level');
+        const redactPaths = config.get('logger.redactPaths') || [];
+        const prettyPrint = config.get('logger.prettyPrint');
+        
         return {
           pinoHttp: {
-            level: conf.level,
-            redact: conf.redactPaths,
-            transport: conf.prettyPrint
+            level,
+            redact: [
+              'req.headers.authorization',
+              'req.headers.cookie',
+              'body.password',
+              'body.secret',
+              'body.token',
+              'body.key',
+              ...redactPaths,
+            ],
+            transport: prettyPrint
               ? {
                   target: 'pino-pretty',
                   options: { colorize: true, singleLine: true },
@@ -45,41 +61,42 @@ import { UserModule } from '@modules/user/user.module';
               : undefined,
             genReqId: (req) =>
               (req.headers['x-request-id'] as string | undefined) ??
-              crypto.randomUUID(),
+              randomUUID(),
           },
         };
       },
     }),
 
-    // ── Rate Limiting ─────────────────────────────────────────────────────────
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (cs: ConfigService) => {
-        const conf = cs.get<SecurityConfig>(SECURITY_CONFIG_KEY)!;
+      useFactory: (config: ConfigService) => {
         return {
           throttlers: [
             {
-              ttl: conf.rateLimit.windowMs,
-              limit: conf.rateLimit.limit,
+              ttl: 60000, // 1 minute default
+              limit: 100, // 100 requests per minute default
             },
           ],
         };
       },
     }),
 
-    // ── Internal Events ───────────────────────────────────────────────────────
     EventEmitterModule.forRoot({
       wildcard: true,
       delimiter: '.',
       maxListeners: 20,
     }),
 
-    // ── Queue (BullMQ) ────────────────────────────────────────────────────────
     BullModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (cs: ConfigService) => {
-        const conf = cs.get<QueueConfig>(QUEUE_CONFIG_KEY)!;
-        return { connection: conf.redis };
+      useFactory: (config: ConfigService) => {
+        return { 
+          connection: {
+            host: config.get('redis.host'),
+            port: config.get('redis.port'),
+            password: config.get('redis.password') || undefined,
+          }
+        };
       },
     }),
 
@@ -87,14 +104,17 @@ import { UserModule } from '@modules/user/user.module';
     CacheModule.registerAsync({
       isGlobal: true,
       inject: [ConfigService],
-      useFactory: async (cs: ConfigService) => {
-        const conf = cs.get<CacheConfig>(CACHE_CONFIG_KEY)!;
+      useFactory: async (config: ConfigService) => {
         return {
-          store: redisStore,
-          socket: { host: conf.redis.host, port: conf.redis.port },
-          password: conf.redis.password,
-          ttl: conf.defaultTtlMs,
-          keyPrefix: conf.keyPrefix,
+          store: await redisStore({
+            socket: { 
+              host: config.get('redis.host'), 
+              port: config.get('redis.port') 
+            },
+            password: config.get('redis.password') || undefined,
+          }),
+          ttl: 60000, // 1 minute default
+          keyPrefix: 'cache:',
         };
       },
     }),
@@ -113,6 +133,12 @@ import { UserModule } from '@modules/user/user.module';
   providers: [
     // Apply ThrottlerGuard globally
     { provide: APP_GUARD, useClass: ThrottlerGuard },
+    
+    // Global exception filter
+    { provide: APP_FILTER, useClass: GlobalExceptionFilter },
+    
+    // Global logging interceptor
+    { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
   ],
 })
 export class AppModule {}

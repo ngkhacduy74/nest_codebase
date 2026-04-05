@@ -16,6 +16,7 @@
     "lint:check": "eslint \"{src,apps,libs,test}/**/*.ts\" --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "spellcheck": "cspell lint \"src/**/*.ts\" \"test/**/*.ts\" --no-progress",
+    "pre-commit": "npm run lint:check && npm run typecheck",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
@@ -38,8 +39,13 @@
     ]
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1024.0",
+    "@aws-sdk/client-ses": "^3.1024.0",
+    "@aws-sdk/s3-request-presigner": "^3.1024.0",
     "@fastify/compress": "^8.3.1",
+    "@fastify/cookie": "^11.0.2",
     "@fastify/helmet": "^13.0.2",
+    "@fastify/static": "^9.0.0",
     "@nestjs/bullmq": "^11.0.4",
     "@nestjs/cache-manager": "^3.1.0",
     "@nestjs/common": "^11.0.1",
@@ -48,21 +54,22 @@
     "@nestjs/event-emitter": "^3.0.1",
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/passport": "^11.0.5",
-    "@nestjs/platform-express": "^11.0.1",
     "@nestjs/platform-fastify": "^11.1.18",
     "@nestjs/swagger": "^11.2.6",
     "@nestjs/terminus": "^11.1.1",
     "@nestjs/throttler": "^6.5.0",
     "@prisma/client": "^7.6.0",
+    "@sendgrid/mail": "^8.1.6",
     "@willsoto/nestjs-prometheus": "^6.1.0",
     "argon2": "^0.44.0",
+    "bullmq": "^5.73.0",
     "cache-manager": "^7.2.8",
     "cache-manager-redis-yet": "^5.1.5",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
-    "fastify": "^5.8.4",
+    "compression": "^1.7.5",
+    "helmet": "^8.0.0",
     "ioredis": "^5.10.1",
-    "joi": "^18.1.2",
     "nestjs-cls": "^6.2.0",
     "nestjs-i18n": "^10.6.0",
     "nestjs-pino": "^4.6.1",
@@ -82,7 +89,6 @@
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.1",
-    "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.0.0",
     "@types/supertest": "^7.0.0",
@@ -121,6 +127,12 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/$1",
+      "^@modules/(.*)$": "<rootDir>/modules/$1",
+      "^@common/(.*)$": "<rootDir>/common/$1",
+      "^@config/(.*)$": "<rootDir>/config/$1"
+    }
   }
 }

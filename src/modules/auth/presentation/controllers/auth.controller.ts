@@ -1,113 +1,66 @@
-import { Body, Controller, Post, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import { Body, Controller, Post, HttpCode, HttpStatus, UseGuards, Req } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from '../../application/services/auth.service';
 import { LoginDto } from '../dtos/login.dto';
 import { RefreshTokenDto } from '../dtos/refresh-token.dto';
-import { BaseResponse } from '@/common/interfaces/base-response.interface';
-
-class LoginResponse {
-  accessToken!: string;
-  refreshToken!: string;
-  refreshTokenId!: string;
-}
-
-class RefreshTokenResponse {
-  accessToken!: string;
-  refreshToken!: string;
-  refreshTokenId!: string;
-}
+import { AuthResponseDto } from '../dtos/auth-response.dto';
+import { Public } from '@/common/decorators/public.decorator';
+import { LocalAuthGuard } from '@/common/guards/local-auth.guard';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
+  @UseGuards(LocalAuthGuard)
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ 
-    summary: 'User login',
-    description: 'Authenticate user with email and password, returns JWT tokens'
-  })
-  @ApiResponse({ 
-    status: HttpStatus.OK, 
-    description: 'Login successful',
-    type: LoginResponse,
-    schema: {
-      example: {
-        success: true,
-        data: {
-          accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-          refreshToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-          refreshTokenId: '550e8400-e29b-41d4-a616-42a8f4ab123'
-        },
-        message: 'Login successful',
-        meta: {
-          timestamp: '2024-01-01T00:00:00.000Z',
-          requestId: 'req-123',
-          traceId: 'trace-456'
-        }
-      }
-    }
-  })
-  @ApiBody({ 
-    type: LoginDto,
-    description: 'Login credentials',
-    required: true 
-  })
-  async login(@Body() loginDto: LoginDto): Promise<BaseResponse<LoginResponse>> {
-    const tokens = await this.authService.login({
-      id: 'user-id',
-      email: loginDto.email,
-      role: 'user' as any,
-      isActive: true,
-    });
-
+  @ApiOperation({ summary: 'User login' })
+  @ApiResponse({ status: HttpStatus.OK, type: AuthResponseDto })
+  async login(@Req() req: any, @Body() loginDto: LoginDto): Promise<AuthResponseDto> {
+    const tokens = await this.authService.login(req.user);
+    
     return {
-      success: true,
-      data: tokens,
-      message: 'Login successful'
+      ...tokens,
+      expiresIn: 900, // 15 mins
+      user: {
+        id: req.user.id,
+        email: req.user.email,
+        role: req.user.role,
+      },
     };
   }
 
+  @Public()
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ 
-    summary: 'Refresh access token',
-    description: 'Generate new access token using refresh token'
-  })
-  @ApiResponse({ 
-    status: HttpStatus.OK, 
-    description: 'Token refreshed successfully',
-    type: RefreshTokenResponse,
-    schema: {
-      example: {
-        success: true,
-        data: {
-          accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-          refreshToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-          refreshTokenId: '550e8400-e29b-41d4-a616-42a8f4ab123'
-        },
-        message: 'Token refreshed successfully',
-        meta: {
-          timestamp: '2024-01-01T00:00:00.000Z',
-          requestId: 'req-123',
-          traceId: 'trace-456'
-        }
-      }
-    }
-  })
-  @ApiBody({ 
-    type: RefreshTokenDto,
-    description: 'Refresh token',
-    required: true 
-  })
-  async refreshToken(@Body() refreshTokenDto: RefreshTokenDto): Promise<BaseResponse<RefreshTokenResponse>> {
-    const tokens = await this.authService.refreshTokens('user-id', refreshTokenDto.refreshToken);
-
+  @ApiOperation({ summary: 'Refresh access token' })
+  @ApiResponse({ status: HttpStatus.OK, type: AuthResponseDto })
+  async refreshToken(@Body() refreshTokenDto: RefreshTokenDto): Promise<AuthResponseDto> {
+    const tokens = await this.authService.refreshTokens(refreshTokenDto.refreshToken);
+    const payload = this.authService.decodePayload(tokens.accessToken);
+    
     return {
-      success: true,
-      data: tokens,
-      message: 'Token refreshed successfully'
+      ...tokens,
+      expiresIn: 900,
+      user: {
+        id: payload.sub,
+        email: payload.email,
+        role: payload.role,
+      },
     };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Logout user' })
+  async logout(@Req() req: any): Promise<void> {
+    const user = req.user;
+    // Revoking access token (blacklist) and session
+    await this.authService.logout(user.id, user.jti, '');
   }
 }

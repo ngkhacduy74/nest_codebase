@@ -1,11 +1,9 @@
-import { BaseEntity } from '@/shared/domain/base.entity';
+import { BaseEntity } from '@/common/domain/base.entity';
 
-import {
-  InvalidNameError,
-  UserAlreadyDeactivatedError,
-} from '@/shared/domain/errors/domain.error';
+
 import { Role } from '../enums/role.enum';
 import { Email } from '../value-objects/email.value-object';
+import { InvalidNameError, UserAlreadyDeactivatedError } from '@/common/domain/errors/domain.error';
 
 // ── No Prisma imports here — domain is pure ──────────────────────────────────
 
@@ -89,6 +87,11 @@ export class UserEntity extends BaseEntity<string> {
     if (!lastName.trim()) throw new InvalidNameError('lastName');
     this._firstName = firstName.trim();
     this._lastName = lastName.trim();
+    this.touch();
+  }
+
+  assignRole(role: Role): void {
+    this._role = role;
     this.touch();
   }
 

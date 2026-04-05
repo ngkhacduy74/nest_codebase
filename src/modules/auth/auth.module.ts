@@ -1,24 +1,29 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './application/services/auth.service';
 import { AuthController } from './presentation/controllers/auth.controller';
-import { RedisTokenStore } from './infrastructure/token-store/redis-token-store';
-import { AUTH_CONFIG_KEY } from '@/config/auth.config';
+import { RedisTokenStore, TOKEN_STORE } from './infrastructure/token-store/redis-token-store';
+import { LocalStrategy } from './infrastructure/strategies/local.strategy';
+import { JwtStrategy } from './infrastructure/strategies/jwt.strategy';
+
 import { UserModule } from '../user/user.module';
+
 
 @Module({
   imports: [
     UserModule,
+    PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
-        const authConfig = configService.get(AUTH_CONFIG_KEY);
+        const authConfig = configService.get<any>('auth');
         return {
           global: true,
-          secret: authConfig?.accessToken.secret,
+          secret: authConfig?.jwt?.accessToken?.secret || 'secret',
           signOptions: {
-            expiresIn: authConfig?.accessToken.expiresIn,
+            expiresIn: authConfig?.jwt?.accessToken?.expiresIn || '15m',
           },
         };
       },
@@ -26,7 +31,14 @@ import { UserModule } from '../user/user.module';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, RedisTokenStore],
+  providers: [
+    AuthService,
+    LocalStrategy,
+    JwtStrategy,
+    {
+      provide: TOKEN_STORE,
+      useClass: RedisTokenStore,
+    },
+  ],
   exports: [AuthService],
-})
-export class AuthModule {}
+}) export class AuthModule {}
