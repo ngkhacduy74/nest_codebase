@@ -4,6 +4,14 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { NotFoundException } from '@nestjs/common';
 import { USER_REPOSITORY } from '@/constants/injection-tokens';
 import { CacheKeys } from '@/constants/cache.constant';
+import { AppLoggerService } from '@/common/services/logger.service';
+
+// Mock performance service
+const mockPerformanceService = {
+  recordMetric: jest.fn(),
+  recordDuration: jest.fn(),
+  startTimer: jest.fn(),
+};
 
 describe('GetUserByIdUseCase', () => {
   let useCase: GetUserByIdUseCase;
@@ -24,6 +32,7 @@ describe('GetUserByIdUseCase', () => {
         GetUserByIdUseCase,
         { provide: USER_REPOSITORY, useValue: repo },
         { provide: CACHE_MANAGER, useValue: cache },
+        { provide: AppLoggerService, useValue: mockPerformanceService },
       ],
     }).compile();
 

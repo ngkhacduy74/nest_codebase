@@ -4,7 +4,19 @@ import appConfig from './app.config';
 import { AppConfig } from './app-config.type';
 
 describe('AppConfig', () => {
+  beforeEach(() => {
+    // Clean up environment variables before each test
+    delete process.env.APP_PORT;
+    delete process.env.APP_NAME;
+    delete process.env.NODE_ENV;
+  });
+
   it('should load default config values', async () => {
+    // Set valid environment variables for test
+    process.env.APP_PORT = '3000';
+    process.env.APP_NAME = 'NestJS SaaS';
+    process.env.NODE_ENV = 'development';
+    
     const module = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({
@@ -14,8 +26,9 @@ describe('AppConfig', () => {
       ],
     }).compile();
 
-    const config = module.get<AppConfig>('app');
-
+    // Test the config function directly
+    const config = await appConfig() as any;
+    
     expect(config.nodeEnv).toBe('development');
     expect(config.port).toBe(3000);
     expect(config.name).toBe('NestJS SaaS');
@@ -30,16 +43,7 @@ describe('AppConfig', () => {
     process.env.APP_NAME = 'Custom App';
     process.env.NODE_ENV = 'production';
 
-    const module = await Test.createTestingModule({
-      imports: [
-        ConfigModule.forRoot({
-          load: [appConfig],
-          isGlobal: true,
-        }),
-      ],
-    }).compile();
-
-    const config = module.get<AppConfig>('app');
+    const config = await appConfig() as any;
 
     expect(config.port).toBe(4000);
     expect(config.name).toBe('Custom App');

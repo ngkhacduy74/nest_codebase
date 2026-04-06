@@ -7,6 +7,11 @@ import { USER_REPOSITORY } from '@/constants/injection-tokens';
 import { TOKEN_STORE } from '../../infrastructure/token-store/redis-token-store';
 import { InvalidCredentialsError } from '@/common/domain/errors/application.error';
 
+// Mock uuid module
+jest.mock('uuid', () => ({
+  v4: jest.fn(() => 'mock-uuid-1234'),
+}));
+
 describe('AuthService', () => {
   let service: AuthService;
   let userRepo: any;
