@@ -1,8 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CreateUserUseCase } from './create-user.use-case';
+import { ConflictError } from '@/common/domain/errors/application.error';
 import { USER_REPOSITORY } from '@/constants/injection-tokens';
+import { createMockRepository, createTestModule } from '@/common/utils/test-helpers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { ConflictException } from '@nestjs/common';
 import { CreateUserDataDto } from '../../domain/repositories/user.repository.interface';
 import { Role } from '../../domain/enums/role.enum';
 
@@ -12,21 +13,23 @@ describe('CreateUserUseCase', () => {
   let eventEmitter: any;
 
   beforeEach(async () => {
-    repo = {
+    repo = createMockRepository({
       findByEmail: jest.fn(),
+      existsByEmail: jest.fn(),
       create: jest.fn(),
-    };
+    });
+
     eventEmitter = {
       emit: jest.fn(),
     };
 
-    const module: TestingModule = await Test.createTestingModule({
+    const module = await createTestModule({
       providers: [
         CreateUserUseCase,
         { provide: USER_REPOSITORY, useValue: repo },
-        { provide: EventEmitter2, useValue: eventEmitter },
+        EventEmitter2,
       ],
-    }).compile();
+    });
 
     useCase = module.get<CreateUserUseCase>(CreateUserUseCase);
   });
@@ -68,7 +71,7 @@ describe('CreateUserUseCase', () => {
     repo.findByEmail.mockResolvedValue({ id: 'existing-id' });
 
     // Act & Assert
-    await expect(useCase.execute(dto)).rejects.toThrow(ConflictException);
+    await expect(useCase.execute(dto)).rejects.toThrow(ConflictError);
     expect(repo.create).not.toHaveBeenCalled();
     expect(eventEmitter.emit).not.toHaveBeenCalled();
   });

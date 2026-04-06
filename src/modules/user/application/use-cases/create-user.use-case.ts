@@ -1,8 +1,9 @@
-import { Inject, Injectable, ConflictException, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { IUserRepository, CreateUserDataDto, CreateUserDto } from '../../domain/repositories/user.repository.interface';
 import { INJECTION_TOKENS } from '@/constants/injection-tokens';
 import { UserEntity } from '../../domain/entities/user.entity';
+import { ConflictError } from '@/common/domain/errors/application.error';
 
 @Injectable()
 export class CreateUserUseCase {
@@ -16,7 +17,7 @@ export class CreateUserUseCase {
   async execute(dto: CreateUserDataDto): Promise<UserEntity> {
     const exists = await this.userRepo.existsByEmail(dto.email);
     if (exists) {
-      throw new ConflictException(`User with email ${dto.email} already exists`);
+      throw new ConflictError(`User with email ${dto.email} already exists`);
     }
 
     const { v4: uuidv4 } = await import('uuid');
