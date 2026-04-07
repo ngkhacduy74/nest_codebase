@@ -1,5 +1,10 @@
 import { Module } from '@nestjs/common';
-import { PrometheusModule, makeCounterProvider, makeGaugeProvider, makeHistogramProvider } from '@willsoto/nestjs-prometheus';
+import {
+  PrometheusModule,
+  makeCounterProvider,
+  makeGaugeProvider,
+  makeHistogramProvider,
+} from '@willsoto/nestjs-prometheus';
 
 @Module({
   imports: [

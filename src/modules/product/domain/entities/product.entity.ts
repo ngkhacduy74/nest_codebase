@@ -16,7 +16,12 @@ export class ProductEntity extends BaseEntity {
     this._isActive = data.isActive ?? true;
   }
 
-  static create(name: string, description: string, price: number, stock: number): ProductEntity {
+  static create(
+    name: string,
+    description: string,
+    price: number,
+    stock: number,
+  ): ProductEntity {
     if (price <= 0) {
       throw new Error('Price must be greater than 0');
     }
@@ -26,7 +31,7 @@ export class ProductEntity extends BaseEntity {
 
     const now = new Date();
     const { v4: uuidv4 } = require('uuid');
-    
+
     return new ProductEntity({
       id: uuidv4(),
       name: name.trim(),
@@ -44,11 +49,21 @@ export class ProductEntity extends BaseEntity {
   }
 
   // Getters
-  get name(): string { return this._name; }
-  get description(): string { return this._description; }
-  get price(): number { return this._price; }
-  get stock(): number { return this._stock; }
-  get isActive(): boolean { return this._isActive; }
+  get name(): string {
+    return this._name;
+  }
+  get description(): string {
+    return this._description;
+  }
+  get price(): number {
+    return this._price;
+  }
+  get stock(): number {
+    return this._stock;
+  }
+  get isActive(): boolean {
+    return this._isActive;
+  }
 
   // Business methods
   updatePrice(newPrice: number): void {

@@ -1,6 +1,9 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { INJECTION_TOKENS } from '@/constants/injection-tokens';
-import { IUserRepository, PaginationOptions } from '../../domain/repositories/user.repository.interface';
+import {
+  IUserRepository,
+  PaginationOptions,
+} from '../../domain/repositories/user.repository.interface';
 
 @Injectable()
 export class GetUsersUseCase {

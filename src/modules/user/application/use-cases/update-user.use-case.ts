@@ -2,16 +2,20 @@ import { Inject, Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { IUserRepository, UpdateUserDto } from '../../domain/repositories/user.repository.interface';
+import {
+  IUserRepository,
+  UpdateUserDto,
+} from '../../domain/repositories/user.repository.interface';
 import { INJECTION_TOKENS } from '@/constants/injection-tokens';
-import { CacheKeys, CacheTTL } from '@/constants/cache.constant';
+import { CacheKeys } from '@/constants/cache.constant';
 
 @Injectable()
 export class UpdateUserUseCase {
   private readonly logger = new Logger(UpdateUserUseCase.name);
 
   constructor(
-    @Inject(INJECTION_TOKENS.USER_REPOSITORY) private readonly userRepo: IUserRepository,
+    @Inject(INJECTION_TOKENS.USER_REPOSITORY)
+    private readonly userRepo: IUserRepository,
     @Inject(CACHE_MANAGER) private readonly cache: Cache,
     private readonly eventEmitter: EventEmitter2,
   ) {}

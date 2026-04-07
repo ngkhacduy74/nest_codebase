@@ -1,4 +1,3 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -6,6 +5,7 @@ import { ClsService } from 'nestjs-cls';
 import { USER_REPOSITORY } from '@/constants/injection-tokens';
 import { TOKEN_STORE } from '../../infrastructure/token-store/redis-token-store';
 import { InvalidCredentialsError } from '@/common/domain/errors/application.error';
+import { createTestModule } from '@/common/utils/test-helpers';
 
 // Mock uuid module
 jest.mock('uuid', () => ({
@@ -50,7 +50,7 @@ describe('AuthService', () => {
       get: jest.fn().mockReturnValue('trace-id'),
     };
 
-    const module: TestingModule = await Test.createTestingModule({
+    const module = await createTestModule({
       providers: [
         AuthService,
         { provide: USER_REPOSITORY, useValue: userRepo },
@@ -59,7 +59,7 @@ describe('AuthService', () => {
         { provide: ConfigService, useValue: configService },
         { provide: ClsService, useValue: cls },
       ],
-    }).compile();
+    });
 
     service = module.get<AuthService>(AuthService);
   });
@@ -67,25 +67,29 @@ describe('AuthService', () => {
   describe('validateUser', () => {
     it('should throw InvalidCredentialsError if user not found', async () => {
       userRepo.findByEmail.mockResolvedValue(null);
-      await expect(service.validateUser('test@example.com', 'pw')).rejects.toThrow(InvalidCredentialsError);
+      await expect(
+        service.validateUser('test@example.com', 'pw'),
+      ).rejects.toThrow(InvalidCredentialsError);
     });
 
     it('should throw InvalidCredentialsError if password invalid', async () => {
-      const user = { 
-        id: '1', 
-        email: 'test@example.com', 
+      const user = {
+        id: '1',
+        email: 'test@example.com',
         validatePassword: jest.fn().mockResolvedValue(false),
         isActive: true,
         isDeleted: false,
       };
       userRepo.findByEmail.mockResolvedValue(user);
-      await expect(service.validateUser('test@example.com', 'pw')).rejects.toThrow(InvalidCredentialsError);
+      await expect(
+        service.validateUser('test@example.com', 'pw'),
+      ).rejects.toThrow(InvalidCredentialsError);
     });
 
     it('should return user payload if valid', async () => {
-      const user = { 
-        id: '1', 
-        email: 'test@example.com', 
+      const user = {
+        id: '1',
+        email: 'test@example.com',
         role: 'user',
         validatePassword: jest.fn().mockResolvedValue(true),
         isActive: true,
@@ -100,8 +104,13 @@ describe('AuthService', () => {
   describe('login', () => {
     it('should issue token pair and store refresh token', async () => {
       jwtService.signAsync.mockResolvedValue('token');
-      const user = { id: '1', email: 'test@example.com', role: 'user' as any, isActive: true };
-      
+      const user = {
+        id: '1',
+        email: 'test@example.com',
+        role: 'user' as any,
+        isActive: true,
+      };
+
       const result = await service.login(user);
 
       expect(result.accessToken).toBeDefined();

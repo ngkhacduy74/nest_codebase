@@ -38,10 +38,13 @@ export class PaginationUtil {
     };
   }
 
-  static getSkipAndTake(page?: number, limit?: number): { skip?: number; take?: number } {
+  static getSkipAndTake(
+    page?: number,
+    limit?: number,
+  ): { skip?: number; take?: number } {
     const parsedPage = page || 1;
     const parsedLimit = limit || 10;
-    
+
     return {
       skip: (parsedPage - 1) * parsedLimit,
       take: parsedLimit,

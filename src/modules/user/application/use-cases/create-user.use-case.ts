@@ -1,6 +1,9 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { IUserRepository, CreateUserDataDto, CreateUserDto } from '../../domain/repositories/user.repository.interface';
+import {
+  IUserRepository,
+  CreateUserDataDto,
+} from '../../domain/repositories/user.repository.interface';
 import { INJECTION_TOKENS } from '@/constants/injection-tokens';
 import { UserEntity } from '../../domain/entities/user.entity';
 import { ConflictError } from '@/common/domain/errors/application.error';
@@ -10,7 +13,8 @@ export class CreateUserUseCase {
   private readonly logger = new Logger(CreateUserUseCase.name);
 
   constructor(
-    @Inject(INJECTION_TOKENS.USER_REPOSITORY) private readonly userRepo: IUserRepository,
+    @Inject(INJECTION_TOKENS.USER_REPOSITORY)
+    private readonly userRepo: IUserRepository,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -22,7 +26,7 @@ export class CreateUserUseCase {
 
     const { v4: uuidv4 } = await import('uuid');
     const argon2 = await import('argon2');
-    
+
     const passwordHash = await argon2.hash(dto.password);
 
     const user = await this.userRepo.create({

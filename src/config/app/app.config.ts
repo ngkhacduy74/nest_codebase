@@ -1,12 +1,12 @@
 import { registerAs } from '@nestjs/config';
-import { 
-  IsEnum, 
-  IsOptional, 
-  IsInt, 
-  Min, 
-  Max, 
-  IsString, 
-  IsNotEmpty 
+import {
+  IsEnum,
+  IsOptional,
+  IsInt,
+  Min,
+  Max,
+  IsString,
+  IsNotEmpty,
 } from 'class-validator';
 import { AppConfig, Environment } from './app-config.type';
 import { validateConfig } from '@/utils/config/validate-config';
@@ -43,8 +43,11 @@ class EnvironmentVariablesValidator {
 }
 
 export default registerAs<AppConfig>('app', () => {
-  const validatedConfig = validateConfig(process.env, EnvironmentVariablesValidator);
-  
+  const validatedConfig = validateConfig(
+    process.env,
+    EnvironmentVariablesValidator,
+  );
+
   const nodeEnv = validatedConfig.NODE_ENV || Environment.DEVELOPMENT;
   const port = validatedConfig.APP_PORT || 3000;
   const name = validatedConfig.APP_NAME || 'NestJS SaaS';

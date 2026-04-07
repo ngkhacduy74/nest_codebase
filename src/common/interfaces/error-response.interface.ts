@@ -74,7 +74,7 @@ export function createErrorResponse(error: ErrorMetadata): ErrorResponse {
 
 export function createValidationErrorResponse(
   error: ErrorMetadata,
-  details: Array<{ field: string; message: string; value?: any }>
+  details: Array<{ field: string; message: string; value?: any }>,
 ): ValidationErrorResponse {
   return {
     success: false,

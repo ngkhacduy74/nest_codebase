@@ -21,7 +21,7 @@
 //           provide: 'EmailProvider',
 //           useFactory: (configService: ConfigService) => {
 //             const emailConfig = configService.get<EmailConfig>(EMAIL_CONFIG_KEY)!;
-            
+
 //             switch (emailConfig.provider) {
 //               case 'sendgrid':
 //                 return new SendgridProvider(configService);
@@ -55,7 +55,7 @@
 //           provide: 'EmailProvider',
 //           useFactory: (configService: ConfigService) => {
 //             const emailConfig = configService.get<EmailConfig>(EMAIL_CONFIG_KEY)!;
-            
+
 //             switch (emailConfig.provider) {
 //               case 'sendgrid':
 //                 return new SendgridProvider(configService);

@@ -8,7 +8,7 @@ export interface ValidateConfigOptions {
 export function validateConfig<T extends object>(
   config: Record<string, unknown>,
   envVariablesClass: new () => T,
-  options: ValidateConfigOptions = {}
+  options: ValidateConfigOptions = {},
 ): T {
   const validatedConfig = plainToInstance(envVariablesClass, config, {
     enableImplicitConversion: true,
@@ -23,8 +23,10 @@ export function validateConfig<T extends object>(
       const constraints = Object.values(error.constraints || {});
       return `${error.property}: ${constraints.join(', ')}`;
     });
-    
-    throw new Error(`Configuration validation failed: ${errorMessages.join('; ')}`);
+
+    throw new Error(
+      `Configuration validation failed: ${errorMessages.join('; ')}`,
+    );
   }
 
   return validatedConfig;
@@ -34,6 +36,6 @@ export function formatValidationError(error: Error): string {
   if (error.message.includes('Configuration validation failed')) {
     return error.message;
   }
-  
+
   return `Configuration error: ${error.message}`;
 }

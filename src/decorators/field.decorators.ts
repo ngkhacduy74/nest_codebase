@@ -1,12 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { 
-  IsString, 
-  IsEmail, 
-  IsOptional, 
-  IsNotEmpty, 
-  MinLength, 
+import {
+  IsEmail,
+  IsNotEmpty,
+  MinLength,
   MaxLength,
-  IsInt,
   Min,
   Max,
   IsBoolean,
@@ -14,12 +11,9 @@ import {
   IsUUID,
   IsDateString,
   IsNumber,
-  IsDecimal,
   IsPositive,
-  ValidateNested,
   IsArray,
-  IsIn,
-  Matches
+  Matches,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
@@ -34,16 +28,16 @@ export function StringField(options?: {
 }) {
   return function (target: any, propertyKey: string) {
     const isRequired = options?.required !== false;
-    
+
     // Validation decorators
     if (isRequired) {
       IsNotEmpty()(target, propertyKey);
     }
-    
+
     if (options?.minLength) {
       MinLength(options.minLength)(target, propertyKey);
     }
-    
+
     if (options?.maxLength) {
       MaxLength(options.maxLength)(target, propertyKey);
     }
@@ -78,12 +72,12 @@ export function EmailField(options?: {
 }) {
   return function (target: any, propertyKey: string) {
     const isRequired = options?.required !== false;
-    
+
     // Validation decorators
     if (isRequired) {
       IsNotEmpty()(target, propertyKey);
     }
-    
+
     IsEmail()(target, propertyKey);
 
     // Transform decorators
@@ -115,21 +109,22 @@ export function PasswordField(options?: {
 }) {
   return function (target: any, propertyKey: string) {
     const isRequired = options?.required !== false;
-    
+
     // Validation decorators
     if (isRequired) {
       IsNotEmpty()(target, propertyKey);
     }
-    
+
     const minLength = options?.minLength || 8;
     MinLength(minLength)(target, propertyKey);
-    
+
     if (options?.maxLength) {
       MaxLength(options.maxLength)(target, propertyKey);
     }
 
     // Password complexity pattern
-    const pattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
+    const pattern =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
     Matches(pattern)(target, propertyKey);
 
     // Swagger decorator
@@ -158,12 +153,12 @@ export function UUIDField(options?: {
 }) {
   return function (target: any, propertyKey: string) {
     const isRequired = options?.required !== false;
-    
+
     // Validation decorators
     if (isRequired) {
       IsNotEmpty()(target, propertyKey);
     }
-    
+
     IsUUID('4')(target, propertyKey);
 
     // Swagger decorator
@@ -193,28 +188,31 @@ export function NumberField(options?: {
 }) {
   return function (target: any, propertyKey: string) {
     const isRequired = options?.required !== false;
-    
+
     // Validation decorators
     if (isRequired) {
       IsNotEmpty()(target, propertyKey);
     }
-    
+
     IsNumber()(target, propertyKey);
-    
+
     if (options?.min !== undefined) {
       Min(options.min)(target, propertyKey);
     }
-    
+
     if (options?.max !== undefined) {
       Max(options.max)(target, propertyKey);
     }
-    
+
     if (options?.positive) {
       IsPositive()(target, propertyKey);
     }
 
     // Transform decorator
-    Transform(({ value }) => value ? Number(value) : undefined)(target, propertyKey);
+    Transform(({ value }) => (value ? Number(value) : undefined))(
+      target,
+      propertyKey,
+    );
 
     // Swagger decorator
     const apiPropertyOptions = {
@@ -242,20 +240,23 @@ export function DecimalField(options?: {
 }) {
   return function (target: any, propertyKey: string) {
     const isRequired = options?.required !== false;
-    
+
     // Validation decorators
     if (isRequired) {
       IsNotEmpty()(target, propertyKey);
     }
-    
+
     IsNumber()(target, propertyKey);
-    
+
     if (options?.positive) {
       IsPositive()(target, propertyKey);
     }
 
     // Transform decorator
-    Transform(({ value }) => value ? Number(value) : undefined)(target, propertyKey);
+    Transform(({ value }) => (value ? Number(value) : undefined))(
+      target,
+      propertyKey,
+    );
 
     // Swagger decorator
     const apiPropertyOptions = {
@@ -280,7 +281,7 @@ export function BooleanField(options?: {
 }) {
   return function (target: any, propertyKey: string) {
     const isRequired = options?.required !== false;
-    
+
     // Validation decorators
     IsBoolean()(target, propertyKey);
 
@@ -307,22 +308,25 @@ export function BooleanField(options?: {
 }
 
 // Enum Field Decorator
-export function EnumField<T extends Record<string, any>>(enumType: T, options?: {
-  description?: string;
-  example?: string;
-  required?: boolean;
-  isArray?: boolean;
-}) {
+export function EnumField<T extends Record<string, any>>(
+  enumType: T,
+  options?: {
+    description?: string;
+    example?: string;
+    required?: boolean;
+    isArray?: boolean;
+  },
+) {
   return function (target: any, propertyKey: string) {
     const isRequired = options?.required !== false;
-    
+
     // Validation decorators
     if (isRequired) {
       IsNotEmpty()(target, propertyKey);
     }
-    
+
     IsEnum(enumType)(target, propertyKey);
-    
+
     if (options?.isArray) {
       IsArray()(target, propertyKey);
       IsEnum(enumType, { each: true })(target, propertyKey);
@@ -354,12 +358,12 @@ export function DateField(options?: {
 }) {
   return function (target: any, propertyKey: string) {
     const isRequired = options?.required !== false;
-    
+
     // Validation decorators
     if (isRequired) {
       IsNotEmpty()(target, propertyKey);
     }
-    
+
     IsDateString()(target, propertyKey);
 
     // Transform decorator

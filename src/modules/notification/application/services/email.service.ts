@@ -9,11 +9,19 @@ export class EmailService {
 
   constructor(
     private readonly configService: ConfigService,
-    @InjectMetric('email_sent_total') private readonly emailCounter: Counter<string>,
+    @InjectMetric('email_sent_total')
+    private readonly emailCounter: Counter<string>,
   ) {}
 
-  async send(to: string, subject: string, template: string, context: any): Promise<any> {
-    this.logger.log(`[Email] Sending email to ${to}: ${subject} (template: ${template})`);
+  async send(
+    to: string,
+    subject: string,
+    template: string,
+    context: any,
+  ): Promise<any> {
+    this.logger.log(
+      `[Email] Sending email to ${to}: ${subject} (template: ${template})`,
+    );
     this.emailCounter.inc({ provider: 'simulated', status: 'success' });
     return { success: true, messageId: `msg-${Date.now()}` };
   }
@@ -25,7 +33,11 @@ export class EmailService {
     return { success: true, messageId: `welcome-${Date.now()}` };
   }
 
-  async sendAccountUpdateEmail(to: string, firstName: string, changes: any): Promise<any> {
+  async sendAccountUpdateEmail(
+    to: string,
+    firstName: string,
+    changes: any,
+  ): Promise<any> {
     const subject = 'Your account was updated';
     this.logger.log(`[Email] Sending account update email to ${to}`);
     this.emailCounter.inc({ provider: 'simulated', status: 'success' });

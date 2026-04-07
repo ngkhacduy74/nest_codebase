@@ -48,7 +48,9 @@ describe('PrismaUserRepository', () => {
 
       expect(result).toBeDefined();
       expect(result?.id).toBe('1');
-      expect(prisma.user.findUnique).toHaveBeenCalledWith({ where: { id: '1' } });
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({
+        where: { id: '1' },
+      });
     });
 
     it('should return null if user not found', async () => {

@@ -1,10 +1,5 @@
 import { registerAs } from '@nestjs/config';
-import { 
-  IsString, 
-  IsOptional, 
-  IsInt, 
-  IsBoolean 
-} from 'class-validator';
+import { IsString, IsOptional, IsInt, IsBoolean } from 'class-validator';
 import { RedisConfig } from './redis-config.type';
 import { validateConfig } from '@/utils/config/validate-config';
 
@@ -39,8 +34,11 @@ class EnvironmentVariablesValidator {
 }
 
 export default registerAs<RedisConfig>('redis', () => {
-  const validatedConfig = validateConfig(process.env, EnvironmentVariablesValidator);
-  
+  const validatedConfig = validateConfig(
+    process.env,
+    EnvironmentVariablesValidator,
+  );
+
   return {
     host: validatedConfig.CACHE_REDIS_HOST || 'localhost',
     port: validatedConfig.CACHE_REDIS_PORT || 6379,

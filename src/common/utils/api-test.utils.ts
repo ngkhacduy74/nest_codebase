@@ -25,12 +25,15 @@ export class ApiTestClient {
     this.baseUrl = `http://localhost:${this.configService.get('app.port', 3000)}`;
   }
 
-  async get(endpoint: string, options?: {
-    headers?: Record<string, string>;
-    query?: Record<string, any>;
-  }): Promise<ApiTestResponse> {
+  async get(
+    endpoint: string,
+    options?: {
+      headers?: Record<string, string>;
+      query?: Record<string, any>;
+    },
+  ): Promise<ApiTestResponse> {
     const url = `${this.baseUrl}${endpoint}`;
-    
+
     await this.logger.trace(`API GET: ${url}`, {
       method: 'GET',
       url,
@@ -38,7 +41,8 @@ export class ApiTestClient {
       query: options?.query,
     });
 
-    const response = await this.app.get(url)
+    const response = await this.app
+      .get(url)
       .set('Cookie', this.formatCookies())
       .query(options?.query || {})
       .set(options?.headers || {});
@@ -46,12 +50,16 @@ export class ApiTestClient {
     return this.formatResponse(response);
   }
 
-  async post(endpoint: string, data?: any, options?: {
-    headers?: Record<string, string>;
-    query?: Record<string, any>;
-  }): Promise<ApiTestResponse> {
+  async post(
+    endpoint: string,
+    data?: any,
+    options?: {
+      headers?: Record<string, string>;
+      query?: Record<string, any>;
+    },
+  ): Promise<ApiTestResponse> {
     const url = `${this.baseUrl}${endpoint}`;
-    
+
     await this.logger.trace(`API POST: ${url}`, {
       method: 'POST',
       url,
@@ -60,7 +68,8 @@ export class ApiTestClient {
       query: options?.query,
     });
 
-    const response = await this.app.post(url)
+    const response = await this.app
+      .post(url)
       .set('Cookie', this.formatCookies())
       .query(options?.query || {})
       .set(options?.headers || {})
@@ -69,12 +78,16 @@ export class ApiTestClient {
     return this.formatResponse(response);
   }
 
-  async put(endpoint: string, data?: any, options?: {
-    headers?: Record<string, string>;
-    query?: Record<string, any>;
-  }): Promise<ApiTestResponse> {
+  async put(
+    endpoint: string,
+    data?: any,
+    options?: {
+      headers?: Record<string, string>;
+      query?: Record<string, any>;
+    },
+  ): Promise<ApiTestResponse> {
     const url = `${this.baseUrl}${endpoint}`;
-    
+
     await this.logger.trace(`API PUT: ${url}`, {
       method: 'PUT',
       url,
@@ -83,7 +96,8 @@ export class ApiTestClient {
       query: options?.query,
     });
 
-    const response = await this.app.put(url)
+    const response = await this.app
+      .put(url)
       .set('Cookie', this.formatCookies())
       .query(options?.query || {})
       .set(options?.headers || {})
@@ -92,12 +106,16 @@ export class ApiTestClient {
     return this.formatResponse(response);
   }
 
-  async patch(endpoint: string, data?: any, options?: {
-    headers?: Record<string, string>;
-    query?: Record<string, any>;
-  }): Promise<ApiTestResponse> {
+  async patch(
+    endpoint: string,
+    data?: any,
+    options?: {
+      headers?: Record<string, string>;
+      query?: Record<string, any>;
+    },
+  ): Promise<ApiTestResponse> {
     const url = `${this.baseUrl}${endpoint}`;
-    
+
     await this.logger.trace(`API PATCH: ${url}`, {
       method: 'PATCH',
       url,
@@ -106,7 +124,8 @@ export class ApiTestClient {
       query: options?.query,
     });
 
-    const response = await this.app.patch(url)
+    const response = await this.app
+      .patch(url)
       .set('Cookie', this.formatCookies())
       .query(options?.query || {})
       .set(options?.headers || {})
@@ -115,12 +134,15 @@ export class ApiTestClient {
     return this.formatResponse(response);
   }
 
-  async delete(endpoint: string, options?: {
-    headers?: Record<string, string>;
-    query?: Record<string, any>;
-  }): Promise<ApiTestResponse> {
+  async delete(
+    endpoint: string,
+    options?: {
+      headers?: Record<string, string>;
+      query?: Record<string, any>;
+    },
+  ): Promise<ApiTestResponse> {
     const url = `${this.baseUrl}${endpoint}`;
-    
+
     await this.logger.trace(`API DELETE: ${url}`, {
       method: 'DELETE',
       url,
@@ -128,7 +150,8 @@ export class ApiTestClient {
       query: options?.query,
     });
 
-    const response = await this.app.delete(url)
+    const response = await this.app
+      .delete(url)
       .set('Cookie', this.formatCookies())
       .query(options?.query || {})
       .set(options?.headers || {});
@@ -159,8 +182,10 @@ export class ApiTestClient {
     const cookies: Record<string, string> = {};
     const setCookieHeader = response.headers['set-cookie'];
     if (setCookieHeader) {
-      const cookieStrings = Array.isArray(setCookieHeader) ? setCookieHeader : [setCookieHeader];
-      cookieStrings.forEach(cookieString => {
+      const cookieStrings = Array.isArray(setCookieHeader)
+        ? setCookieHeader
+        : [setCookieHeader];
+      cookieStrings.forEach((cookieString) => {
         const [name] = cookieString.split('=')[0];
         if (name) {
           cookies[name] = cookieString;
@@ -178,9 +203,16 @@ export class ApiTestClient {
 }
 
 export class ApiTestAssertions {
-  static assertStatus(response: ApiTestResponse, expectedStatus: number, message?: string): void {
+  static assertStatus(
+    response: ApiTestResponse,
+    expectedStatus: number,
+    message?: string,
+  ): void {
     if (response.status !== expectedStatus) {
-      throw new Error(message || `Expected status ${expectedStatus}, but got ${response.status}`);
+      throw new Error(
+        message ||
+          `Expected status ${expectedStatus}, but got ${response.status}`,
+      );
     }
   }
 
@@ -193,11 +225,19 @@ export class ApiTestAssertions {
   }
 
   static assertBadRequest(response: ApiTestResponse, message?: string): void {
-    this.assertStatus(response, 400, message || 'Expected bad request response');
+    this.assertStatus(
+      response,
+      400,
+      message || 'Expected bad request response',
+    );
   }
 
   static assertUnauthorized(response: ApiTestResponse, message?: string): void {
-    this.assertStatus(response, 401, message || 'Expected unauthorized response');
+    this.assertStatus(
+      response,
+      401,
+      message || 'Expected unauthorized response',
+    );
   }
 
   static assertForbidden(response: ApiTestResponse, message?: string): void {
@@ -212,25 +252,48 @@ export class ApiTestAssertions {
     this.assertStatus(response, 409, message || 'Expected conflict response');
   }
 
-  static assertDataStructure(response: ApiTestResponse, expectedStructure: any, message?: string): void {
+  static assertDataStructure(
+    response: ApiTestResponse,
+    expectedStructure: any,
+    message?: string,
+  ): void {
     if (!this.matchesStructure(response.data, expectedStructure)) {
-      throw new Error(message || `Response data structure does not match expected structure`);
+      throw new Error(
+        message || `Response data structure does not match expected structure`,
+      );
     }
   }
 
-  static assertContains(response: ApiTestResponse, expectedValue: any, path?: string, message?: string): void {
-    const actualValue = path ? this.getNestedValue(response.data, path) : response.data;
-    
+  static assertContains(
+    response: ApiTestResponse,
+    expectedValue: any,
+    path?: string,
+    message?: string,
+  ): void {
+    const actualValue = path
+      ? this.getNestedValue(response.data, path)
+      : response.data;
+
     if (!this.containsValue(actualValue, expectedValue)) {
       const pathInfo = path ? ` at path "${path}"` : '';
-      throw new Error(message || `Expected response to contain ${expectedValue}${pathInfo}`);
+      throw new Error(
+        message || `Expected response to contain ${expectedValue}${pathInfo}`,
+      );
     }
   }
 
-  static assertHeader(response: ApiTestResponse, headerName: string, expectedValue: string, message?: string): void {
+  static assertHeader(
+    response: ApiTestResponse,
+    headerName: string,
+    expectedValue: string,
+    message?: string,
+  ): void {
     const actualValue = response.headers[headerName.toLowerCase()];
     if (actualValue !== expectedValue) {
-      throw new Error(message || `Expected header ${headerName} to be ${expectedValue}, but got ${actualValue}`);
+      throw new Error(
+        message ||
+          `Expected header ${headerName} to be ${expectedValue}, but got ${actualValue}`,
+      );
     }
   }
 
@@ -247,7 +310,7 @@ export class ApiTestAssertions {
       if (!(key in actual)) {
         return false;
       }
-      
+
       if (!this.matchesStructure(actual[key], expected[key])) {
         return false;
       }
@@ -262,7 +325,7 @@ export class ApiTestAssertions {
     }
 
     if (Array.isArray(expected) && Array.isArray(actual)) {
-      return expected.every(item => actual.includes(item));
+      return expected.every((item) => actual.includes(item));
     }
 
     if (typeof expected === 'object' && typeof actual === 'object') {

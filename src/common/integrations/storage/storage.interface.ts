@@ -50,7 +50,11 @@ export interface StorageProvider {
   /**
    * Upload a file to storage
    */
-  upload(key: string, buffer: Buffer | Readable, options?: StorageUploadOptions): Promise<StorageUploadResult>;
+  upload(
+    key: string,
+    buffer: Buffer | Readable,
+    options?: StorageUploadOptions,
+  ): Promise<StorageUploadResult>;
 
   /**
    * Download a file from storage

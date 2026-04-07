@@ -22,7 +22,6 @@ import {
   AccountInactiveError,
   InvalidCredentialsError,
   InvalidTokenStructureError,
-  TokenExpiredError,
   TokenRevokedError,
 } from '@/common/domain/errors/application.error';
 
@@ -67,14 +66,21 @@ export class AuthService {
     private readonly cls: ClsService<AppClsStore>,
     @Inject(TOKEN_STORE) private readonly tokenStore: ITokenStore,
     private readonly configService: ConfigService,
-    @InjectMetric('active_sessions_total') private readonly sessionsGauge: Gauge<string>,
+    @InjectMetric('active_sessions_total')
+    private readonly sessionsGauge: Gauge<string>,
   ) {}
 
   private get authConf(): AuthConfig {
     const auth = this.configService.get<any>(AUTH_CONFIG_KEY);
     return {
-      accessToken: auth?.jwt?.accessToken || { secret: 'secret', expiresIn: '15m' },
-      refreshToken: auth?.jwt?.refreshToken || { secret: 'secret', expiresIn: '7d' },
+      accessToken: auth?.jwt?.accessToken || {
+        secret: 'secret',
+        expiresIn: '15m',
+      },
+      refreshToken: auth?.jwt?.refreshToken || {
+        secret: 'secret',
+        expiresIn: '7d',
+      },
       tokenBlacklistTtlSeconds: auth?.tokenBlacklistTtlSeconds || 604800,
     };
   }
@@ -84,7 +90,7 @@ export class AuthService {
     password: string,
   ): Promise<AuthUserPayload> {
     const user = await this.userRepository.findByEmail(email);
-  
+
     if (!user) throw new InvalidCredentialsError();
     if (user.isDeleted) throw new AccountDeletedError(user.id);
     if (!user.isActive) throw new AccountInactiveError(user.id);
@@ -127,7 +133,9 @@ export class AuthService {
     // Verify against Redis (existence and hash)
     const isValid = await this.tokenStore.verify(userId, tokenId, refreshToken);
     if (!isValid) {
-      this.logger.warn(`Refresh token reuse or invalid: userId=${userId} tokenId=${tokenId}`);
+      this.logger.warn(
+        `Refresh token reuse or invalid: userId=${userId} tokenId=${tokenId}`,
+      );
       await this.tokenStore.revokeAll(userId);
       throw new UnauthorizedException('Invalid refresh token');
     }
@@ -151,14 +159,18 @@ export class AuthService {
     });
   }
 
-  async logout(userId: string, jti: string, refreshTokenId: string): Promise<void> {
+  async logout(
+    userId: string,
+    jti: string,
+    refreshTokenId: string,
+  ): Promise<void> {
     // 1. Blacklist access token (until it expires)
     // We assume 15 mins for now if not provided, or better to extract from payload
     await this.tokenStore.blacklistAccessToken(jti, 900);
-    
+
     await this.tokenStore.revoke(userId, refreshTokenId);
     this.sessionsGauge.dec();
-    
+
     this.logger.log(`[Auth] Logout: userId=${userId}`);
   }
 
@@ -184,13 +196,10 @@ export class AuthService {
           expiresIn: this.authConf.accessToken.expiresIn,
         } as any,
       ),
-      this.jwtService.signAsync(
-        { sub: user.id, jti: refreshTokenId },
-        {
-          secret: this.authConf.refreshToken.secret,
-          expiresIn: this.authConf.refreshToken.expiresIn,
-        } as any,
-      ),
+      this.jwtService.signAsync({ sub: user.id, jti: refreshTokenId }, {
+        secret: this.authConf.refreshToken.secret,
+        expiresIn: this.authConf.refreshToken.expiresIn,
+      } as any),
     ]);
 
     // Store refresh token (TTL = 7 days)

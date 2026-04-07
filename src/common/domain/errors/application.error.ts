@@ -56,9 +56,14 @@ export class UserNotFoundException extends ApplicationError {
 
 export class UserAlreadyExistsError extends ApplicationError {
   constructor(email: string) {
-    super(`User with email "${email}" already exists`, 'USER_ALREADY_EXISTS', 409, {
-      email,
-    });
+    super(
+      `User with email "${email}" already exists`,
+      'USER_ALREADY_EXISTS',
+      409,
+      {
+        email,
+      },
+    );
   }
 }
 
@@ -87,7 +92,9 @@ export class AccountDeletedError extends ApplicationError {
 // Auth-specific Application Errors
 export class TokenExpiredError extends ApplicationError {
   constructor(tokenType: 'access' | 'refresh' = 'access') {
-    super(`${tokenType} token has expired`, 'TOKEN_EXPIRED', 401, { tokenType });
+    super(`${tokenType} token has expired`, 'TOKEN_EXPIRED', 401, {
+      tokenType,
+    });
   }
 }
 

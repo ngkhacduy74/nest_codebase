@@ -1,10 +1,10 @@
 import { registerAs } from '@nestjs/config';
-import { 
-  IsString, 
-  IsOptional, 
-  IsInt, 
-  IsBoolean, 
-  IsNotEmpty 
+import {
+  IsString,
+  IsOptional,
+  IsInt,
+  IsBoolean,
+  IsNotEmpty,
 } from 'class-validator';
 import { DatabaseConfig } from './database-config.type';
 import { validateConfig } from '@/utils/config/validate-config';
@@ -28,8 +28,11 @@ class EnvironmentVariablesValidator {
 }
 
 export default registerAs<DatabaseConfig>('database', () => {
-  const validatedConfig = validateConfig(process.env, EnvironmentVariablesValidator);
-  
+  const validatedConfig = validateConfig(
+    process.env,
+    EnvironmentVariablesValidator,
+  );
+
   return {
     url: validatedConfig.DATABASE_URL || '',
     ssl: validatedConfig.DATABASE_SSL,

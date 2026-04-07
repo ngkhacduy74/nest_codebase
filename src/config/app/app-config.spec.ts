@@ -1,7 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
 import appConfig from './app.config';
-import { AppConfig } from './app-config.type';
 
 describe('AppConfig', () => {
   beforeEach(() => {
@@ -16,7 +15,7 @@ describe('AppConfig', () => {
     process.env.APP_PORT = '3000';
     process.env.APP_NAME = 'NestJS SaaS';
     process.env.NODE_ENV = 'development';
-    
+
     const module = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({
@@ -27,8 +26,8 @@ describe('AppConfig', () => {
     }).compile();
 
     // Test the config function directly
-    const config = await appConfig() as any;
-    
+    const config = (await appConfig()) as any;
+
     expect(config.nodeEnv).toBe('development');
     expect(config.port).toBe(3000);
     expect(config.name).toBe('NestJS SaaS');
@@ -43,7 +42,7 @@ describe('AppConfig', () => {
     process.env.APP_NAME = 'Custom App';
     process.env.NODE_ENV = 'production';
 
-    const config = await appConfig() as any;
+    const config = (await appConfig()) as any;
 
     expect(config.port).toBe(4000);
     expect(config.name).toBe('Custom App');

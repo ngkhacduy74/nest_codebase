@@ -1,9 +1,11 @@
 import { BaseEntity } from '@/common/domain/base.entity';
 
-
 import { Role } from '../enums/role.enum';
 import { Email } from '../value-objects/email.value-object';
-import { InvalidNameError, UserAlreadyDeactivatedError } from '@/common/domain/errors/domain.error';
+import {
+  InvalidNameError,
+  UserAlreadyDeactivatedError,
+} from '@/common/domain/errors/domain.error';
 
 // ── No Prisma imports here — domain is pure ──────────────────────────────────
 

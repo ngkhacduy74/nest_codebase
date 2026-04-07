@@ -1,10 +1,10 @@
 import { registerAs } from '@nestjs/config';
-import { 
-  IsString, 
-  IsOptional, 
-  IsInt, 
-  IsBoolean, 
-  IsNotEmpty 
+import {
+  IsString,
+  IsOptional,
+  IsInt,
+  IsBoolean,
+  IsNotEmpty,
 } from 'class-validator';
 import { AuthConfig } from './auth-config.type';
 import { validateConfig } from '@/utils/config/validate-config';
@@ -56,8 +56,11 @@ class EnvironmentVariablesValidator {
 }
 
 export default registerAs<AuthConfig>('auth', () => {
-  const validatedConfig = validateConfig(process.env, EnvironmentVariablesValidator);
-  
+  const validatedConfig = validateConfig(
+    process.env,
+    EnvironmentVariablesValidator,
+  );
+
   return {
     jwt: {
       accessToken: {
@@ -71,14 +74,18 @@ export default registerAs<AuthConfig>('auth', () => {
     },
     session: {
       maxActive: validatedConfig.AUTH_SESSION_MAX_ACTIVE || 5,
-      blacklistEnabled: validatedConfig.AUTH_SESSION_BLACKLIST_ENABLED !== false,
+      blacklistEnabled:
+        validatedConfig.AUTH_SESSION_BLACKLIST_ENABLED !== false,
     },
     password: {
       minLength: validatedConfig.AUTH_PASSWORD_MIN_LENGTH || 8,
-      requireUppercase: validatedConfig.AUTH_PASSWORD_REQUIRE_UPPERCASE !== false,
-      requireLowercase: validatedConfig.AUTH_PASSWORD_REQUIRE_LOWERCASE !== false,
+      requireUppercase:
+        validatedConfig.AUTH_PASSWORD_REQUIRE_UPPERCASE !== false,
+      requireLowercase:
+        validatedConfig.AUTH_PASSWORD_REQUIRE_LOWERCASE !== false,
       requireNumbers: validatedConfig.AUTH_PASSWORD_REQUIRE_NUMBERS !== false,
-      requireSpecialChars: validatedConfig.AUTH_PASSWORD_REQUIRE_SPECIAL_CHARS !== false,
+      requireSpecialChars:
+        validatedConfig.AUTH_PASSWORD_REQUIRE_SPECIAL_CHARS !== false,
     },
   };
 });

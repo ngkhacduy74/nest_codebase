@@ -11,9 +11,9 @@
 
 //   constructor(@Inject(ConfigService) private readonly configService: ConfigService) {
 //     super('SendGrid');
-    
+
 //     const emailConfig = this.configService.get<EmailConfig>(EMAIL_CONFIG_KEY)!;
-    
+
 //     this.mailService = new MailService();
 //     this.mailService.setApiKey(emailConfig.sendgrid!.apiKey);
 //   }
@@ -21,14 +21,14 @@
 //   async send(message: EmailMessage): Promise<EmailSendResult> {
 //     try {
 //       this.logOperation('send', { to: message.to, subject: message.subject });
-      
+
 //       const emailConfig = this.configService.get<EmailConfig>(EMAIL_CONFIG_KEY)!;
-      
+
 //       const content = [
 //         ...(message.html ? [{ type: 'text/html' as const, value: message.html }] : []),
 //         ...(message.text ? [{ type: 'text/plain' as const, value: message.text }] : [])
 //       ];
-      
+
 //       if (content.length === 0) {
 //         throw new Error('Email must have either html or text content');
 //       }
@@ -68,9 +68,9 @@
 //   async sendTemplate(message: EmailMessage): Promise<EmailSendResult> {
 //     try {
 //       this.logOperation('sendTemplate', { to: message.to, templateId: message.template?.templateId });
-      
+
 //       const emailConfig = this.configService.get<EmailConfig>(EMAIL_CONFIG_KEY)!;
-      
+
 //       const msg = {
 //         to: Array.isArray(message.to) ? message.to : [message.to],
 //         from: message.from || `${emailConfig.sendgrid!.fromName} <${emailConfig.sendgrid!.fromEmail}>`,
@@ -102,7 +102,7 @@
 //   async validateConfig(): Promise<boolean> {
 //     try {
 //       const emailConfig = this.configService.get<EmailConfig>(EMAIL_CONFIG_KEY)!;
-      
+
 //       if (!emailConfig.sendgrid?.apiKey) {
 //         return false;
 //       }

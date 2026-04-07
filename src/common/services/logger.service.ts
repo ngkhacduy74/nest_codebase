@@ -129,7 +129,7 @@ export class AppLoggerService {
     message: string,
     error: Error,
     context?: LogContext,
-    metadata?: LogMetadata
+    metadata?: LogMetadata,
   ): void {
     this.log(LogLevel.ERROR, message, context, {
       ...metadata,
@@ -145,7 +145,7 @@ export class AppLoggerService {
   // Performance logging
   startTimer(operation: string, metadata?: LogMetadata): () => void {
     const startTime = Date.now();
-    
+
     return () => {
       const endTime = Date.now();
       const duration = endTime - startTime;
@@ -159,7 +159,7 @@ export class AppLoggerService {
     duration: number,
     startTime: number,
     endTime: number,
-    metadata?: LogMetadata
+    metadata?: LogMetadata,
   ): void {
     const logEntry: PerformanceLogEntry = {
       level: LogLevel.INFO,
@@ -182,18 +182,15 @@ export class AppLoggerService {
     url: string,
     statusCode: number,
     duration: number,
-    metadata?: LogMetadata
+    metadata?: LogMetadata,
   ): void {
-    this.http(
-      `${method} ${url} ${statusCode} - ${duration}ms`,
-      {
-        ...metadata,
-        method,
-        url,
-        statusCode,
-        duration,
-      }
-    );
+    this.http(`${method} ${url} ${statusCode} - ${duration}ms`, {
+      ...metadata,
+      method,
+      url,
+      statusCode,
+      duration,
+    });
   }
 
   // Security event logging
@@ -201,18 +198,14 @@ export class AppLoggerService {
     event: string,
     details: any,
     severity: 'low' | 'medium' | 'high' | 'critical' = 'medium',
-    metadata?: LogMetadata
+    metadata?: LogMetadata,
   ): void {
-    this.warn(
-      `Security event: ${event}`,
-      LogContext.SECURITY,
-      {
-        ...metadata,
-        securityEvent: event,
-        details,
-        severity,
-      }
-    );
+    this.warn(`Security event: ${event}`, LogContext.SECURITY, {
+      ...metadata,
+      securityEvent: event,
+      details,
+      severity,
+    });
   }
 
   // Database operation logging
@@ -220,40 +213,34 @@ export class AppLoggerService {
     operation: string,
     table: string,
     duration: number,
-    metadata?: LogMetadata
+    metadata?: LogMetadata,
   ): void {
-    this.database(
-      `Database ${operation} on ${table} - ${duration}ms`,
-      {
-        ...metadata,
-        operation,
-        table,
-        duration,
-      }
-    );
+    this.database(`Database ${operation} on ${table} - ${duration}ms`, {
+      ...metadata,
+      operation,
+      table,
+      duration,
+    });
   }
 
   // Business event logging
   logBusinessEvent(
     event: string,
     userId?: string,
-    metadata?: LogMetadata
+    metadata?: LogMetadata,
   ): void {
-    this.business(
-      `Business event: ${event}`,
-      {
-        ...metadata,
-        userId,
-        businessEvent: event,
-      }
-    );
+    this.business(`Business event: ${event}`, {
+      ...metadata,
+      userId,
+      businessEvent: event,
+    });
   }
 
   private log(
     level: LogLevel,
     message: string,
     context?: LogContext,
-    metadata?: LogMetadata
+    metadata?: LogMetadata,
   ): void {
     const logEntry: LogEntry = {
       level,

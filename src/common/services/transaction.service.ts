@@ -5,7 +5,11 @@ import { AppError } from '@/common/errors/app.error';
 
 export interface TransactionOptions {
   timeout?: number;
-  isolationLevel?: 'READ_UNCOMMITTED' | 'READ_COMMITTED' | 'REPEATABLE_READ' | 'SERIALIZABLE';
+  isolationLevel?:
+    | 'READ_UNCOMMITTED'
+    | 'READ_COMMITTED'
+    | 'REPEATABLE_READ'
+    | 'SERIALIZABLE';
 }
 
 export interface TransactionContext {
@@ -29,7 +33,7 @@ export class TransactionService {
 
   async runInTransaction<T>(
     operations: (tx: any) => Promise<T>,
-    options?: TransactionOptions
+    options?: TransactionOptions,
   ): Promise<T> {
     const transactionId = this.generateTransactionId();
     const startTime = Date.now();
@@ -43,32 +47,30 @@ export class TransactionService {
     this.activeTransactions.set(transactionId, context);
 
     try {
-      this.logger.database(
-        `Transaction started: ${transactionId}`,
-        {
-          transactionId,
-          isolationLevel: options?.isolationLevel,
-          timeout: options?.timeout,
-        }
-      );
+      this.logger.database(`Transaction started: ${transactionId}`, {
+        transactionId,
+        isolationLevel: options?.isolationLevel,
+        timeout: options?.timeout,
+      });
 
-      const result = await this.executeTransaction(operations, transactionId, options);
+      const result = await this.executeTransaction(
+        operations,
+        transactionId,
+        options,
+      );
 
       const duration = Date.now() - startTime;
-      
-      this.logger.database(
-        `Transaction completed: ${transactionId}`,
-        {
-          transactionId,
-          duration,
-          operationCount: context.operations.length,
-        }
-      );
+
+      this.logger.database(`Transaction completed: ${transactionId}`, {
+        transactionId,
+        duration,
+        operationCount: context.operations.length,
+      });
 
       return result;
     } catch (error) {
       const duration = Date.now() - startTime;
-      
+
       this.logger.errorWithException(
         `Transaction failed: ${transactionId}`,
         error as Error,
@@ -77,7 +79,7 @@ export class TransactionService {
           transactionId,
           duration,
           operationCount: context.operations.length,
-        }
+        },
       );
 
       throw error;
@@ -89,14 +91,14 @@ export class TransactionService {
   private async executeTransaction<T>(
     operations: (tx: any) => Promise<T>,
     transactionId: string,
-    options?: TransactionOptions
+    options?: TransactionOptions,
   ): Promise<T> {
     const context = this.activeTransactions.get(transactionId);
     if (!context) {
       throw AppError.internalError(
         `Transaction context not found: ${transactionId}`,
         undefined,
-        { transactionId }
+        { transactionId },
       );
     }
 
@@ -132,7 +134,7 @@ export class TransactionService {
       // Override methods with logging
       if (tx[this.getModelName]) {
         const model = tx[this.getModelName];
-        
+
         model.findUnique = async (args: any) => {
           const endTimer = logOperation('findUnique');
           try {
@@ -232,15 +234,16 @@ export class TransactionService {
     return await this.prisma.$transaction(transactionWrapper);
   }
 
-  private createTimeoutPromise(timeout: number, transactionId: string): Promise<never> {
+  private createTimeoutPromise(
+    timeout: number,
+    transactionId: string,
+  ): Promise<never> {
     return new Promise((_, reject) => {
       setTimeout(() => {
         reject(
-          AppError.timeout(
-            `Transaction timeout: ${transactionId}`,
-            timeout,
-            { transactionId }
-          )
+          AppError.timeout(`Transaction timeout: ${transactionId}`, timeout, {
+            transactionId,
+          }),
         );
       }, timeout);
     });
@@ -250,7 +253,7 @@ export class TransactionService {
     transactions: Array<{
       operations: (tx: any) => Promise<T>;
       options?: TransactionOptions;
-    }>
+    }>,
   ): Promise<T[]> {
     const results: T[] = [];
     const errors: Error[] = [];
@@ -271,8 +274,8 @@ export class TransactionService {
         {
           totalTransactions: transactions.length,
           failedTransactions: errors.length,
-          errors: errors.map(e => e.message),
-        }
+          errors: errors.map((e) => e.message),
+        },
       );
     }
 
@@ -292,7 +295,7 @@ export class TransactionService {
   }
 
   private getModelName(): string {
-    // This is a placeholder - in real implementation, 
+    // This is a placeholder - in real implementation,
     // this would be determined by the context or passed as parameter
     return 'model';
   }
@@ -312,7 +315,10 @@ export class TransactionService {
     const now = Date.now();
     for (const [id, context] of activeTransactions) {
       const duration = now - context.startTime;
-      if (!longestRunningTransaction || duration > longestRunningTransaction.duration) {
+      if (
+        !longestRunningTransaction ||
+        duration > longestRunningTransaction.duration
+      ) {
         longestRunningTransaction = { id, duration };
       }
     }

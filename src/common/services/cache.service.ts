@@ -1,4 +1,4 @@
-import { Injectable, LoggerService as NestLoggerService } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppLoggerService } from '@/common/services/logger.service';
 
@@ -43,7 +43,7 @@ export class CacheService {
 
   async get<T>(key: string): Promise<T | null> {
     const entry = this.cache.get(key);
-    
+
     if (!entry) {
       this.stats.misses++;
       this.logger.trace(`Cache miss: ${key}`, {
@@ -51,7 +51,7 @@ export class CacheService {
         operation: 'get',
         result: 'miss',
       });
-      
+
       return null;
     }
 
@@ -59,21 +59,21 @@ export class CacheService {
     if (Date.now() > entry.expiresAt) {
       this.cache.delete(key);
       this.stats.misses++;
-      
+
       this.logger.trace(`Cache miss (expired): ${key}`, {
         key,
         operation: 'get',
         result: 'expired',
         age: Date.now() - entry.createdAt,
       });
-      
+
       return null;
     }
 
     // Update hit count
     entry.hits++;
     this.stats.hits++;
-    
+
     this.logger.trace(`Cache hit: ${key}`, {
       key,
       operation: 'get',
@@ -85,11 +85,15 @@ export class CacheService {
     return entry.data;
   }
 
-  async set<T>(key: string, data: T, options: CacheOptions = {}): Promise<void> {
+  async set<T>(
+    key: string,
+    data: T,
+    options: CacheOptions = {},
+  ): Promise<void> {
     const now = Date.now();
     const ttl = options.ttl || this.getDefaultTtl();
-    const expiresAt = now + (ttl * 1000);
-    
+    const expiresAt = now + ttl * 1000;
+
     const entry: CacheEntry<T> = {
       data,
       createdAt: now,
@@ -102,7 +106,7 @@ export class CacheService {
 
     this.cache.set(key, entry);
     this.stats.sets++;
-    
+
     this.logger.trace(`Cache set: ${key}`, {
       key,
       operation: 'set',
@@ -114,10 +118,10 @@ export class CacheService {
 
   async delete(key: string): Promise<boolean> {
     const deleted = this.cache.delete(key);
-    
+
     if (deleted) {
       this.stats.deletes++;
-      
+
       this.logger.trace(`Cache delete: ${key}`, {
         key,
         operation: 'delete',
@@ -130,53 +134,53 @@ export class CacheService {
         result: 'not_found',
       });
     }
-    
+
     return deleted;
   }
 
   async invalidateByTag(tag: string): Promise<number> {
     let invalidatedCount = 0;
-    
+
     for (const [key, entry] of this.cache.entries()) {
       if (entry.tags && entry.tags.includes(tag)) {
         this.cache.delete(key);
         invalidatedCount++;
       }
     }
-    
+
     this.logger.trace(`Cache invalidation by tag: ${tag}`, {
       tag,
       operation: 'invalidate_by_tag',
       invalidatedCount,
     });
-    
+
     return invalidatedCount;
   }
 
   async invalidateByPattern(pattern: string): Promise<number> {
     const regex = new RegExp(pattern);
     let invalidatedCount = 0;
-    
+
     for (const [key] of this.cache.keys()) {
       if (regex.test(key)) {
         this.cache.delete(key);
         invalidatedCount++;
       }
     }
-    
+
     this.logger.trace(`Cache invalidation by pattern: ${pattern}`, {
       pattern,
       operation: 'invalidate_by_pattern',
       invalidatedCount,
     });
-    
+
     return invalidatedCount;
   }
 
   async clear(): Promise<void> {
     const size = this.cache.size;
     this.cache.clear();
-    
+
     this.logger.trace(`Cache cleared`, {
       operation: 'clear',
       clearedEntries: size,
@@ -185,16 +189,19 @@ export class CacheService {
 
   async getMultiple<T>(keys: string[]): Promise<Map<string, T | null>> {
     const results = new Map<string, T | null>();
-    
+
     for (const key of keys) {
       const value = await this.get<T>(key);
       results.set(key, value);
     }
-    
+
     return results;
   }
 
-  async setMultiple<T>(entries: Map<string, T>, options: CacheOptions = {}): Promise<void> {
+  async setMultiple<T>(
+    entries: Map<string, T>,
+    options: CacheOptions = {},
+  ): Promise<void> {
     for (const [key, value] of entries) {
       await this.set(key, value, options);
     }
@@ -202,42 +209,43 @@ export class CacheService {
 
   async exists(key: string): Promise<boolean> {
     const entry = this.cache.get(key);
-    
+
     if (!entry) {
       return false;
     }
-    
+
     // Check if expired
     return Date.now() <= entry.expiresAt;
   }
 
   async getTtl(key: string): Promise<number | null> {
     const entry = this.cache.get(key);
-    
+
     if (!entry) {
       return null;
     }
-    
+
     const remainingTtl = Math.max(0, entry.expiresAt - Date.now());
     return Math.ceil(remainingTtl / 1000);
   }
 
   async getKeysByTag(tag: string): Promise<string[]> {
     const keys: string[] = [];
-    
+
     for (const [key, entry] of this.cache.entries()) {
       if (entry.tags && entry.tags.includes(tag)) {
         keys.push(key);
       }
     }
-    
+
     return keys;
   }
 
   getStats(): CacheStats {
     const totalRequests = this.stats.hits + this.stats.misses;
-    const hitRate = totalRequests > 0 ? (this.stats.hits / totalRequests) * 100 : 0;
-    
+    const hitRate =
+      totalRequests > 0 ? (this.stats.hits / totalRequests) * 100 : 0;
+
     return {
       keys: this.cache.size,
       hits: this.stats.hits,
@@ -250,20 +258,20 @@ export class CacheService {
   async cleanup(): Promise<number> {
     const now = Date.now();
     let cleanedCount = 0;
-    
+
     for (const [key, entry] of this.cache.entries()) {
       if (now > entry.expiresAt) {
         this.cache.delete(key);
         cleanedCount++;
       }
     }
-    
+
     this.logger.trace(`Cache cleanup completed`, {
       operation: 'cleanup',
       cleanedCount,
       remainingEntries: this.cache.size,
     });
-    
+
     return cleanedCount;
   }
 
@@ -273,26 +281,28 @@ export class CacheService {
 
   private calculateMemoryUsage(): number {
     let totalSize = 0;
-    
+
     for (const entry of this.cache.values()) {
       // Rough estimation of memory usage
       totalSize += JSON.stringify(entry).length * 2; // Rough estimation
     }
-    
+
     return totalSize;
   }
 
   // Cache warming utilities
-  async warmup<T>(entries: Map<string, { data: T; options?: CacheOptions }>): Promise<void> {
+  async warmup<T>(
+    entries: Map<string, { data: T; options?: CacheOptions }>,
+  ): Promise<void> {
     this.logger.trace(`Cache warmup started`, {
       operation: 'warmup',
       entryCount: entries.size,
     });
-    
+
     for (const [key, { data, options }] of entries) {
       await this.set(key, data, options);
     }
-    
+
     this.logger.trace(`Cache warmup completed`, {
       operation: 'warmup',
       entryCount: entries.size,
@@ -312,7 +322,7 @@ export class CacheService {
         remainingTtl: Math.max(0, entry.expiresAt - Date.now()),
       },
     }));
-    
+
     return {
       entries,
       stats: this.getStats(),
@@ -327,24 +337,27 @@ export class CacheService {
   }> {
     const stats = this.getStats();
     const issues: string[] = [];
-    
+
     // Check hit rate
     if (stats.hitRate < 50 && stats.hits + stats.misses > 100) {
       issues.push('Low cache hit rate');
     }
-    
+
     // Check memory usage
-    const maxMemory = this.configService.get('cache.maxMemory', 100 * 1024 * 1024); // 100MB default
+    const maxMemory = this.configService.get(
+      'cache.maxMemory',
+      100 * 1024 * 1024,
+    ); // 100MB default
     if (stats.memoryUsage > maxMemory) {
       issues.push('High memory usage');
     }
-    
+
     // Check number of keys
     const maxKeys = this.configService.get('cache.maxKeys', 10000);
     if (stats.keys > maxKeys) {
       issues.push('Too many cache keys');
     }
-    
+
     return {
       healthy: issues.length === 0,
       stats,
@@ -354,50 +367,52 @@ export class CacheService {
 }
 
 // Cache decorator for methods
-export const Cache = (options: CacheOptions = {}) => 
+export const Cache =
+  (options: CacheOptions = {}) =>
   (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
     const originalMethod = descriptor.value;
-    
-    descriptor.value = async function(...args: any[]) {
+
+    descriptor.value = async function (...args: any[]) {
       const cacheService = this.cacheService as CacheService;
       const cacheKey = `${target.constructor.name}:${propertyKey}:${JSON.stringify(args)}`;
-      
+
       // Try to get from cache
       const cachedResult = await cacheService.get(cacheKey);
       if (cachedResult !== null) {
         return cachedResult;
       }
-      
+
       // Execute original method
       const result = await originalMethod.apply(this, args);
-      
+
       // Cache the result
       await cacheService.set(cacheKey, result, options);
-      
+
       return result;
     };
-    
+
     return descriptor;
   };
 
 // Cache invalidation decorator
-export const CacheInvalidate = (tags: string[]) => 
+export const CacheInvalidate =
+  (tags: string[]) =>
   (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
     const originalMethod = descriptor.value;
-    
-    descriptor.value = async function(...args: any[]) {
+
+    descriptor.value = async function (...args: any[]) {
       const cacheService = this.cacheService as CacheService;
-      
+
       // Execute original method
       const result = await originalMethod.apply(this, args);
-      
+
       // Invalidate cache by tags
       for (const tag of tags) {
         await cacheService.invalidateByTag(tag);
       }
-      
+
       return result;
     };
-    
+
     return descriptor;
   };

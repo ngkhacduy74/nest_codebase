@@ -1,9 +1,12 @@
-import { Injectable, NestMiddleware, LoggerService as NestLoggerService } from '@nestjs/common';
+import {
+  Injectable,
+  NestMiddleware,
+  LoggerService as NestLoggerService,
+} from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { AppLoggerService } from '@/common/services/logger.service';
-import { AppError } from '@/common/errors/app.error';
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -31,7 +34,7 @@ export class AuthMiddleware implements NestMiddleware {
   ) {
     this.logger = logger as AppLoggerService;
     this.jwtService = jwtService;
-    
+
     // Paths that don't require authentication
     this.excludedPaths = [
       '/health',
@@ -44,29 +47,36 @@ export class AuthMiddleware implements NestMiddleware {
     ];
   }
 
-  async use(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  async use(
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     const startTime = Date.now();
-    
+
     try {
       // Add correlation IDs
       this.addCorrelationIds(req);
-      
+
       // Skip authentication for excluded paths
       if (this.isExcludedPath(req.path)) {
-        this.logger.http(`Skipping authentication for excluded path: ${req.path}`, {
-          requestId: req.requestId,
-          traceId: req.traceId,
-          path: req.path,
-          method: req.method,
-        });
-        
+        this.logger.http(
+          `Skipping authentication for excluded path: ${req.path}`,
+          {
+            requestId: req.requestId,
+            traceId: req.traceId,
+            path: req.path,
+            method: req.method,
+          },
+        );
+
         req.user = undefined;
         return next();
       }
 
       // Extract token from headers
       const token = this.extractToken(req);
-      
+
       if (!token) {
         this.logger.security('No authentication token provided', {
           requestId: req.requestId,
@@ -76,14 +86,14 @@ export class AuthMiddleware implements NestMiddleware {
           ip: req.ip,
           userAgent: req.headers['user-agent'],
         });
-        
+
         req.user = undefined;
         return next();
       }
 
       // Validate token
       const payload = await this.validateToken(token);
-      
+
       if (!payload) {
         this.logger.security('Invalid authentication token', {
           requestId: req.requestId,
@@ -94,7 +104,7 @@ export class AuthMiddleware implements NestMiddleware {
           userAgent: req.headers['user-agent'],
           token: token.substring(0, 20) + '...', // Don't log full token
         });
-        
+
         req.user = undefined;
         return next();
       }
@@ -110,7 +120,7 @@ export class AuthMiddleware implements NestMiddleware {
           userId: payload.id,
           email: payload.email,
         });
-        
+
         req.user = undefined;
         return next();
       }
@@ -144,7 +154,7 @@ export class AuthMiddleware implements NestMiddleware {
       next();
     } catch (error) {
       const duration = Date.now() - startTime;
-      
+
       this.logger.errorWithException(
         'Authentication middleware error',
         error as Error,
@@ -156,7 +166,7 @@ export class AuthMiddleware implements NestMiddleware {
           method: req.method,
           duration,
           ip: req.ip,
-        }
+        },
       );
 
       req.user = undefined;
@@ -166,18 +176,19 @@ export class AuthMiddleware implements NestMiddleware {
 
   private addCorrelationIds(req: AuthenticatedRequest): void {
     // Extract or generate request ID
-    req.requestId = req.headers['x-request-id'] as string || 
+    req.requestId =
+      (req.headers['x-request-id'] as string) ||
       `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     // Extract or generate trace ID
-    req.traceId = req.headers['x-trace-id'] as string || 
+    req.traceId =
+      (req.headers['x-trace-id'] as string) ||
       `trace_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
   private isExcludedPath(path: string): boolean {
-    return this.excludedPaths.some(excludedPath => 
-      path.startsWith(excludedPath) || 
-      path === excludedPath
+    return this.excludedPaths.some(
+      (excludedPath) => path.startsWith(excludedPath) || path === excludedPath,
     );
   }
 
@@ -220,7 +231,7 @@ export class AuthMiddleware implements NestMiddleware {
         error: error.message,
         token: token.substring(0, 20) + '...', // Don't log full token
       });
-      
+
       return null;
     }
   }
@@ -230,9 +241,12 @@ export class AuthMiddleware implements NestMiddleware {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('X-XSS-Protection', '1; mode=block');
-    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    res.setHeader(
+      'Strict-Transport-Security',
+      'max-age=31536000; includeSubDomains',
+    );
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-    
+
     // Add CORS headers if needed
     const corsOrigin = this.configService.get('app.corsOrigin');
     if (corsOrigin && corsOrigin !== '*') {

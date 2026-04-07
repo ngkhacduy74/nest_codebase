@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { AppLoggerService } from '@/common/services/logger.service';
+import { Provider, Type, DynamicModule, ForwardReference } from '@nestjs/common';
 
 // Mock providers for testing
 export const mockProviders = {
@@ -12,7 +11,7 @@ export const mockProviders = {
     del: jest.fn(),
     reset: jest.fn(),
   },
-  
+
   // Logger Service
   AppLoggerService: {
     recordMetric: jest.fn(),
@@ -40,19 +39,28 @@ export const PERFORMANCE_TOKENS = {
 };
 
 export interface TestModuleOptions {
-  providers?: any[];
-  imports?: any[];
+  providers?: Provider[];
+  imports?: Array<
+    Type<any> | DynamicModule | Promise<DynamicModule> | ForwardReference
+  >;
 }
 
-export async function createTestModule(options: TestModuleOptions = {}): Promise<TestingModule> {
+export async function createTestModule(
+  options: TestModuleOptions = {},
+): Promise<TestingModule> {
   const defaultProviders = [
     ...Object.entries(mockProviders).map(([key, value]) => ({
       provide: key,
       useValue: value,
     })),
-    ...Object.entries(PERFORMANCE_TOKENS).map(([key, value]) => ({
-      provide: value,
-      useValue: { recordMetric: jest.fn() },
+    ...Object.values(PERFORMANCE_TOKENS).map((token) => ({
+      provide: token,
+      useValue: {
+        inc: jest.fn(),
+        dec: jest.fn(),
+        set: jest.fn(),
+        recordMetric: jest.fn(), // Keep for backward compatibility
+      },
     })),
   ];
 
@@ -65,10 +73,12 @@ export async function createTestModule(options: TestModuleOptions = {}): Promise
   return Test.createTestingModule({
     imports: [...defaultImports, ...(options.imports || [])],
     providers: [...defaultProviders, ...(options.providers || [])],
-  });
+  }).compile();
 }
 
-export function createMockRepository<T extends Record<string, any>>(methods: Partial<T> = {}): T {
+export function createMockRepository<T extends Record<string, any>>(
+  methods: Partial<T> = {},
+): T {
   const mock = {
     findById: jest.fn(),
     findByEmail: jest.fn(),
@@ -105,8 +115,8 @@ export function createMockJwtService() {
 export function createMockConfigService() {
   return {
     get: jest.fn((key: string) => {
-      const configMap = {
-        'app': {
+      const configMap: Record<string, any> = {
+        app: {
           nodeEnv: 'development',
           port: 3000,
           name: 'NestJS SaaS',
@@ -116,21 +126,21 @@ export function createMockConfigService() {
           fallbackLanguage: 'en',
           corsOrigin: '*',
         },
-        'auth': {
+        auth: {
           accessTokenSecret: 'test-secret',
           refreshTokenSecret: 'test-refresh-secret',
           accessTokenExpiresIn: 900,
           refreshTokenExpiresIn: 604800,
         },
-        'database': {
+        database: {
           url: 'postgresql://localhost:5432/testdb',
         },
-        'redis': {
+        redis: {
           host: 'localhost',
           port: 6379,
         },
       };
-      
+
       return configMap[key] || null;
     }),
   };

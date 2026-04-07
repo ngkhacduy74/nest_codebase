@@ -16,9 +16,9 @@ import { DeleteUserUseCase } from './application/use-cases/delete-user.use-case'
     // Repository binding - chỉ đổi 1 dòng này để swap DB
     {
       provide: INJECTION_TOKENS.USER_REPOSITORY,
-      useClass: PrismaUserRepository,  // ← ĐỔI DUY NHẤT DÒNG NÀY ĐỂ SWAP DB
+      useClass: PrismaUserRepository, // ← ĐỔI DUY NHẤT DÒNG NÀY ĐỂ SWAP DB
     },
-    
+
     // Use-cases
     CreateUserUseCase,
     GetUserByIdUseCase,

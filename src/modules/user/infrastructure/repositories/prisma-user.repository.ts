@@ -1,9 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@/generated/prisma/client';
 import { UserEntity } from '../../domain/entities/user.entity';
-import { IUserRepository, PaginationOptions, PaginatedResult, CreateUserDto, UpdateUserDto } from '../../domain/repositories/user.repository.interface';
+import {
+  IUserRepository,
+  PaginationOptions,
+  PaginatedResult,
+  CreateUserDto,
+  UpdateUserDto,
+} from '../../domain/repositories/user.repository.interface';
 import { PrismaService } from '@/modules/prisma/prisma.service';
-import { UserAlreadyExistsError, UserNotFoundException } from '@/common/domain/errors/application.error';
+import {
+  UserAlreadyExistsError,
+  UserNotFoundException,
+} from '@/common/domain/errors/application.error';
 import { DatabaseError } from '@/common/domain/errors/infrastructure.error';
 
 @Injectable()
@@ -16,7 +25,7 @@ export class PrismaUserRepository implements IUserRepository {
       email: user.email,
       firstName: user.firstName || '',
       lastName: user.lastName || '',
-      role: user.role as any,
+      role: user.role,
       isActive: user.isActive,
       isEmailVerified: user.isEmailVerified,
       createdAt: user.createdAt,
@@ -48,7 +57,9 @@ export class PrismaUserRepository implements IUserRepository {
     }
   }
 
-  async findAll(options: PaginationOptions): Promise<PaginatedResult<UserEntity>> {
+  async findAll(
+    options: PaginationOptions,
+  ): Promise<PaginatedResult<UserEntity>> {
     try {
       const { page, limit, sortBy = 'createdAt', sortOrder = 'desc' } = options;
       const skip = (page - 1) * limit;

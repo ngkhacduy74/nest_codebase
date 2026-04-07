@@ -55,21 +55,27 @@ export class RedisTokenStore implements ITokenStore, OnModuleDestroy {
     const tokenHash = await argon2.hash(token);
 
     const multi = this.redis.multi();
-    
+
     // Store the hashed token
     multi.setex(key, ttlSeconds, tokenHash);
-    
+
     // Add to session tracker (sorted set by timestamp)
     multi.zadd(sessionsKey, Date.now(), tokenId);
-    
+
     await multi.exec();
 
     // Check and prune old sessions
     const sessionCount = await this.redis.zcard(sessionsKey);
     if (sessionCount > this.MAX_ACTIVE_SESSIONS) {
-      const toRemove = await this.redis.zrange(sessionsKey, 0, sessionCount - this.MAX_ACTIVE_SESSIONS - 1);
+      const toRemove = await this.redis.zrange(
+        sessionsKey,
+        0,
+        sessionCount - this.MAX_ACTIVE_SESSIONS - 1,
+      );
       if (toRemove.length > 0) {
-        this.logger.log(`Pruning ${toRemove.length} old sessions for user ${userId}`);
+        this.logger.log(
+          `Pruning ${toRemove.length} old sessions for user ${userId}`,
+        );
         const pruneMulti = this.redis.multi();
         for (const tid of toRemove) {
           pruneMulti.del(this.refreshKey(userId, tid));
@@ -80,35 +86,41 @@ export class RedisTokenStore implements ITokenStore, OnModuleDestroy {
     }
   }
 
-  async verify(userId: string, tokenId: string, token: string): Promise<boolean> {
+  async verify(
+    userId: string,
+    tokenId: string,
+    token: string,
+  ): Promise<boolean> {
     const key = this.refreshKey(userId, tokenId);
     const tokenHash = await this.redis.get(key);
-    
+
     if (!tokenHash) return false;
-    
+
     return argon2.verify(tokenHash, token);
   }
 
   async revoke(userId: string, tokenId: string): Promise<void> {
     const key = this.refreshKey(userId, tokenId);
     const sessionsKey = this.userSessionsKey(userId);
-    
+
     const multi = this.redis.multi();
     multi.del(key);
     multi.zrem(sessionsKey, tokenId);
-    
+
     const results = await multi.exec();
     const deletedCount = results?.[0]?.[1] as number;
 
     if (deletedCount === 0) {
-      this.logger.warn(`[TOKEN REUSE/REVOKED] Potential reuse or invalid revoke: userId=${userId} tokenId=${tokenId}`);
+      this.logger.warn(
+        `[TOKEN REUSE/REVOKED] Potential reuse or invalid revoke: userId=${userId} tokenId=${tokenId}`,
+      );
     }
   }
 
   async revokeAll(userId: string): Promise<void> {
     const sessionsKey = this.userSessionsKey(userId);
     const tokenIds = await this.redis.zrange(sessionsKey, 0, -1);
-    
+
     if (tokenIds.length > 0) {
       const multi = this.redis.multi();
       for (const tid of tokenIds) {
@@ -117,7 +129,7 @@ export class RedisTokenStore implements ITokenStore, OnModuleDestroy {
       multi.del(sessionsKey);
       await multi.exec();
     }
-    
+
     this.logger.log(`Revoked all sessions for user ${userId}`);
   }
 

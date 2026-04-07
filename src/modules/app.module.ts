@@ -21,7 +21,6 @@ import { HealthModule } from '@modules/health/health.module';
 import { MetricsModule } from '@modules/metrics/metrics.module';
 import { AuthModule } from '@modules/auth/auth.module';
 import { UserModule } from '@modules/user/user.module';
-import { NotificationModule } from '@modules/notification/notification.module';
 
 @Module({
   imports: [
@@ -40,7 +39,7 @@ import { NotificationModule } from '@modules/notification/notification.module';
         const level = config.get('logger.level');
         const redactPaths = config.get('logger.redactPaths') || [];
         const prettyPrint = config.get('logger.prettyPrint');
-        
+
         return {
           pinoHttp: {
             level,
@@ -90,12 +89,12 @@ import { NotificationModule } from '@modules/notification/notification.module';
     BullModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
-        return { 
+        return {
           connection: {
             host: config.get('redis.host'),
             port: config.get('redis.port'),
             password: config.get('redis.password') || undefined,
-          }
+          },
         };
       },
     }),
@@ -107,9 +106,9 @@ import { NotificationModule } from '@modules/notification/notification.module';
       useFactory: async (config: ConfigService) => {
         return {
           store: await redisStore({
-            socket: { 
-              host: config.get('redis.host'), 
-              port: config.get('redis.port') 
+            socket: {
+              host: config.get('redis.host'),
+              port: config.get('redis.port'),
             },
             password: config.get('redis.password') || undefined,
           }),
@@ -133,10 +132,10 @@ import { NotificationModule } from '@modules/notification/notification.module';
   providers: [
     // Apply ThrottlerGuard globally
     { provide: APP_GUARD, useClass: ThrottlerGuard },
-    
+
     // Global exception filter
     { provide: APP_FILTER, useClass: GlobalExceptionFilter },
-    
+
     // Global logging interceptor
     { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
   ],

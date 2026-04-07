@@ -15,7 +15,6 @@ import { ValidationError } from '../domain/errors/validation.error';
 import { DomainError } from '../domain/errors/domain.error';
 import { InfrastructureError } from '../domain/errors/infrastructure.error';
 
-
 interface ErrorResponse {
   success: false;
   statusCode: number;
@@ -41,7 +40,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const reply = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    const { statusCode, code, message, errors, layer } = this.classify(exception);
+    const { statusCode, code, message, errors, layer } =
+      this.classify(exception);
     const isProd = process.env['NODE_ENV'] === 'production';
 
     const body: ErrorResponse = {
@@ -81,7 +81,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
       const response = exception.getResponse();
 
       if (typeof response === 'string') {
-        return { statusCode: status, code: 'HTTP_ERROR', message: response, layer: 'Controller' };
+        return {
+          statusCode: status,
+          code: 'HTTP_ERROR',
+          message: response,
+          layer: 'Controller',
+        };
       }
 
       if (typeof response === 'object' && response !== null) {
@@ -101,7 +106,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     // 2. Application errors (use-case failures) — Application layer
     if (exception instanceof ApplicationError) {
-      const appError = exception as ApplicationError;
+      const appError = exception;
       return {
         statusCode: appError.statusCode,
         code: appError.code,
@@ -112,7 +117,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     // 3. Validation errors — DTO/Value Object validation → 400 Bad Request
     if (exception instanceof ValidationError) {
-      const validationError = exception as ValidationError;
+      const validationError = exception;
       return {
         statusCode: HttpStatus.BAD_REQUEST,
         code: validationError.code,
@@ -123,7 +128,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     // 4. Domain errors — business rule violations → Domain layer
     if (exception instanceof DomainError) {
-      const domainError = exception as DomainError;
+      const domainError = exception;
       return {
         statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
         code: domainError.code,

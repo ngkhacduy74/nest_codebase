@@ -20,7 +20,7 @@
 //           provide: 'StorageProvider',
 //           useFactory: (configService: ConfigService) => {
 //             const storageConfig = configService.get<StorageConfig>(STORAGE_CONFIG_KEY)!;
-            
+
 //             switch (storageConfig.provider) {
 //               case 'aws-s3':
 //                 return new AwsS3Provider(configService);
@@ -52,7 +52,7 @@
 //           provide: 'StorageProvider',
 //           useFactory: (configService: ConfigService) => {
 //             const storageConfig = configService.get<StorageConfig>(STORAGE_CONFIG_KEY)!;
-            
+
 //             switch (storageConfig.provider) {
 //               case 'aws-s3':
 //                 return new AwsS3Provider(configService);

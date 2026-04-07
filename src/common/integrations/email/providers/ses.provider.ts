@@ -11,9 +11,9 @@
 
 //   constructor(@Inject(ConfigService) private readonly configService: ConfigService) {
 //     super('AWS SES');
-    
+
 //     const emailConfig = this.configService.get<EmailConfig>(EMAIL_CONFIG_KEY)!;
-    
+
 //     this.sesClient = new SES({
 //       region: emailConfig.ses!.region,
 //       credentials: {
@@ -26,9 +26,9 @@
 //   async send(message: EmailMessage): Promise<EmailSendResult> {
 //     try {
 //       this.logOperation('send', { to: message.to, subject: message.subject });
-      
+
 //       const emailConfig = this.configService.get<EmailConfig>(EMAIL_CONFIG_KEY)!;
-      
+
 //       const command = new SendEmailCommand({
 //         Source: message.from || `${emailConfig.ses!.fromName} <${emailConfig.ses!.fromEmail}>`,
 //         Destination: {
@@ -65,9 +65,9 @@
 //   async sendTemplate(message: EmailMessage): Promise<EmailSendResult> {
 //     try {
 //       this.logOperation('sendTemplate', { to: message.to, templateId: message.template?.templateId });
-      
+
 //       const emailConfig = this.configService.get<EmailConfig>(EMAIL_CONFIG_KEY)!;
-      
+
 //       const command = new SendTemplatedEmailCommand({
 //         Source: message.from || `${emailConfig.ses!.fromName} <${emailConfig.ses!.fromEmail}>`,
 //         Destination: {
@@ -101,7 +101,7 @@
 //   async validateConfig(): Promise<boolean> {
 //     try {
 //       const emailConfig = this.configService.get<EmailConfig>(EMAIL_CONFIG_KEY)!;
-      
+
 //       if (!emailConfig.ses?.accessKeyId || !emailConfig.ses?.secretAccessKey) {
 //         return false;
 //       }

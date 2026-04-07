@@ -29,9 +29,9 @@
 
 //   constructor(@Inject(ConfigService) private readonly configService: ConfigService) {
 //     super('AWS S3');
-    
+
 //     const storageConfig = this.configService.get<StorageConfig>(STORAGE_CONFIG_KEY)!;
-    
+
 //     this.s3Client = new S3Client({
 //       region: storageConfig.awsS3!.region,
 //       credentials: {
@@ -41,14 +41,14 @@
 //       endpoint: storageConfig.awsS3!.endpoint,
 //       forcePathStyle: storageConfig.awsS3!.forcePathStyle || false,
 //     });
-    
+
 //     this.bucket = storageConfig.awsS3!.bucket;
 //   }
 
 //   async upload(key: string, buffer: Buffer | Readable, options?: StorageUploadOptions): Promise<StorageUploadResult> {
 //     try {
 //       this.logOperation('upload', { key, size: buffer instanceof Buffer ? buffer.length : 'stream' });
-      
+
 //       const command = new PutObjectCommand({
 //         Bucket: this.bucket,
 //         Key: key,
@@ -81,7 +81,7 @@
 //   async download(key: string): Promise<StorageDownloadResult> {
 //     try {
 //       this.logOperation('download', { key });
-      
+
 //       const command = new GetObjectCommand({
 //         Bucket: this.bucket,
 //         Key: key,
@@ -109,7 +109,7 @@
 //   async delete(key: string): Promise<StorageDeleteResult> {
 //     try {
 //       this.logOperation('delete', { key });
-      
+
 //       const command = new DeleteObjectCommand({
 //         Bucket: this.bucket,
 //         Key: key,
@@ -133,7 +133,7 @@
 //   async list(prefix?: string, maxKeys?: number): Promise<StorageListResult> {
 //     try {
 //       this.logOperation('list', { prefix, maxKeys });
-      
+
 //       const command = new ListObjectsV2Command({
 //         Bucket: this.bucket,
 //         Prefix: prefix,
@@ -164,16 +164,16 @@
 //   async getSignedUrl(key: string, expiresIn: number): Promise<string> {
 //     try {
 //       this.logOperation('getSignedUrl', { key, expiresIn });
-      
+
 //       const command = new GetObjectCommand({
 //         Bucket: this.bucket,
 //         Key: key,
 //       });
 
 //       const url = await getSignedUrl(this.s3Client, command, { expiresIn });
-      
+
 //       this.logOperation('getSignedUrl success', { key });
-      
+
 //       return url;
 //     } catch (error) {
 //       this.logError('getSignedUrl', error);
@@ -227,7 +227,7 @@
 //   async validateConfig(): Promise<boolean> {
 //     try {
 //       const storageConfig = this.configService.get<StorageConfig>(STORAGE_CONFIG_KEY)!;
-      
+
 //       if (!storageConfig.awsS3?.accessKeyId || !storageConfig.awsS3?.secretAccessKey || !storageConfig.awsS3?.bucket) {
 //         return false;
 //       }

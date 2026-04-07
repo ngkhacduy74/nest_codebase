@@ -22,7 +22,12 @@ export class RequiredFieldError extends ValidationError {
 
 export class InvalidFormatError extends ValidationError {
   constructor(field: string, format: string, value?: unknown) {
-    super(`Field "${field}" must be a valid ${format}`, 'INVALID_FORMAT', field, value);
+    super(
+      `Field "${field}" must be a valid ${format}`,
+      'INVALID_FORMAT',
+      field,
+      value,
+    );
   }
 }
 
@@ -36,20 +41,29 @@ export class InvalidLengthError extends ValidationError {
     } else if (max) {
       message += ` must be at most ${max} characters`;
     }
-    
+
     super(message, 'INVALID_LENGTH', field, value);
   }
 }
 
 export class InvalidEmailFormatError extends ValidationError {
   constructor(email: string) {
-    super(`Invalid email format: "${email}"`, 'INVALID_EMAIL_FORMAT', 'email', email);
+    super(
+      `Invalid email format: "${email}"`,
+      'INVALID_EMAIL_FORMAT',
+      'email',
+      email,
+    );
   }
 }
 
 export class InvalidPasswordError extends ValidationError {
   constructor(reason: string) {
-    super(`Password validation failed: ${reason}`, 'INVALID_PASSWORD', 'password');
+    super(
+      `Password validation failed: ${reason}`,
+      'INVALID_PASSWORD',
+      'password',
+    );
   }
 }
 
@@ -65,7 +79,7 @@ export class InvalidEnumValueError extends ValidationError {
       `Field "${field}" must be one of: ${enumValues.join(', ')}`,
       'INVALID_ENUM_VALUE',
       field,
-      value
+      value,
     );
   }
 }

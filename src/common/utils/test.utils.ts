@@ -37,11 +37,11 @@ export class DatabaseTestHelper implements TestDatabase {
 
   async reset(): Promise<void> {
     await this.logger.trace('Resetting test database');
-    
+
     // Delete all data in correct order to respect foreign keys
     await this.prisma.product.deleteMany();
     await this.prisma.user.deleteMany();
-    
+
     this.logger.trace('Test database reset completed');
   }
 
@@ -53,7 +53,7 @@ export class DatabaseTestHelper implements TestDatabase {
   async clear(table?: string): Promise<void> {
     if (table) {
       await this.logger.trace(`Clearing table: ${table}`);
-      
+
       switch (table.toLowerCase()) {
         case 'users':
           await this.prisma.user.deleteMany();
@@ -71,7 +71,7 @@ export class DatabaseTestHelper implements TestDatabase {
 
   async seed(data?: any): Promise<void> {
     await this.logger.trace('Seeding test database');
-    
+
     if (data?.users) {
       await this.prisma.user.createMany({
         data: data.users,
@@ -99,7 +99,7 @@ export class DatabaseTestHelper implements TestDatabase {
       throw new Error(`Unknown entity: ${entity}`);
     }
 
-    const result = await (model as any).createMany({
+    const result = await model.createMany({
       data,
     });
 
@@ -112,7 +112,7 @@ export class DatabaseTestHelper implements TestDatabase {
       throw new Error(`Unknown entity: ${entity}`);
     }
 
-    return await (model as any).count();
+    return await model.count();
   }
 
   private getModel(entity: string): any {
@@ -127,13 +127,19 @@ export class DatabaseTestHelper implements TestDatabase {
   }
 
   // Assertions for testing
-  assertExists<T>(data: T | null | undefined, message?: string): asserts data is T {
+  assertExists<T>(
+    data: T | null | undefined,
+    message?: string,
+  ): asserts data is T {
     if (data === null || data === undefined) {
       throw new Error(message || `Expected data to exist, but got ${data}`);
     }
   }
 
-  assertNotExists<T>(data: T | null | undefined, message?: string): asserts data is null | undefined {
+  assertNotExists<T>(
+    data: T | null | undefined,
+    message?: string,
+  ): asserts data is null | undefined {
     if (data !== null && data !== undefined) {
       throw new Error(message || `Expected data to not exist, but got ${data}`);
     }
@@ -151,15 +157,28 @@ export class DatabaseTestHelper implements TestDatabase {
     }
   }
 
-  assertContains<T extends string>(actual: T, expected: string, message?: string): void {
+  assertContains<T extends string>(
+    actual: T,
+    expected: string,
+    message?: string,
+  ): void {
     if (!actual.includes(expected)) {
-      throw new Error(message || `Expected "${actual}" to contain "${expected}"`);
+      throw new Error(
+        message || `Expected "${actual}" to contain "${expected}"`,
+      );
     }
   }
 
-  assertLength<T extends any[]>(actual: T, expectedLength: number, message?: string): void {
+  assertLength<T extends any[]>(
+    actual: T,
+    expectedLength: number,
+    message?: string,
+  ): void {
     if (actual.length !== expectedLength) {
-      throw new Error(message || `Expected length ${expectedLength}, but got ${actual.length}`);
+      throw new Error(
+        message ||
+          `Expected length ${expectedLength}, but got ${actual.length}`,
+      );
     }
   }
 
@@ -195,7 +214,10 @@ export class DatabaseTestHelper implements TestDatabase {
   }
 
   randomUUID(): string {
-    return Math.random().toString(36).substr(2, 9) + Math.random().toString(36).substr(2, 9);
+    return (
+      Math.random().toString(36).substr(2, 9) +
+      Math.random().toString(36).substr(2, 9)
+    );
   }
 }
 
@@ -213,14 +235,19 @@ export class TestTimer {
   assertMaxTime(maxMs: number, message?: string): void {
     const elapsed = this.elapsed();
     if (elapsed > maxMs) {
-      throw new Error(message || `Test took too long: ${elapsed}ms (max: ${maxMs}ms)`);
+      throw new Error(
+        message || `Test took too long: ${elapsed}ms (max: ${maxMs}ms)`,
+      );
     }
   }
 }
 
 // Global test setup utilities
 export class TestSetup {
-  static async setupTestDatabase(prisma: PrismaService, logger: AppLoggerService): Promise<TestDatabase> {
+  static async setupTestDatabase(
+    prisma: PrismaService,
+    logger: AppLoggerService,
+  ): Promise<TestDatabase> {
     const helper = new DatabaseTestHelper(prisma, logger);
     await helper.reset();
     return helper;

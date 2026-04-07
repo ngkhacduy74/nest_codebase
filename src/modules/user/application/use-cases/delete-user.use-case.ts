@@ -11,7 +11,8 @@ export class DeleteUserUseCase {
   private readonly logger = new Logger(DeleteUserUseCase.name);
 
   constructor(
-    @Inject(INJECTION_TOKENS.USER_REPOSITORY) private readonly userRepo: IUserRepository,
+    @Inject(INJECTION_TOKENS.USER_REPOSITORY)
+    private readonly userRepo: IUserRepository,
     @Inject(CACHE_MANAGER) private readonly cache: Cache,
     private readonly eventEmitter: EventEmitter2,
   ) {}

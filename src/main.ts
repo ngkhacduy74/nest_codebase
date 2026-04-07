@@ -1,7 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import { Logger, VersioningType, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
+import {
+  FastifyAdapter,
+  NestFastifyApplication,
+} from '@nestjs/platform-fastify';
 import { AppModule } from './modules/app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { AppClsStore } from './modules/cls/cls.module';
@@ -26,25 +29,34 @@ async function bootstrap(): Promise<void> {
   const port = configService.get<number>('app.port') || 3000;
   const apiPrefix = configService.get<string>('app.apiPrefix') || 'api/v1';
   const nodeEnv = configService.get<string>('app.nodeEnv') || 'development';
-  const shutdownTimeout = configService.get<number>('app.shutdownTimeout') || 30000;
+  const shutdownTimeout =
+    configService.get<number>('app.shutdownTimeout') || 30000;
   const apiVersion = configService.get<string>('app.apiVersion') || '1';
 
-  const corsOrigins = configService.get<string[]>('security.cors.allowedOrigins') || ['*'];
-  const corsMethods = configService.get<string[]>('security.cors.allowedMethods') || ['GET'];
-  const corsHeaders = configService.get<string[]>('security.cors.allowedHeaders') || [];
-  const corsCredentials = configService.get<boolean>('security.cors.credentials') || false;
+  const corsOrigins = configService.get<string[]>(
+    'security.cors.allowedOrigins',
+  ) || ['*'];
+  const corsMethods = configService.get<string[]>(
+    'security.cors.allowedMethods',
+  ) || ['GET'];
+  const corsHeaders =
+    configService.get<string[]>('security.cors.allowedHeaders') || [];
+  const corsCredentials =
+    configService.get<boolean>('security.cors.credentials') || false;
   const corsMaxAge = configService.get<number>('security.cors.maxAge') || 86400;
 
-  const helmetCsp = configService.get<boolean>('security.helmet.contentSecurityPolicy') !== false;
-  const helmetHsts = configService.get<boolean>('security.helmet.hsts') !== false;
-  const helmetNoSniff = configService.get<boolean>('security.helmet.noSniff') !== false;
+  const helmetCsp =
+    configService.get<boolean>('security.helmet.contentSecurityPolicy') !==
+    false;
+  const helmetHsts =
+    configService.get<boolean>('security.helmet.hsts') !== false;
+  const helmetNoSniff =
+    configService.get<boolean>('security.helmet.noSniff') !== false;
 
   // ── Fastify Helmet Plugin ─────────────────────────────────────────────────────
   await app.register(import('@fastify/helmet'), {
     contentSecurityPolicy: helmetCsp,
-    hsts: helmetHsts
-      ? { maxAge: 31536000, includeSubDomains: true }
-      : false,
+    hsts: helmetHsts ? { maxAge: 31536000, includeSubDomains: true } : false,
     noSniff: helmetNoSniff,
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
     permittedCrossDomainPolicies: { permittedPolicies: 'none' },
@@ -89,7 +101,7 @@ async function bootstrap(): Promise<void> {
   });
 
   app.enableVersioning({ type: VersioningType.URI });
-  
+
   // ── Global Pipes ────────────────────────────────────────────────────────────
   app.useGlobalPipes(
     new ValidationPipe({
@@ -121,9 +133,7 @@ async function bootstrap(): Promise<void> {
       SwaggerModule.createDocument(app, doc),
       { swaggerOptions: { persistAuthorization: true } },
     );
-    logger.log(
-      `📚 Swagger: http://localhost:${port}/${apiPrefix}/docs`,
-    );
+    logger.log(`📚 Swagger: http://localhost:${port}/${apiPrefix}/docs`);
   }
 
   // ── Graceful shutdown ────────────────────────────────────────────────────────
@@ -140,9 +150,7 @@ async function bootstrap(): Promise<void> {
   });
 
   await app.listen({ port, host: '0.0.0.0' });
-  logger.log(
-    `🚀 Running: http://localhost:${port}/${apiPrefix}`,
-  );
+  logger.log(`🚀 Running: http://localhost:${port}/${apiPrefix}`);
   logger.log(`🌍 Env: ${nodeEnv}`);
 }
 

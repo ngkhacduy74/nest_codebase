@@ -11,11 +11,7 @@ import { NOTIFICATION_QUEUE_NAME } from './notification.constants';
       name: NOTIFICATION_QUEUE_NAME,
     }),
   ],
-  providers: [
-    NotificationListener,
-    EmailProcessor,
-    EmailService,
-  ],
+  providers: [NotificationListener, EmailProcessor, EmailService],
   exports: [EmailService],
 })
 export class NotificationModule {}

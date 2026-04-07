@@ -1,4 +1,4 @@
-import { Injectable, CanActivate, ExecutionContext, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { AppLoggerService } from '@/common/services/logger.service';
@@ -52,16 +52,16 @@ export class RateLimitGuard implements CanActivate {
     try {
       // Get rate limit options from metadata
       const options = this.getRateLimitOptions(context);
-      
+
       // Generate key for rate limiting
       const key = this.generateKey(request, options);
-      
+
       // Check rate limit
       const rateLimitInfo = await this.store.increment(key, options);
-      
+
       // Add rate limit headers
       this.addRateLimitHeaders(response, rateLimitInfo);
-      
+
       // Check if rate limit exceeded
       if (rateLimitInfo.totalHits > options.max) {
         this.logger.security('Rate limit exceeded', {
@@ -75,16 +75,12 @@ export class RateLimitGuard implements CanActivate {
           userAgent: request.headers['user-agent'],
         });
 
-        throw AppError.rateLimitExceeded(
-          options.max,
-          options.windowMs,
-          {
-            key,
-            totalHits: rateLimitInfo.totalHits,
-            remainingHits: rateLimitInfo.remainingHits,
-            resetTime: rateLimitInfo.resetTime,
-          }
-        );
+        throw AppError.rateLimitExceeded(options.max, options.windowMs, {
+          key,
+          totalHits: rateLimitInfo.totalHits,
+          remainingHits: rateLimitInfo.remainingHits,
+          resetTime: rateLimitInfo.resetTime,
+        });
       }
 
       // Log rate limit info
@@ -106,7 +102,7 @@ export class RateLimitGuard implements CanActivate {
           path: request.path,
           method: request.method,
           ip: request.ip,
-        }
+        },
       );
 
       throw error;
@@ -114,8 +110,11 @@ export class RateLimitGuard implements CanActivate {
   }
 
   private getRateLimitOptions(context: ExecutionContext): RateLimitOptions {
-    const customOptions = this.reflector.get<Partial<RateLimitOptions>>('rateLimit', {});
-    
+    const customOptions = this.reflector.get<Partial<RateLimitOptions>>(
+      'rateLimit',
+      {},
+    );
+
     return {
       ...this.defaultOptions,
       ...customOptions,
@@ -125,13 +124,16 @@ export class RateLimitGuard implements CanActivate {
   private generateKey(request: any, options: RateLimitOptions): string {
     // Get user ID if authenticated
     const userId = request.user?.id;
-    
+
     // Get IP address
-    const ip = request.ip || request.connection?.remoteAddress || request.socket?.remoteAddress;
-    
+    const ip =
+      request.ip ||
+      request.connection?.remoteAddress ||
+      request.socket?.remoteAddress;
+
     // Get endpoint
     const endpoint = request.path;
-    
+
     // Generate key based on strategy
     if (userId) {
       // Rate limit per user
@@ -145,10 +147,19 @@ export class RateLimitGuard implements CanActivate {
     }
   }
 
-  private addRateLimitHeaders(response: any, rateLimitInfo: RateLimitInfo): void {
+  private addRateLimitHeaders(
+    response: any,
+    rateLimitInfo: RateLimitInfo,
+  ): void {
     response.setHeader('X-RateLimit-Limit', rateLimitInfo.windowMs);
-    response.setHeader('X-RateLimit-Remaining', Math.max(0, rateLimitInfo.remainingHits));
-    response.setHeader('X-RateLimit-Reset', rateLimitInfo.resetTime.toISOString());
+    response.setHeader(
+      'X-RateLimit-Remaining',
+      Math.max(0, rateLimitInfo.remainingHits),
+    );
+    response.setHeader(
+      'X-RateLimit-Reset',
+      rateLimitInfo.resetTime.toISOString(),
+    );
   }
 }
 
@@ -159,18 +170,24 @@ export class MemoryRateLimitStore implements RateLimitStore {
 
   constructor(private readonly logger: AppLoggerService) {
     // Cleanup expired entries every 5 minutes
-    this.cleanupInterval = setInterval(() => {
-      this.cleanup();
-    }, 5 * 60 * 1000);
+    this.cleanupInterval = setInterval(
+      () => {
+        this.cleanup();
+      },
+      5 * 60 * 1000,
+    );
   }
 
-  async increment(key: string, options: RateLimitOptions): Promise<RateLimitInfo> {
+  async increment(
+    key: string,
+    options: RateLimitOptions,
+  ): Promise<RateLimitInfo> {
     const now = Date.now();
     const resetTime = new Date(now + options.windowMs);
-    
+
     // Get existing entry
     let entry = this.store.get(key);
-    
+
     if (!entry) {
       // Create new entry
       entry = {
@@ -195,16 +212,16 @@ export class MemoryRateLimitStore implements RateLimitStore {
         entry.remainingHits = Math.max(0, options.max - entry.totalHits);
       }
     }
-    
+
     // Update store
     this.store.set(key, entry);
-    
+
     return entry;
   }
 
   async reset(key: string): Promise<void> {
     this.store.delete(key);
-    
+
     this.logger.http(`Rate limit reset for key: ${key}`, {
       key,
     });
@@ -213,14 +230,14 @@ export class MemoryRateLimitStore implements RateLimitStore {
   async cleanup(): Promise<void> {
     const now = Date.now();
     let cleanedCount = 0;
-    
+
     for (const [key, entry] of this.store.entries()) {
       if (now > entry.resetTime.getTime()) {
         this.store.delete(key);
         cleanedCount++;
       }
     }
-    
+
     if (cleanedCount > 0) {
       this.logger.http(`Rate limit cleanup completed`, {
         cleanedCount,
@@ -233,15 +250,16 @@ export class MemoryRateLimitStore implements RateLimitStore {
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval);
     }
-    
+
     this.store.clear();
-    
+
     this.logger.http('Rate limit store destroyed');
   }
 }
 
 // Decorator for setting rate limit options
-export const RateLimit = (options: Partial<RateLimitOptions>) => 
+export const RateLimit =
+  (options: Partial<RateLimitOptions>) =>
   (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
     Reflect.defineMetadata('rateLimit', options, descriptor.value);
     return descriptor;
@@ -254,18 +272,21 @@ export class RedisRateLimitStore implements RateLimitStore {
     private readonly logger: AppLoggerService,
   ) {}
 
-  async increment(key: string, options: RateLimitOptions): Promise<RateLimitInfo> {
+  async increment(
+    key: string,
+    options: RateLimitOptions,
+  ): Promise<RateLimitInfo> {
     const now = Date.now();
     const resetTime = now + options.windowMs;
-    
+
     // Use Redis INCR with expiration
     const pipeline = this.redis.pipeline();
     pipeline.incr(key);
     pipeline.expire(key, Math.ceil(options.windowMs / 1000));
-    
+
     const results = await pipeline.exec();
     const totalHits = results[0][1] as number;
-    
+
     return {
       totalHits,
       remainingHits: Math.max(0, options.max - totalHits),
@@ -276,7 +297,7 @@ export class RedisRateLimitStore implements RateLimitStore {
 
   async reset(key: string): Promise<void> {
     await this.redis.del(key);
-    
+
     this.logger.http(`Rate limit reset for key: ${key}`, {
       key,
     });

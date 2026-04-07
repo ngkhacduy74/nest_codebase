@@ -1,4 +1,4 @@
-import { Injectable, LoggerService as NestLoggerService } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppLoggerService } from '@/common/services/logger.service';
 
@@ -55,7 +55,12 @@ export class PerformanceService {
   }
 
   // Metric recording
-  recordMetric(name: string, value: number, unit: string, tags?: Record<string, string>): void {
+  recordMetric(
+    name: string,
+    value: number,
+    unit: string,
+    tags?: Record<string, string>,
+  ): void {
     const metric: PerformanceMetric = {
       name,
       value,
@@ -65,7 +70,7 @@ export class PerformanceService {
     };
 
     this.metrics.push(metric);
-    
+
     // Keep only last 10000 metrics to prevent memory issues
     if (this.metrics.length > 10000) {
       this.metrics.splice(0, this.metrics.length - 10000);
@@ -82,26 +87,48 @@ export class PerformanceService {
     this.checkThresholds(metric);
   }
 
-  recordDuration(name: string, duration: number, tags?: Record<string, string>): void {
+  recordDuration(
+    name: string,
+    duration: number,
+    tags?: Record<string, string>,
+  ): void {
     this.recordMetric(name, duration, 'ms', tags);
   }
 
-  recordMemoryUsage(name: string, memoryUsage: number, tags?: Record<string, string>): void {
+  recordMemoryUsage(
+    name: string,
+    memoryUsage: number,
+    tags?: Record<string, string>,
+  ): void {
     this.recordMetric(name, memoryUsage, 'bytes', tags);
   }
 
-  recordCpuUsage(name: string, cpuUsage: number, tags?: Record<string, string>): void {
+  recordCpuUsage(
+    name: string,
+    cpuUsage: number,
+    tags?: Record<string, string>,
+  ): void {
     this.recordMetric(name, cpuUsage, 'percent', tags);
   }
 
-  recordDatabaseQuery(name: string, duration: number, rowCount?: number, tags?: Record<string, string>): void {
+  recordDatabaseQuery(
+    name: string,
+    duration: number,
+    rowCount?: number,
+    tags?: Record<string, string>,
+  ): void {
     this.recordMetric(name, duration, 'ms', {
       ...tags,
       rowCount: rowCount?.toString(),
     });
   }
 
-  recordApiResponse(name: string, duration: number, statusCode: number, tags?: Record<string, string>): void {
+  recordApiResponse(
+    name: string,
+    duration: number,
+    statusCode: number,
+    tags?: Record<string, string>,
+  ): void {
     this.recordMetric(name, duration, 'ms', {
       ...tags,
       statusCode: statusCode.toString(),
@@ -112,12 +139,12 @@ export class PerformanceService {
   startTimer(name: string): () => void {
     const startTime = Date.now();
     this.timers.set(name, startTime);
-    
+
     return () => {
       const endTime = Date.now();
       const duration = endTime - startTime;
       this.timers.delete(name);
-      
+
       this.recordDuration(name, duration);
     };
   }
@@ -127,11 +154,11 @@ export class PerformanceService {
     if (!startTime) {
       return null;
     }
-    
+
     const endTime = Date.now();
     const duration = endTime - startTime;
     this.timers.delete(name);
-    
+
     this.recordDuration(name, duration);
     return duration;
   }
@@ -139,7 +166,7 @@ export class PerformanceService {
   // Threshold management
   addThreshold(threshold: PerformanceThreshold): void {
     this.thresholds.set(threshold.name, threshold);
-    
+
     this.logger.trace(`Performance threshold added: ${threshold.name}`, {
       threshold: threshold.name,
       warning: threshold.warning,
@@ -150,13 +177,13 @@ export class PerformanceService {
 
   removeThreshold(name: string): boolean {
     const removed = this.thresholds.delete(name);
-    
+
     if (removed) {
       this.logger.trace(`Performance threshold removed: ${name}`, {
         threshold: name,
       });
     }
-    
+
     return removed;
   }
 
@@ -164,36 +191,43 @@ export class PerformanceService {
   getActiveAlerts(): PerformanceAlert[] {
     const now = Date.now();
     const alertTtl = 5 * 60 * 1000; // 5 minutes
-    
-    return this.alerts.filter(alert => 
-      (now - alert.timestamp) < alertTtl
-    );
+
+    return this.alerts.filter((alert) => now - alert.timestamp < alertTtl);
   }
 
   clearAlerts(): void {
     const clearedCount = this.alerts.length;
     this.alerts.splice(0, this.alerts.length);
-    
+
     this.logger.trace(`Performance alerts cleared`, {
       clearedCount,
     });
   }
 
   // Reporting
-  generateReport(timeRange?: { start: number; end: number }): PerformanceReport {
+  generateReport(timeRange?: {
+    start: number;
+    end: number;
+  }): PerformanceReport {
     let filteredMetrics = this.metrics;
-    
+
     if (timeRange) {
-      filteredMetrics = this.metrics.filter(metric =>
-        metric.timestamp >= timeRange.start && metric.timestamp <= timeRange.end
+      filteredMetrics = this.metrics.filter(
+        (metric) =>
+          metric.timestamp >= timeRange.start &&
+          metric.timestamp <= timeRange.end,
       );
     }
 
     const thresholdArray = Array.from(this.thresholds.values());
     const activeAlerts = this.getActiveAlerts();
-    
-    const warnings = activeAlerts.filter(alert => alert.severity === 'warning').length;
-    const criticals = activeAlerts.filter(alert => alert.severity === 'critical').length;
+
+    const warnings = activeAlerts.filter(
+      (alert) => alert.severity === 'warning',
+    ).length;
+    const criticals = activeAlerts.filter(
+      (alert) => alert.severity === 'critical',
+    ).length;
 
     return {
       metrics: filteredMetrics,
@@ -208,66 +242,86 @@ export class PerformanceService {
     };
   }
 
-  getMetricsByName(name: string, timeRange?: { start: number; end: number }): PerformanceMetric[] {
-    let filteredMetrics = this.metrics.filter(metric => metric.name === name);
-    
+  getMetricsByName(
+    name: string,
+    timeRange?: { start: number; end: number },
+  ): PerformanceMetric[] {
+    let filteredMetrics = this.metrics.filter((metric) => metric.name === name);
+
     if (timeRange) {
-      filteredMetrics = filteredMetrics.filter(metric =>
-        metric.timestamp >= timeRange.start && metric.timestamp <= timeRange.end
+      filteredMetrics = filteredMetrics.filter(
+        (metric) =>
+          metric.timestamp >= timeRange.start &&
+          metric.timestamp <= timeRange.end,
       );
     }
-    
+
     return filteredMetrics;
   }
 
   getMetricsByTag(tagKey: string, tagValue: string): PerformanceMetric[] {
-    return this.metrics.filter(metric =>
-      metric.tags && metric.tags[tagKey] === tagValue
+    return this.metrics.filter(
+      (metric) => metric.tags && metric.tags[tagKey] === tagValue,
     );
   }
 
   // Statistics
-  getAverageMetric(name: string, timeRange?: { start: number; end: number }): number | null {
+  getAverageMetric(
+    name: string,
+    timeRange?: { start: number; end: number },
+  ): number | null {
     const metrics = this.getMetricsByName(name, timeRange);
-    
+
     if (metrics.length === 0) {
       return null;
     }
-    
+
     const sum = metrics.reduce((acc, metric) => acc + metric.value, 0);
     return sum / metrics.length;
   }
 
-  getMaxMetric(name: string, timeRange?: { start: number; end: number }): number | null {
+  getMaxMetric(
+    name: string,
+    timeRange?: { start: number; end: number },
+  ): number | null {
     const metrics = this.getMetricsByName(name, timeRange);
-    
+
     if (metrics.length === 0) {
       return null;
     }
-    
-    return Math.max(...metrics.map(metric => metric.value));
+
+    return Math.max(...metrics.map((metric) => metric.value));
   }
 
-  getMinMetric(name: string, timeRange?: { start: number; end: number }): number | null {
+  getMinMetric(
+    name: string,
+    timeRange?: { start: number; end: number },
+  ): number | null {
     const metrics = this.getMetricsByName(name, timeRange);
-    
+
     if (metrics.length === 0) {
       return null;
     }
-    
-    return Math.min(...metrics.map(metric => metric.value));
+
+    return Math.min(...metrics.map((metric) => metric.value));
   }
 
-  getPercentileMetric(name: string, percentile: number, timeRange?: { start: number; end: number }): number | null {
+  getPercentileMetric(
+    name: string,
+    percentile: number,
+    timeRange?: { start: number; end: number },
+  ): number | null {
     const metrics = this.getMetricsByName(name, timeRange);
-    
+
     if (metrics.length === 0) {
       return null;
     }
-    
-    const sortedMetrics = metrics.map(metric => metric.value).sort((a, b) => a - b);
+
+    const sortedMetrics = metrics
+      .map((metric) => metric.value)
+      .sort((a, b) => a - b);
     const index = Math.ceil((percentile / 100) * sortedMetrics.length) - 1;
-    
+
     return sortedMetrics[Math.max(0, index)];
   }
 
@@ -283,24 +337,26 @@ export class PerformanceService {
   }> {
     const issues: string[] = [];
     const activeAlerts = this.getActiveAlerts();
-    
+
     // Check for too many critical alerts
-    const criticalAlerts = activeAlerts.filter(alert => alert.severity === 'critical');
+    const criticalAlerts = activeAlerts.filter(
+      (alert) => alert.severity === 'critical',
+    );
     if (criticalAlerts.length > 5) {
       issues.push('Too many critical performance alerts');
     }
-    
+
     // Check for old metrics (stale data)
     const now = Date.now();
     const staleThreshold = 10 * 60 * 1000; // 10 minutes
-    const staleMetrics = this.metrics.filter(metric => 
-      (now - metric.timestamp) > staleThreshold
+    const staleMetrics = this.metrics.filter(
+      (metric) => now - metric.timestamp > staleThreshold,
     );
-    
+
     if (staleMetrics.length > this.metrics.length * 0.8) {
       issues.push('Most performance metrics are stale');
     }
-    
+
     return {
       healthy: issues.length === 0,
       issues,
@@ -313,23 +369,26 @@ export class PerformanceService {
   }
 
   // Cleanup
-  cleanup(maxAge: number = 24 * 60 * 60 * 1000): number { // 24 hours default
+  cleanup(maxAge: number = 24 * 60 * 60 * 1000): number {
+    // 24 hours default
     const cutoff = Date.now() - maxAge;
     const initialLength = this.metrics.length;
-    
-    this.metrics.splice(0, this.metrics.length, 
-      ...this.metrics.filter(metric => metric.timestamp > cutoff)
+
+    this.metrics.splice(
+      0,
+      this.metrics.length,
+      ...this.metrics.filter((metric) => metric.timestamp > cutoff),
     );
-    
+
     const cleanedCount = initialLength - this.metrics.length;
-    
+
     this.logger.trace(`Performance metrics cleanup completed`, {
       operation: 'cleanup',
       cleanedCount,
       remainingMetrics: this.metrics.length,
       maxAge,
     });
-    
+
     return cleanedCount;
   }
 
@@ -382,7 +441,7 @@ export class PerformanceService {
 
   private checkThresholds(metric: PerformanceMetric): void {
     const threshold = this.thresholds.get(metric.name);
-    
+
     if (!threshold) {
       return;
     }
@@ -431,7 +490,7 @@ export class PerformanceService {
       };
 
       this.alerts.push(alert);
-      
+
       // Keep only last 1000 alerts
       if (this.alerts.length > 1000) {
         this.alerts.splice(0, this.alerts.length - 1000);
@@ -441,7 +500,8 @@ export class PerformanceService {
         alert: alert.message,
         metric: metric.name,
         value: metric.value,
-        threshold: severity === 'critical' ? threshold.critical : threshold.warning,
+        threshold:
+          severity === 'critical' ? threshold.critical : threshold.warning,
         unit: threshold.unit,
         tags: metric.tags,
       });
@@ -451,25 +511,29 @@ export class PerformanceService {
   private calculateMemoryUsage(): number {
     // Rough estimation of memory usage
     let totalSize = 0;
-    
+
     totalSize += JSON.stringify(this.metrics).length * 2;
-    totalSize += JSON.stringify(Array.from(this.thresholds.entries())).length * 2;
+    totalSize +=
+      JSON.stringify(Array.from(this.thresholds.entries())).length * 2;
     totalSize += JSON.stringify(this.alerts).length * 2;
     totalSize += JSON.stringify(Array.from(this.timers.entries())).length * 2;
-    
+
     return totalSize;
   }
 }
 
 // Performance monitoring decorator
-export const PerformanceMonitor = (metricName: string) => 
+export const PerformanceMonitor =
+  (metricName: string) =>
   (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
     const originalMethod = descriptor.value;
-    
-    descriptor.value = async function(...args: any[]) {
+
+    descriptor.value = async function (...args: any[]) {
       const performanceService = this.performanceService as PerformanceService;
-      const timer = performanceService.startTimer(`${target.constructor.name}:${propertyKey}`);
-      
+      const timer = performanceService.startTimer(
+        `${target.constructor.name}:${propertyKey}`,
+      );
+
       try {
         const result = await originalMethod.apply(this, args);
         timer();
@@ -479,6 +543,6 @@ export const PerformanceMonitor = (metricName: string) =>
         throw error;
       }
     };
-    
+
     return descriptor;
   };

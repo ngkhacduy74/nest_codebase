@@ -1,4 +1,4 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AppLoggerService } from '@/common/services/logger.service';
 import { AppError } from '@/common/errors/app.error';
@@ -26,13 +26,21 @@ export const PERMISSIONS = {
   USER_READ_OWN: { resource: 'user', action: 'read', conditions: ['own'] },
   USER_UPDATE_OWN: { resource: 'user', action: 'update', conditions: ['own'] },
   USER_DELETE_OWN: { resource: 'user', action: 'delete', conditions: ['own'] },
-  
+
   // Product permissions
   PRODUCT_READ: { resource: 'product', action: 'read' },
   PRODUCT_CREATE: { resource: 'product', action: 'create' },
-  PRODUCT_UPDATE_OWN: { resource: 'product', action: 'update', conditions: ['own'] },
-  PRODUCT_DELETE_OWN: { resource: 'product', action: 'delete', conditions: ['own'] },
-  
+  PRODUCT_UPDATE_OWN: {
+    resource: 'product',
+    action: 'update',
+    conditions: ['own'],
+  },
+  PRODUCT_DELETE_OWN: {
+    resource: 'product',
+    action: 'delete',
+    conditions: ['own'],
+  },
+
   // Admin permissions
   USER_READ_ALL: { resource: 'user', action: 'read' },
   USER_UPDATE_ALL: { resource: 'user', action: 'update' },
@@ -85,7 +93,7 @@ export class AuthorizationGuard implements CanActivate {
         ip: request.ip,
         userAgent: request.headers['user-agent'],
       });
-      
+
       throw AppError.unauthorized('Authentication required');
     }
 
@@ -95,7 +103,10 @@ export class AuthorizationGuard implements CanActivate {
 
     try {
       // Check if user has required roles
-      if (requiredRoles.length > 0 && !this.hasRequiredRoles(user.role, requiredRoles)) {
+      if (
+        requiredRoles.length > 0 &&
+        !this.hasRequiredRoles(user.role, requiredRoles)
+      ) {
         this.logger.security('Access denied - insufficient role', {
           userId: user.id,
           userRole: user.role,
@@ -104,12 +115,15 @@ export class AuthorizationGuard implements CanActivate {
           method: request.method,
           ip: request.ip,
         });
-        
+
         throw AppError.forbidden('Insufficient permissions');
       }
 
       // Check if user has required permissions
-      if (requiredPermissions.length > 0 && !this.hasRequiredPermissions(user, requiredPermissions, request)) {
+      if (
+        requiredPermissions.length > 0 &&
+        !this.hasRequiredPermissions(user, requiredPermissions, request)
+      ) {
         this.logger.security('Access denied - insufficient permissions', {
           userId: user.id,
           userRole: user.role,
@@ -118,7 +132,7 @@ export class AuthorizationGuard implements CanActivate {
           method: request.method,
           ip: request.ip,
         });
-        
+
         throw AppError.forbidden('Insufficient permissions');
       }
 
@@ -142,9 +156,9 @@ export class AuthorizationGuard implements CanActivate {
           userId: user.id,
           path: request.path,
           method: request.method,
-        }
+        },
       );
-      
+
       throw AppError.forbidden('Authorization failed');
     }
   }
@@ -156,11 +170,11 @@ export class AuthorizationGuard implements CanActivate {
   private hasRequiredPermissions(
     user: any,
     requiredPermissions: string[],
-    request: any
+    request: any,
   ): boolean {
     const userPermissions = ROLE_PERMISSIONS[user.role] || [];
-    
-    return requiredPermissions.every(requiredPermission => {
+
+    return requiredPermissions.every((requiredPermission) => {
       const permission = this.parsePermission(requiredPermission);
       return this.checkPermission(user, permission, request);
     });
@@ -174,13 +188,14 @@ export class AuthorizationGuard implements CanActivate {
   private checkPermission(
     user: any,
     permission: Permission,
-    request: any
+    request: any,
   ): boolean {
     const userPermissions = ROLE_PERMISSIONS[user.role] || [];
-    
-    const hasPermission = userPermissions.some(userPermission => 
-      userPermission.resource === permission.resource && 
-      userPermission.action === permission.action
+
+    const hasPermission = userPermissions.some(
+      (userPermission) =>
+        userPermission.resource === permission.resource &&
+        userPermission.action === permission.action,
     );
 
     if (!hasPermission) {
@@ -198,9 +213,9 @@ export class AuthorizationGuard implements CanActivate {
   private checkConditions(
     user: any,
     permission: Permission,
-    request: any
+    request: any,
   ): boolean {
-    return permission.conditions.every(condition => {
+    return permission.conditions.every((condition) => {
       switch (condition) {
         case 'own':
           return this.checkOwnership(user, permission.resource, request);
@@ -212,8 +227,9 @@ export class AuthorizationGuard implements CanActivate {
 
   private checkOwnership(user: any, resource: string, request: any): boolean {
     // Extract resource ID from request parameters
-    const resourceId = request.params.id || request.params.userId || request.params.productId;
-    
+    const resourceId =
+      request.params.id || request.params.userId || request.params.productId;
+
     if (!resourceId) {
       return false;
     }
@@ -229,7 +245,10 @@ export class AuthorizationGuard implements CanActivate {
     }
   }
 
-  private async checkProductOwnership(userId: string, productId: string): Promise<boolean> {
+  private async checkProductOwnership(
+    userId: string,
+    productId: string,
+  ): Promise<boolean> {
     // This would typically involve a database call
     // For now, we'll implement a simple check
     // In a real implementation, you would query the database
@@ -238,13 +257,15 @@ export class AuthorizationGuard implements CanActivate {
 }
 
 // Decorators for setting required permissions/roles
-export const Permissions = (...permissions: string[]) => 
+export const Permissions =
+  (...permissions: string[]) =>
   (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
     Reflect.defineMetadata('permissions', permissions, descriptor.value);
     return descriptor;
   };
 
-export const Roles = (...roles: string[]) => 
+export const Roles =
+  (...roles: string[]) =>
   (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
     Reflect.defineMetadata('roles', roles, descriptor.value);
     return descriptor;

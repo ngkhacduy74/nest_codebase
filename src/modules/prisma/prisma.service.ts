@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  OnModuleInit,
-  OnModuleDestroy,
-} from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaClient, Prisma } from '../../generated/prisma/client';
 
 @Injectable()
@@ -12,7 +8,9 @@ export class PrismaService
 {
   constructor() {
     super({
-      accelerateUrl: process.env.DATABASE_URL || 'postgresql://username:password@localhost:5432/database_name',
+      accelerateUrl:
+        process.env.DATABASE_URL ||
+        'postgresql://username:password@localhost:5432/database_name',
       errorFormat: 'pretty',
     });
   }

@@ -1,17 +1,9 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { GetUserByIdUseCase } from './get-user-by-id.use-case';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { NotFoundException } from '@nestjs/common';
 import { USER_REPOSITORY } from '@/constants/injection-tokens';
 import { CacheKeys } from '@/constants/cache.constant';
-import { AppLoggerService } from '@/common/services/logger.service';
-
-// Mock performance service
-const mockPerformanceService = {
-  recordMetric: jest.fn(),
-  recordDuration: jest.fn(),
-  startTimer: jest.fn(),
-};
+import { createTestModule } from '@/common/utils/test-helpers';
 
 describe('GetUserByIdUseCase', () => {
   let useCase: GetUserByIdUseCase;
@@ -27,14 +19,13 @@ describe('GetUserByIdUseCase', () => {
       set: jest.fn(),
     };
 
-    const module: TestingModule = await Test.createTestingModule({
+    const module = await createTestModule({
       providers: [
         GetUserByIdUseCase,
         { provide: USER_REPOSITORY, useValue: repo },
         { provide: CACHE_MANAGER, useValue: cache },
-        { provide: AppLoggerService, useValue: mockPerformanceService },
       ],
-    }).compile();
+    });
 
     useCase = module.get<GetUserByIdUseCase>(GetUserByIdUseCase);
   });

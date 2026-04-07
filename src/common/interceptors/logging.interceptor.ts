@@ -7,7 +7,10 @@ import {
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { Request, Response } from 'express';
-import { AppLoggerService, LogMetadata } from '@/common/services/logger.service';
+import {
+  AppLoggerService,
+  LogMetadata,
+} from '@/common/services/logger.service';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
@@ -17,7 +20,7 @@ export class LoggingInterceptor implements NestInterceptor {
     const startTime = Date.now();
     const request = context.switchToHttp().getRequest<Request>();
     const response = context.switchToHttp().getResponse<Response>();
-    
+
     const { method, url, ip, headers } = request;
     const requestId = headers['x-request-id'] as string | undefined;
     const traceId = headers['x-trace-id'] as string | undefined;
@@ -64,7 +67,7 @@ export class LoggingInterceptor implements NestInterceptor {
               ...metadata,
               type: 'slow_request',
               threshold: 1000,
-            }
+            },
           );
         }
       }),
@@ -81,11 +84,11 @@ export class LoggingInterceptor implements NestInterceptor {
             ...metadata,
             duration,
             statusCode: error.status || 500,
-          }
+          },
         );
 
         return throwError(() => error);
-      })
+      }),
     );
   }
 }

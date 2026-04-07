@@ -1,18 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@/generated/prisma/client';
 import { ProductEntity } from '../../domain/entities/product.entity';
-import { IProductRepository, PaginationOptions, PaginatedResult, CreateProductDto, UpdateProductDto } from '../../domain/repositories/product.repository.interface';
+import {
+  IProductRepository,
+  PaginationOptions,
+  PaginatedResult,
+  CreateProductDto,
+  UpdateProductDto,
+} from '../../domain/repositories/product.repository.interface';
 import { PrismaService } from '@/modules/prisma/prisma.service';
-import { BaseRepository, PaginationResult } from '@/common/repositories/base.repository';
-import { AppError } from '@/common/errors/app.error';
+import { BaseRepository } from '@/common/repositories/base.repository';
 import { AppLoggerService } from '@/common/services/logger.service';
 
 @Injectable()
-export class PrismaProductRepository extends BaseRepository<ProductEntity> implements IProductRepository {
-  constructor(
-    prisma: PrismaService,
-    logger: AppLoggerService,
-  ) {
+export class PrismaProductRepository
+  extends BaseRepository<ProductEntity>
+  implements IProductRepository
+{
+  constructor(prisma: PrismaService, logger: AppLoggerService) {
     super(prisma, logger, 'Product');
   }
 
@@ -38,16 +42,20 @@ export class PrismaProductRepository extends BaseRepository<ProductEntity> imple
     return product ? this.mapToDomain(product) : null;
   }
 
-  async findAll(options: PaginationOptions): Promise<PaginatedResult<ProductEntity>> {
+  async findAll(
+    options: PaginationOptions,
+  ): Promise<PaginatedResult<ProductEntity>> {
     const { page, limit, sortBy = 'createdAt', sortOrder = 'desc' } = options;
-    
-    const result = await super.findManyWithPagination(
-      undefined,
-      { page, limit, sortBy, sortOrder }
-    );
-    
+
+    const result = await super.findManyWithPagination(undefined, {
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+    });
+
     return {
-      data: result.data.map(product => this.mapToDomain(product)),
+      data: result.data.map((product) => this.mapToDomain(product)),
       pagination: result.pagination,
     };
   }

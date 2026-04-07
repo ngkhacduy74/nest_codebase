@@ -1,8 +1,10 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { CreateUserUseCase } from './create-user.use-case';
 import { ConflictError } from '@/common/domain/errors/application.error';
 import { USER_REPOSITORY } from '@/constants/injection-tokens';
-import { createMockRepository, createTestModule } from '@/common/utils/test-helpers';
+import {
+  createMockRepository,
+  createTestModule,
+} from '@/common/utils/test-helpers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CreateUserDataDto } from '../../domain/repositories/user.repository.interface';
 import { Role } from '../../domain/enums/role.enum';
@@ -27,7 +29,7 @@ describe('CreateUserUseCase', () => {
       providers: [
         CreateUserUseCase,
         { provide: USER_REPOSITORY, useValue: repo },
-        EventEmitter2,
+        { provide: EventEmitter2, useValue: eventEmitter },
       ],
     });
 
@@ -43,8 +45,14 @@ describe('CreateUserUseCase', () => {
       lastName: 'Doe',
       role: Role.USER,
     };
-    repo.findByEmail.mockResolvedValue(null);
-    repo.create.mockResolvedValue(undefined);
+    repo.existsByEmail.mockResolvedValue(false);
+    repo.create.mockResolvedValue({
+      id: '1',
+      email: dto.email,
+      firstName: dto.firstName,
+      lastName: dto.lastName,
+      createdAt: new Date(),
+    });
 
     // Act
     const result = await useCase.execute(dto);
@@ -53,10 +61,13 @@ describe('CreateUserUseCase', () => {
     expect(result).toBeDefined();
     expect(result.email).toBe(dto.email);
     expect(repo.create).toHaveBeenCalled();
-    expect(eventEmitter.emit).toHaveBeenCalledWith('user.created', expect.objectContaining({
-      email: dto.email,
-      fullName: 'John Doe',
-    }));
+    expect(eventEmitter.emit).toHaveBeenCalledWith(
+      'user.created',
+      expect.objectContaining({
+        email: dto.email,
+        firstName: 'John',
+      }),
+    );
   });
 
   it('should throw ConflictException if email already exists', async () => {
@@ -68,7 +79,7 @@ describe('CreateUserUseCase', () => {
       lastName: 'Doe',
       role: Role.USER,
     };
-    repo.findByEmail.mockResolvedValue({ id: 'existing-id' });
+    repo.existsByEmail.mockResolvedValue(true);
 
     // Act & Assert
     await expect(useCase.execute(dto)).rejects.toThrow(ConflictError);

@@ -5,11 +5,11 @@
  */
 export const INJECTION_TOKENS = {
   // Repositories
-  USER_REPOSITORY:    Symbol('USER_REPOSITORY'),
+  USER_REPOSITORY: Symbol('USER_REPOSITORY'),
   PRODUCT_REPOSITORY: Symbol('PRODUCT_REPOSITORY'),
 
   // External services
-  EMAIL_SERVICE:   Symbol('EMAIL_SERVICE'),
+  EMAIL_SERVICE: Symbol('EMAIL_SERVICE'),
   STORAGE_SERVICE: Symbol('STORAGE_SERVICE'),
 
   // Infrastructure

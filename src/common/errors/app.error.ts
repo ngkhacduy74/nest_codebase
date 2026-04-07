@@ -1,5 +1,11 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { ErrorType, ErrorCode, ErrorContext, ErrorMetadata, ErrorDetail } from './error.types';
+import {
+  ErrorType,
+  ErrorCode,
+  ErrorContext,
+  ErrorMetadata,
+  ErrorDetail,
+} from './error.types';
 
 export class AppError extends HttpException {
   public readonly errorType: ErrorType;
@@ -21,7 +27,7 @@ export class AppError extends HttpException {
       requestId?: string;
       traceId?: string;
       cause?: Error;
-    }
+    },
   ) {
     super(message, statusCode);
 
@@ -60,14 +66,14 @@ export class AppError extends HttpException {
   static validationFailed(
     message: string = 'Validation failed',
     details?: ErrorDetail[],
-    context?: ErrorContext
+    context?: ErrorContext,
   ): AppError {
     return new AppError(
       message,
       HttpStatus.BAD_REQUEST,
       ErrorType.VALIDATION,
       ErrorCode.VALIDATION_FAILED,
-      { context, details }
+      { context, details },
     );
   }
 
@@ -75,7 +81,7 @@ export class AppError extends HttpException {
     message: string = 'Invalid input provided',
     field?: string,
     value?: any,
-    context?: ErrorContext
+    context?: ErrorContext,
   ): AppError {
     const details = field ? [{ field, message, value }] : undefined;
     return new AppError(
@@ -83,71 +89,71 @@ export class AppError extends HttpException {
       HttpStatus.BAD_REQUEST,
       ErrorType.VALIDATION,
       ErrorCode.INVALID_INPUT,
-      { context, details }
+      { context, details },
     );
   }
 
   static unauthorized(
     message: string = 'Unauthorized access',
-    context?: ErrorContext
+    context?: ErrorContext,
   ): AppError {
     return new AppError(
       message,
       HttpStatus.UNAUTHORIZED,
       ErrorType.AUTHENTICATION,
       ErrorCode.INVALID_CREDENTIALS,
-      { context }
+      { context },
     );
   }
 
   static forbidden(
     message: string = 'Access forbidden',
-    context?: ErrorContext
+    context?: ErrorContext,
   ): AppError {
     return new AppError(
       message,
       HttpStatus.FORBIDDEN,
       ErrorType.AUTHORIZATION,
       ErrorCode.INSUFFICIENT_PERMISSIONS,
-      { context }
+      { context },
     );
   }
 
   static notFound(
     resource: string,
     identifier?: string,
-    context?: ErrorContext
+    context?: ErrorContext,
   ): AppError {
-    const message = identifier 
+    const message = identifier
       ? `${resource} with identifier '${identifier}' not found`
       : `${resource} not found`;
-    
+
     return new AppError(
       message,
       HttpStatus.NOT_FOUND,
       ErrorType.NOT_FOUND,
       ErrorCode.RESOURCE_NOT_FOUND,
-      { 
-        context: { 
-          ...context, 
-          resource, 
-          identifier 
-        } 
-      }
+      {
+        context: {
+          ...context,
+          resource,
+          identifier,
+        },
+      },
     );
   }
 
   static conflict(
     message: string = 'Resource conflict',
     details?: ErrorDetail[],
-    context?: ErrorContext
+    context?: ErrorContext,
   ): AppError {
     return new AppError(
       message,
       HttpStatus.CONFLICT,
       ErrorType.CONFLICT,
       ErrorCode.RESOURCE_CONFLICT,
-      { context, details }
+      { context, details },
     );
   }
 
@@ -155,118 +161,115 @@ export class AppError extends HttpException {
     resource: string,
     field: string,
     value: any,
-    context?: ErrorContext
+    context?: ErrorContext,
   ): AppError {
     const message = `${resource} with ${field} '${value}' already exists`;
-    
+
     return new AppError(
       message,
       HttpStatus.CONFLICT,
       ErrorType.CONFLICT,
       ErrorCode.DUPLICATE_RESOURCE,
-      { 
-        context: { 
-          ...context, 
-          resource, 
-          field, 
-          value 
+      {
+        context: {
+          ...context,
+          resource,
+          field,
+          value,
         },
-        details: [{ field, message, value }]
-      }
+        details: [{ field, message, value }],
+      },
     );
   }
 
   static internalError(
     message: string = 'Internal server error',
     cause?: Error,
-    context?: ErrorContext
+    context?: ErrorContext,
   ): AppError {
     return new AppError(
       message,
       HttpStatus.INTERNAL_SERVER_ERROR,
       ErrorType.INTERNAL_SERVER,
       ErrorCode.INTERNAL_ERROR,
-      { context, cause }
+      { context, cause },
     );
   }
 
-  static serviceUnavailable(
-    service: string,
-    context?: ErrorContext
-  ): AppError {
+  static serviceUnavailable(service: string, context?: ErrorContext): AppError {
     const message = `${service} service is currently unavailable`;
-    
+
     return new AppError(
       message,
       HttpStatus.SERVICE_UNAVAILABLE,
       ErrorType.SERVICE_UNAVAILABLE,
       ErrorCode.EXTERNAL_SERVICE_ERROR,
-      { 
-        context: { 
-          ...context, 
-          service 
-        } 
-      }
+      {
+        context: {
+          ...context,
+          service,
+        },
+      },
     );
   }
 
   static rateLimitExceeded(
     limit?: number,
     windowMs?: number,
-    context?: ErrorContext
+    context?: ErrorContext,
   ): AppError {
-    const message = limit 
+    const message = limit
       ? `Rate limit exceeded. Maximum ${limit} requests per ${windowMs}ms allowed`
       : 'Rate limit exceeded';
-    
+
     return new AppError(
       message,
       HttpStatus.TOO_MANY_REQUESTS,
       ErrorType.RATE_LIMIT,
       ErrorCode.RATE_LIMIT_EXCEEDED,
-      { 
-        context: { 
-          ...context, 
-          limit, 
-          windowMs 
-        } 
-      }
+      {
+        context: {
+          ...context,
+          limit,
+          windowMs,
+        },
+      },
     );
   }
 
   static databaseError(
     message: string = 'Database operation failed',
     cause?: Error,
-    context?: ErrorContext
+    context?: ErrorContext,
   ): AppError {
     return new AppError(
       message,
       HttpStatus.INTERNAL_SERVER_ERROR,
       ErrorType.DATABASE,
       ErrorCode.DATABASE_CONNECTION_FAILED,
-      { context, cause }
+      { context, cause },
     );
   }
 
   static timeout(
     operation: string,
     timeoutMs: number,
-    context?: ErrorContext
+    context?: ErrorContext,
   ): AppError {
     const message = `${operation} operation timed out after ${timeoutMs}ms`;
-    
+
     return new AppError(
       message,
       HttpStatus.REQUEST_TIMEOUT,
       ErrorType.TIMEOUT,
       ErrorCode.TIMEOUT,
-      { 
-        context: { 
-          ...context, 
-          operation, 
-          timeoutMs 
-        } 
-      }
+      {
+        context: {
+          ...context,
+          operation,
+          timeoutMs,
+        },
+      },
     );
   }
 }

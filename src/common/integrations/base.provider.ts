@@ -25,11 +25,14 @@ export abstract class BaseProvider {
   /**
    * Log provider operation
    */
-  protected logOperation(operation: string, details?: Record<string, unknown>): void {
-    const message = details 
+  protected logOperation(
+    operation: string,
+    details?: Record<string, unknown>,
+  ): void {
+    const message = details
       ? `${this.getProviderName()} ${operation}: ${JSON.stringify(details)}`
       : `${this.getProviderName()} ${operation}`;
-    
+
     this.logger.log(message);
   }
 
@@ -37,15 +40,23 @@ export abstract class BaseProvider {
    * Log provider error
    */
   protected logError(operation: string, error: unknown): void {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    this.logger.error(`${this.getProviderName()} ${operation}: ${errorMessage}`, error);
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
+    this.logger.error(
+      `${this.getProviderName()} ${operation}: ${errorMessage}`,
+      error,
+    );
   }
 
   /**
    * Create standardized error result
    */
-  protected createErrorResult(error: unknown, operation: string): { success: false; error: string } {
-    const errorMessage = error instanceof Error ? error.message : `Unknown ${operation} error`;
+  protected createErrorResult(
+    error: unknown,
+    operation: string,
+  ): { success: false; error: string } {
+    const errorMessage =
+      error instanceof Error ? error.message : `Unknown ${operation} error`;
     this.logError(operation, error);
     return { success: false, error: errorMessage };
   }

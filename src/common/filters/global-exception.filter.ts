@@ -3,18 +3,19 @@ import {
   Catch,
   ArgumentsHost,
   HttpException,
-  HttpStatus,
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { AppError } from '@/common/errors/app.error';
-import { createErrorResponse, createValidationErrorResponse } from '@/common/interfaces/error-response.interface';
-import { ValidationError } from 'class-validator';
+import {
+  createErrorResponse,
+  createValidationErrorResponse,
+} from '@/common/interfaces/error-response.interface';
 
 /**
  * 🔍 Global Exception Filter
- * 
+ *
  * Centralized error handling with:
  * - Structured error responses
  * - Request ID correlation
@@ -47,7 +48,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     // Handle AppError instances
     if (exception instanceof AppError) {
       const metadata = exception.getMetadata();
-      
+
       // Add request context
       metadata.requestId = requestId;
       metadata.traceId = traceId;
@@ -56,7 +57,14 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
       // Handle validation errors specially
       if (exception.errorType === 'VALIDATION' && exception.details) {
-        return createValidationErrorResponse(metadata, exception.details as Array<{ field: string; message: string; value?: any }>);
+        return createValidationErrorResponse(
+          metadata,
+          exception.details as Array<{
+            field: string;
+            message: string;
+            value?: any;
+          }>,
+        );
       }
 
       return createErrorResponse(metadata);
@@ -70,7 +78,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       // Handle ValidationPipe errors
       if (this.isValidationError(response)) {
         const validationErrors = this.extractValidationErrors(response);
-        
+
         return {
           success: false,
           error: {
@@ -92,7 +100,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
       // Handle other HTTP exceptions
       const message = this.extractErrorMessage(response);
-      
+
       return {
         success: false,
         error: {
@@ -124,7 +132,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     );
   }
 
-  private extractValidationErrors(response: any): Array<{ field: string; message: string; value?: any }> {
+  private extractValidationErrors(
+    response: any,
+  ): Array<{ field: string; message: string; value?: any }> {
     if (!response.message || !Array.isArray(response.message)) {
       return [];
     }
@@ -153,7 +163,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     if (typeof response === 'object' && response !== null) {
       const message = response.message;
-      
+
       if (Array.isArray(message)) {
         return message.join(', ');
       }
@@ -198,11 +208,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     if (status >= 400 && status < 500) {
       return 'CLIENT_ERROR';
     }
-    
+
     if (status >= 500) {
       return 'SERVER_ERROR';
     }
-    
+
     return 'UNKNOWN';
   }
 
@@ -216,8 +226,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       error: {
         code: 'INTERNAL_ERROR',
         type: 'INTERNAL_SERVER',
-        message: isProduction ? 'Internal server error' : 
-          (exception instanceof Error ? exception.message : 'Unknown error'),
+        message: isProduction
+          ? 'Internal server error'
+          : exception instanceof Error
+            ? exception.message
+            : 'Unknown error',
       },
       meta: {
         timestamp: new Date().toISOString(),
@@ -235,10 +248,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         ...baseResponse,
         error: {
           ...baseResponse.error,
-          details: [{
-            field: 'stack',
-            message: exception.stack || 'No stack trace available',
-          }],
+          details: [
+            {
+              field: 'stack',
+              message: exception.stack || 'No stack trace available',
+            },
+          ],
         },
       };
     }
@@ -246,7 +261,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     return baseResponse;
   }
 
-  private logError(exception: unknown, request: Request, errorResponse: any): void {
+  private logError(
+    exception: unknown,
+    request: Request,
+    errorResponse: any,
+  ): void {
     const isProduction = this.configService.get('app.nodeEnv') === 'production';
     const requestId = errorResponse.meta.requestId;
     const traceId = errorResponse.meta.traceId;
@@ -274,8 +293,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     } else {
       // Log unexpected errors
       this.logger.error(
-        'Unexpected Error', 
-        isProduction ? logContext : { ...logContext, exception }
+        'Unexpected Error',
+        isProduction ? logContext : { ...logContext, exception },
       );
     }
   }

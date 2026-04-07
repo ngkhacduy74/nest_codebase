@@ -3,7 +3,6 @@ import { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from './prisma.service';
 import { DatabaseError } from '@/common/domain/errors/infrastructure.error';
 
-
 export type PrismaTransactionClient = Prisma.TransactionClient;
 export type TransactionCallback<T> = (
   tx: PrismaTransactionClient,

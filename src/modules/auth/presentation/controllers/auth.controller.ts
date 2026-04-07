@@ -1,5 +1,18 @@
-import { Body, Controller, Post, HttpCode, HttpStatus, UseGuards, Req } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Post,
+  HttpCode,
+  HttpStatus,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { AuthService } from '../../application/services/auth.service';
 import { LoginDto } from '../dtos/login.dto';
 import { RefreshTokenDto } from '../dtos/refresh-token.dto';
@@ -19,9 +32,12 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'User login' })
   @ApiResponse({ status: HttpStatus.OK, type: AuthResponseDto })
-  async login(@Req() req: any, @Body() loginDto: LoginDto): Promise<AuthResponseDto> {
+  async login(
+    @Req() req: any,
+    @Body() loginDto: LoginDto,
+  ): Promise<AuthResponseDto> {
     const tokens = await this.authService.login(req.user);
-    
+
     return {
       ...tokens,
       expiresIn: 900, // 15 mins
@@ -38,10 +54,14 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Refresh access token' })
   @ApiResponse({ status: HttpStatus.OK, type: AuthResponseDto })
-  async refreshToken(@Body() refreshTokenDto: RefreshTokenDto): Promise<AuthResponseDto> {
-    const tokens = await this.authService.refreshTokens(refreshTokenDto.refreshToken);
+  async refreshToken(
+    @Body() refreshTokenDto: RefreshTokenDto,
+  ): Promise<AuthResponseDto> {
+    const tokens = await this.authService.refreshTokens(
+      refreshTokenDto.refreshToken,
+    );
     const payload = this.authService.decodePayload(tokens.accessToken);
-    
+
     return {
       ...tokens,
       expiresIn: 900,

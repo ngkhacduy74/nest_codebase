@@ -10,9 +10,9 @@ import { CreateProductUseCase } from './application/use-cases/create-product.use
     // Repository binding - chỉ đổi 1 dòng này để swap DB
     {
       provide: INJECTION_TOKENS.PRODUCT_REPOSITORY,
-      useClass: PrismaProductRepository,  // ← ĐỔI DUY NHẤT DÒNG NÀY ĐỂ SWAP DB
+      useClass: PrismaProductRepository, // ← ĐỔI DUY NHẤT DÒNG NÀY ĐỂ SWAP DB
     },
-    
+
     // Use-cases
     CreateProductUseCase,
   ],

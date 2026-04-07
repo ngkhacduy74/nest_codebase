@@ -50,7 +50,7 @@ export class AuthGuard implements CanActivate {
         throw new UnauthorizedException('INVALID_TOKEN_PAYLOAD');
       }
 
-      (request as AuthenticatedRequest).user = payload;
+      request.user = payload;
 
       return true;
     } catch (error) {
