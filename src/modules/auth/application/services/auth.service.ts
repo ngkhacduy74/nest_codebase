@@ -14,9 +14,8 @@ import type { AppClsStore } from '@/modules/cls/cls.module';
 import type { IUserRepository } from '../../../user/domain/repositories/user.repository.interface';
 import {
   type ITokenStore,
-  TOKEN_STORE,
 } from '../../infrastructure/token-store/redis-token-store';
-import { USER_REPOSITORY } from '@/constants/injection-tokens';
+import { USER_REPOSITORY, INJECTION_TOKENS } from '@/constants/injection-tokens';
 import {
   AccountDeletedError,
   AccountInactiveError,
@@ -64,7 +63,7 @@ export class AuthService {
     @Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository,
     private readonly jwtService: JwtService,
     private readonly cls: ClsService<AppClsStore>,
-    @Inject(TOKEN_STORE) private readonly tokenStore: ITokenStore,
+    @Inject(INJECTION_TOKENS.TOKEN_STORE) private readonly tokenStore: ITokenStore,
     private readonly configService: ConfigService,
     @InjectMetric('active_sessions_total')
     private readonly sessionsGauge: Gauge<string>,

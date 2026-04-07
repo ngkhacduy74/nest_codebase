@@ -11,6 +11,7 @@ import {
   ApiTags,
   ApiOperation,
   ApiResponse,
+  ApiBody as ApiBodyDecorator,
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { AuthService } from '../../application/services/auth.service';
@@ -78,9 +79,21 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Logout user' })
-  async logout(@Req() req: any): Promise<void> {
+  @ApiBodyDecorator({
+    schema: {
+      type: 'object',
+      properties: {
+        refreshToken: {
+          type: 'string',
+          description: 'Refresh token to revoke (optional)',
+          example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+        },
+      },
+    },
+  })
+  async logout(@Req() req: any, @Body() body: { refreshToken?: string }): Promise<void> {
     const user = req.user;
-    // Revoking access token (blacklist) and session
-    await this.authService.logout(user.id, user.jti, '');
+    // Revoking access token (blacklist) and refresh token
+    await this.authService.logout(user.id, user.jti, body.refreshToken || '');
   }
 }

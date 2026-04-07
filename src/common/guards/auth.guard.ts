@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { IS_OPTIONAL_KEY } from '../decorators/optional.decorator';
@@ -19,6 +20,7 @@ export class AuthGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -43,7 +45,7 @@ export class AuthGuard implements CanActivate {
 
     try {
       const payload = await this.jwtService.verifyAsync(token, {
-        secret: process.env.JWT_SECRET,
+        secret: this.configService.get<string>('auth.jwt.accessToken.secret'),
       });
 
       if (!payload.sub || !payload.email) {
@@ -70,10 +72,6 @@ export class AuthGuard implements CanActivate {
     const authHeader = request.headers?.authorization;
     if (authHeader?.startsWith('Bearer ')) {
       return authHeader.substring(7);
-    }
-
-    if (request.query?.token) {
-      return request.query.token;
     }
 
     return undefined;

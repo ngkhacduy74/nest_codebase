@@ -9,6 +9,7 @@ import {
   Param,
   UsePipes,
   ValidationPipe,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -17,11 +18,22 @@ import {
   ApiParam,
   ApiQuery,
   ApiBody,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { CreateUserDto } from '../dtos/create-user.dto';
+import { CreateUserDataDto } from '../../domain/repositories/user.repository.interface';
+import { UpdateUserDto } from '../dtos/update-user.dto';
 import { BaseResponse } from '@/common/interfaces/base-response.interface';
 import { Role } from '@/modules/user/domain/enums/role.enum';
 import { PaginationUtil } from '@/common/utils/pagination.util';
+import { CreateUserUseCase } from '../../application/use-cases/create-user.use-case';
+import { GetUserByIdUseCase } from '../../application/use-cases/get-user-by-id.use-case';
+import { GetUsersUseCase } from '../../application/use-cases/get-users.use-case';
+import { UpdateUserUseCase } from '../../application/use-cases/update-user.use-case';
+import { DeleteUserUseCase } from '../../application/use-cases/delete-user.use-case';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
+import { AuthorizationGuard } from '@/common/guards/authorization.guard';
+import { Roles } from '@/common/guards/authorization.guard';
 
 class UserResponse {
   id: string;
@@ -52,7 +64,31 @@ interface PaginationParams {
 
 @ApiTags('Users')
 @Controller('users')
+@UseGuards(JwtAuthGuard, AuthorizationGuard)
+@ApiBearerAuth()
 export class UserController {
+  constructor(
+    private readonly createUserUseCase: CreateUserUseCase,
+    private readonly getUserByIdUseCase: GetUserByIdUseCase,
+    private readonly getUsersUseCase: GetUsersUseCase,
+    private readonly updateUserUseCase: UpdateUserUseCase,
+    private readonly deleteUserUseCase: DeleteUserUseCase,
+  ) {}
+
+  private toResponse(user: any): UserResponse {
+    return {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      fullName: `${user.firstName} ${user.lastName}`,
+      role: user.role,
+      isActive: user.isActive,
+      isEmailVerified: user.isEmailVerified,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+  }
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
@@ -63,29 +99,6 @@ export class UserController {
     status: HttpStatus.CREATED,
     description: 'User created successfully',
     type: UserResponse,
-    schema: {
-      example: {
-        success: true,
-        data: {
-          id: '550e8400-e29b-41d4-a616-42a8f4ab123',
-          email: 'john.doe@example.com',
-          firstName: 'John',
-          lastName: 'Doe',
-          fullName: 'John Doe',
-          role: 'user',
-          isActive: true,
-          isEmailVerified: false,
-          createdAt: '2024-01-01T00:00:00.000Z',
-          updatedAt: '2024-01-01T00:00:00.000Z',
-        },
-        message: 'User created successfully',
-        meta: {
-          timestamp: '2024-01-01T00:00:00.000Z',
-          requestId: 'req-123',
-          traceId: 'trace-456',
-        },
-      },
-    },
   })
   @ApiBody({
     type: CreateUserDto,
@@ -99,26 +112,14 @@ export class UserController {
       transform: true,
     }),
   )
+  @Roles(Role.ADMIN)
   async createUser(
-    @Body() createUserDto: CreateUserDto,
+    @Body() createUserDto: CreateUserDataDto,
   ): Promise<BaseResponse<UserResponse>> {
-    // This would call the user creation use case
-    const newUser: UserResponse = {
-      id: 'temp-id',
-      email: createUserDto.email,
-      firstName: createUserDto.firstName,
-      lastName: createUserDto.lastName,
-      fullName: `${createUserDto.firstName} ${createUserDto.lastName}`,
-      role: (createUserDto.role as Role) || Role.USER,
-      isActive: true,
-      isEmailVerified: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
+    const user = await this.createUserUseCase.execute(createUserDto);
     return {
       success: true,
-      data: newUser,
+      data: this.toResponse(user),
       message: 'User created successfully',
     };
   }
@@ -183,38 +184,30 @@ export class UserController {
   async getUsers(
     @Query() paginationParams: PaginationParams,
   ): Promise<BaseResponse<UsersResponse[]>> {
-    // This would call the get users use case with pagination
-    const users: UsersResponse[] = [
-      {
-        id: '1',
-        email: 'user1@example.com',
-        firstName: 'John',
-        lastName: 'Doe',
-        fullName: 'John Doe',
-        role: Role.USER,
-      },
-      {
-        id: '2',
-        email: 'user2@example.com',
-        firstName: 'Jane',
-        lastName: 'Smith',
-        fullName: 'Jane Smith',
-        role: Role.ADMIN,
-      },
-    ];
-
-    const paginatedResult = PaginationUtil.createPagination(
-      users,
-      paginationParams,
-    );
+    const result = await this.getUsersUseCase.execute({
+      page: paginationParams.page || 1,
+      limit: paginationParams.limit || 10,
+    });
 
     return {
       success: true,
-      data: paginatedResult.data,
+      data: result.data.map(user => ({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        fullName: `${user.firstName} ${user.lastName}`,
+        role: user.role,
+      })),
       message: 'Users retrieved successfully',
       meta: {
         timestamp: new Date().toISOString(),
-        pagination: paginatedResult.pagination,
+        pagination: {
+          page: result.page,
+          limit: result.limit,
+          total: result.total,
+          totalPages: Math.ceil(result.total / result.limit),
+        },
       },
     };
   }
@@ -265,23 +258,10 @@ export class UserController {
   async getUserById(
     @Param('id') id: string,
   ): Promise<BaseResponse<UserResponse>> {
-    // This would call the get user by ID use case
-    const user: UserResponse = {
-      id,
-      email: 'john.doe@example.com',
-      firstName: 'John',
-      lastName: 'Doe',
-      fullName: 'John Doe',
-      role: Role.USER,
-      isActive: true,
-      isEmailVerified: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
+    const user = await this.getUserByIdUseCase.execute(id);
     return {
       success: true,
-      data: user,
+      data: this.toResponse(user),
       message: 'User retrieved successfully',
     };
   }

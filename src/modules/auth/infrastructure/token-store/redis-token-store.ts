@@ -2,8 +2,7 @@ import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 import * as argon2 from 'argon2';
-
-export const TOKEN_STORE = Symbol('TOKEN_STORE');
+import { INJECTION_TOKENS } from '@/constants/injection-tokens';
 
 export interface ITokenStore {
   save(

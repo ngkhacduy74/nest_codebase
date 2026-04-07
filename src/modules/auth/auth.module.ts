@@ -6,10 +6,10 @@ import { AuthService } from './application/services/auth.service';
 import { AuthController } from './presentation/controllers/auth.controller';
 import {
   RedisTokenStore,
-  TOKEN_STORE,
 } from './infrastructure/token-store/redis-token-store';
 import { LocalStrategy } from './infrastructure/strategies/local.strategy';
 import { JwtStrategy } from './infrastructure/strategies/jwt.strategy';
+import { INJECTION_TOKENS } from '@/constants/injection-tokens';
 
 import { UserModule } from '../user/user.module';
 
@@ -38,7 +38,7 @@ import { UserModule } from '../user/user.module';
     LocalStrategy,
     JwtStrategy,
     {
-      provide: TOKEN_STORE,
+      provide: INJECTION_TOKENS.TOKEN_STORE,
       useClass: RedisTokenStore,
     },
   ],

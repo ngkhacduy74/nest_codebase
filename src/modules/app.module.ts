@@ -19,6 +19,7 @@ import { LoggingInterceptor } from '@common/interceptors/logging.interceptor';
 
 import { HealthModule } from '@modules/health/health.module';
 import { MetricsModule } from '@modules/metrics/metrics.module';
+import { NotificationModule } from '@modules/notification/notification.module';
 import { AuthModule } from '@modules/auth/auth.module';
 import { UserModule } from '@modules/user/user.module';
 
@@ -128,6 +129,7 @@ import { UserModule } from '@modules/user/user.module';
     // ── Feature Modules ───────────────────────────────────────────────────────
     AuthModule,
     UserModule,
+    NotificationModule,
   ],
   providers: [
     // Apply ThrottlerGuard globally
