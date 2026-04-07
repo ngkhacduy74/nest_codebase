@@ -162,15 +162,23 @@ export class AuthService {
     userId: string,
     jti: string,
     refreshTokenId: string,
+    accessTokenPayload?: { exp?: number },
   ): Promise<void> {
-    // 1. Blacklist access token (until it expires)
-    // We assume 15 mins for now if not provided, or better to extract from payload
-    await this.tokenStore.blacklistAccessToken(jti, 900);
+    // 1. Blacklist access token with proper TTL from token expiry
+    let blacklistTtl = 900; // fallback 15 mins
+    
+    if (accessTokenPayload?.exp) {
+      // Calculate TTL from token's exp claim
+      const currentTime = Math.floor(Date.now() / 1000);
+      blacklistTtl = Math.max(0, accessTokenPayload.exp - currentTime);
+    }
+    
+    await this.tokenStore.blacklistAccessToken(jti, blacklistTtl);
 
     await this.tokenStore.revoke(userId, refreshTokenId);
     this.sessionsGauge.dec();
 
-    this.logger.log(`[Auth] Logout: userId=${userId}`);
+    this.logger.log(`[Auth] Logout: userId=${userId}, jti=${jti}, ttl=${blacklistTtl}s`);
   }
 
   async logoutAllDevices(userId: string): Promise<void> {
