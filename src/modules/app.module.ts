@@ -14,7 +14,7 @@ import redisConfig from '@config/redis/redis.config';
 import authConfig from '@config/auth/auth.config';
 import { AppClsModule } from '@modules/cls/cls.module';
 import { PrismaModule } from '@modules/prisma/prisma.module';
-import { RedisModule } from '@/infrastructure/redis/redis.module';
+import { RedisModule } from '@modules/redis/redis.module';
 import { GlobalExceptionFilter } from '@common/filters/global-exception.filter';
 import { LoggingInterceptor } from '@common/interceptors/logging.interceptor';
 import { AuthGuard } from '@common/guards/auth.guard';
