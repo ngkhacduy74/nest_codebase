@@ -22,10 +22,8 @@ import {
 } from '@nestjs/swagger';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { CreateUserDataDto } from '../../domain/repositories/user.repository.interface';
-import { UpdateUserDto } from '../dtos/update-user.dto';
 import { BaseResponse } from '@/common/interfaces/base-response.interface';
 import { Role } from '@/modules/user/domain/enums/role.enum';
-import { PaginationUtil } from '@/common/utils/pagination.util';
 import { CreateUserUseCase } from '../../application/use-cases/create-user.use-case';
 import { GetUserByIdUseCase } from '../../application/use-cases/get-user-by-id.use-case';
 import { GetUsersUseCase } from '../../application/use-cases/get-users.use-case';
@@ -191,7 +189,7 @@ export class UserController {
 
     return {
       success: true,
-      data: result.data.map(user => ({
+      data: result.data.map((user) => ({
         id: user.id,
         email: user.email,
         firstName: user.firstName,

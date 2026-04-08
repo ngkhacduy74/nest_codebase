@@ -122,18 +122,18 @@ export class TransactionService {
     const transactionWrapper = async (tx: any) => {
       // Wrap common Prisma operations with logging
       const originalMethods = {
-        findUnique: tx[this.getModelName]?.findUnique?.bind(tx),
-        findFirst: tx[this.getModelName]?.findFirst?.bind(tx),
-        findMany: tx[this.getModelName]?.findMany?.bind(tx),
-        create: tx[this.getModelName]?.create?.bind(tx),
-        update: tx[this.getModelName]?.update?.bind(tx),
-        delete: tx[this.getModelName]?.delete?.bind(tx),
-        count: tx[this.getModelName]?.count?.bind(tx),
+        findUnique: tx[this.getModelName()]?.findUnique?.bind(tx),
+        findFirst: tx[this.getModelName()]?.findFirst?.bind(tx),
+        findMany: tx[this.getModelName()]?.findMany?.bind(tx),
+        create: tx[this.getModelName()]?.create?.bind(tx),
+        update: tx[this.getModelName()]?.update?.bind(tx),
+        delete: tx[this.getModelName()]?.delete?.bind(tx),
+        count: tx[this.getModelName()]?.count?.bind(tx),
       };
 
       // Override methods with logging
-      if (tx[this.getModelName]) {
-        const model = tx[this.getModelName];
+      if (tx[this.getModelName()]) {
+        const model = tx[this.getModelName()];
 
         model.findUnique = async (args: any) => {
           const endTimer = logOperation('findUnique');

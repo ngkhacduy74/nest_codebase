@@ -1,7 +1,7 @@
 import { registerAs } from '@nestjs/config';
 import { IsString, IsOptional, IsInt, IsBoolean } from 'class-validator';
 import { RedisConfig } from './redis-config.type';
-import { validateConfig } from '@/utils/config/validate-config';
+import { validateConfig } from '@/common/utils/config/validate-config';
 
 class EnvironmentVariablesValidator {
   @IsString()
@@ -40,9 +40,9 @@ export default registerAs<RedisConfig>('redis', () => {
   );
 
   return {
-    host: validatedConfig.CACHE_REDIS_HOST || 'localhost',
-    port: validatedConfig.CACHE_REDIS_PORT || 6379,
-    password: validatedConfig.CACHE_REDIS_PASSWORD || '',
+    host: validatedConfig.CACHE_REDIS_HOST ?? 'localhost',
+    port: validatedConfig.CACHE_REDIS_PORT ?? 6379,
+    password: validatedConfig.CACHE_REDIS_PASSWORD ?? '',
     db: validatedConfig.CACHE_REDIS_DB,
     connectTimeout: validatedConfig.CACHE_REDIS_CONNECT_TIMEOUT,
     lazyConnect: validatedConfig.CACHE_REDIS_LAZY_CONNECT,

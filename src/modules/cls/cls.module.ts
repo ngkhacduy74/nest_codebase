@@ -1,7 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { ClsModule } from 'nestjs-cls';
 import { v4 as uuidv4 } from 'uuid';
-import { Request } from 'express';
+import { FastifyRequest } from 'fastify';
 
 export interface AppClsStore {
   requestId: string;
@@ -20,7 +20,7 @@ export interface AppClsStore {
       middleware: {
         mount: true,
         generateId: true,
-        setup: (cls, req: Request) => {
+        setup: (cls, req: FastifyRequest) => {
           const traceId =
             (req.headers['x-trace-id'] as string | undefined) ?? uuidv4();
           const requestId =

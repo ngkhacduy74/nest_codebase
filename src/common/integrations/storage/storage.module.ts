@@ -1,9 +1,7 @@
 import { Module, DynamicModule } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { StorageService } from './storage.service';
-import { STORAGE_CONFIG_KEY, StorageConfig } from './storage.interface';
 import { AwsS3Provider } from './providers/aws-s3.provider';
-import type { StorageProvider } from './storage.interface';
 
 export const STORAGE_PROVIDER = 'StorageProvider';
 
@@ -22,15 +20,18 @@ export class StorageModule {
             if (!provider) {
               throw new Error(
                 '[StorageModule] STORAGE_PROVIDER không été configuré. ' +
-                'Set STORAGE_PROVIDER=aws-s3 trong .env',
+                  'Set STORAGE_PROVIDER=aws-s3 trong .env',
               );
             }
 
             // Never allow local storage in production
-            if (provider === 'local' && config.get('app.nodeEnv') === 'production') {
+            if (
+              provider === 'local' &&
+              config.get('app.nodeEnv') === 'production'
+            ) {
               throw new Error(
                 '[StorageModule] Local storage interdit en production. ' +
-                'Utilisez aws-s3, cloudinary, ou google-cloud.',
+                  'Utilisez aws-s3, cloudinary, ou google-cloud.',
               );
             }
 
@@ -38,7 +39,9 @@ export class StorageModule {
               case 'aws-s3':
                 return new AwsS3Provider(config);
               default:
-                throw new Error(`[StorageModule] Provider non supporté: ${provider}`);
+                throw new Error(
+                  `[StorageModule] Provider non supporté: ${provider}`,
+                );
             }
           },
         },

@@ -1,4 +1,8 @@
-import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
@@ -10,7 +14,8 @@ import type { ITokenStore } from '@/modules/auth/infrastructure/token-store/redi
 export class JwtAuthGuard extends AuthGuard('jwt') {
   constructor(
     private reflector: Reflector,
-    @Inject(INJECTION_TOKENS.TOKEN_STORE) private readonly tokenStore: ITokenStore,
+    @Inject(INJECTION_TOKENS.TOKEN_STORE)
+    private readonly tokenStore: ITokenStore,
   ) {
     super();
   }
@@ -35,7 +40,9 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     const user = request.user;
 
     if (user?.jti) {
-      const isBlacklisted = await this.tokenStore.isAccessTokenBlacklisted(user.jti);
+      const isBlacklisted = await this.tokenStore.isAccessTokenBlacklisted(
+        user.jti,
+      );
       if (isBlacklisted) {
         throw new UnauthorizedException('TOKEN_REVOKED');
       }

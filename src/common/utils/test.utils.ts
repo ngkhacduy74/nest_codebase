@@ -12,7 +12,7 @@ export interface TestDatabase {
 export class TestBuilder<T> {
   private data: Partial<T> = {};
 
-  constructor(private readonly entityName: string) {}
+  constructor(private readonly _entityName: string) {}
 
   with<K extends keyof T>(key: K, value: T[K]): TestBuilder<T> {
     this.data[key] = value;
@@ -26,6 +26,10 @@ export class TestBuilder<T> {
 
   build(): Partial<T> {
     return { ...this.data };
+  }
+
+  toString(): string {
+    return `TestBuilder<${this._entityName}>`;
   }
 }
 

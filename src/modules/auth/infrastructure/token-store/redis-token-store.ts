@@ -2,7 +2,6 @@ import { Injectable, Logger, OnModuleDestroy, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 import * as argon2 from 'argon2';
-import { INJECTION_TOKENS } from '@/constants/injection-tokens';
 import { REDIS_CLIENT } from '@/infrastructure/redis/redis.module';
 
 export interface ITokenStore {
@@ -33,7 +32,7 @@ export class RedisTokenStore implements ITokenStore, OnModuleDestroy {
   ) {
     this.keyPrefix = configService.get<string>('cache.keyPrefix') || 'cache:';
     this.redis = redisClient;
-    
+
     // Create separate Redis instance for token store with different DB
     this.redisTokenStore = redisClient.duplicate();
     this.redisTokenStore.select(1); // separate DB from auth/tokens

@@ -1,8 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
-import { AppLoggerService } from '@/common/services/logger.service';
+import { AppLoggerService, LogContext } from '@/common/services/logger.service';
 
 export interface ApiTestResponse {
   status: number;
@@ -34,18 +33,22 @@ export class ApiTestClient {
   ): Promise<ApiTestResponse> {
     const url = `${this.baseUrl}${endpoint}`;
 
-    await this.logger.trace(`API GET: ${url}`, {
+    await this.logger.trace(`API GET: ${url}`, LogContext.HTTP, {
       method: 'GET',
       url,
       headers: options?.headers,
       query: options?.query,
     });
 
-    const response = await this.app
-      .get(url)
-      .set('Cookie', this.formatCookies())
-      .query(options?.query || {})
-      .set(options?.headers || {});
+    const response = await (this.app as any).inject({
+      method: 'GET',
+      url,
+      headers: {
+        ...options?.headers,
+        cookie: this.formatCookies(),
+      },
+      query: options?.query,
+    });
 
     return this.formatResponse(response);
   }
@@ -60,7 +63,7 @@ export class ApiTestClient {
   ): Promise<ApiTestResponse> {
     const url = `${this.baseUrl}${endpoint}`;
 
-    await this.logger.trace(`API POST: ${url}`, {
+    await this.logger.trace(`API POST: ${url}`, LogContext.HTTP, {
       method: 'POST',
       url,
       data,
@@ -68,12 +71,16 @@ export class ApiTestClient {
       query: options?.query,
     });
 
-    const response = await this.app
-      .post(url)
-      .set('Cookie', this.formatCookies())
-      .query(options?.query || {})
-      .set(options?.headers || {})
-      .send(data);
+    const response = await (this.app as any).inject({
+      method: 'POST',
+      url,
+      headers: {
+        ...options?.headers,
+        cookie: this.formatCookies(),
+      },
+      query: options?.query,
+      payload: data,
+    });
 
     return this.formatResponse(response);
   }
@@ -88,7 +95,7 @@ export class ApiTestClient {
   ): Promise<ApiTestResponse> {
     const url = `${this.baseUrl}${endpoint}`;
 
-    await this.logger.trace(`API PUT: ${url}`, {
+    await this.logger.trace(`API PUT: ${url}`, LogContext.HTTP, {
       method: 'PUT',
       url,
       data,
@@ -96,12 +103,16 @@ export class ApiTestClient {
       query: options?.query,
     });
 
-    const response = await this.app
-      .put(url)
-      .set('Cookie', this.formatCookies())
-      .query(options?.query || {})
-      .set(options?.headers || {})
-      .send(data);
+    const response = await (this.app as any).inject({
+      method: 'PUT',
+      url,
+      headers: {
+        ...options?.headers,
+        cookie: this.formatCookies(),
+      },
+      query: options?.query,
+      payload: data,
+    });
 
     return this.formatResponse(response);
   }
@@ -116,7 +127,7 @@ export class ApiTestClient {
   ): Promise<ApiTestResponse> {
     const url = `${this.baseUrl}${endpoint}`;
 
-    await this.logger.trace(`API PATCH: ${url}`, {
+    await this.logger.trace(`API PATCH: ${url}`, LogContext.HTTP, {
       method: 'PATCH',
       url,
       data,
@@ -124,12 +135,16 @@ export class ApiTestClient {
       query: options?.query,
     });
 
-    const response = await this.app
-      .patch(url)
-      .set('Cookie', this.formatCookies())
-      .query(options?.query || {})
-      .set(options?.headers || {})
-      .send(data);
+    const response = await (this.app as any).inject({
+      method: 'PATCH',
+      url,
+      headers: {
+        ...options?.headers,
+        cookie: this.formatCookies(),
+      },
+      query: options?.query,
+      payload: data,
+    });
 
     return this.formatResponse(response);
   }
@@ -143,18 +158,22 @@ export class ApiTestClient {
   ): Promise<ApiTestResponse> {
     const url = `${this.baseUrl}${endpoint}`;
 
-    await this.logger.trace(`API DELETE: ${url}`, {
+    await this.logger.trace(`API DELETE: ${url}`, LogContext.HTTP, {
       method: 'DELETE',
       url,
       headers: options?.headers,
       query: options?.query,
     });
 
-    const response = await this.app
-      .delete(url)
-      .set('Cookie', this.formatCookies())
-      .query(options?.query || {})
-      .set(options?.headers || {});
+    const response = await (this.app as any).inject({
+      method: 'DELETE',
+      url,
+      headers: {
+        ...options?.headers,
+        cookie: this.formatCookies(),
+      },
+      query: options?.query,
+    });
 
     return this.formatResponse(response);
   }
@@ -173,19 +192,21 @@ export class ApiTestClient {
       .join('; ');
   }
 
-  private formatResponse(response: Response): ApiTestResponse {
+  private formatResponse(response: any): ApiTestResponse {
     const headers: Record<string, string> = {};
-    response.headers.forEach((value, key) => {
-      headers[key] = value;
-    });
+    if (response.headers) {
+      Object.entries(response.headers).forEach(([key, value]) => {
+        headers[key] = value as string;
+      });
+    }
 
     const cookies: Record<string, string> = {};
-    const setCookieHeader = response.headers['set-cookie'];
+    const setCookieHeader = response.headers?.['set-cookie'];
     if (setCookieHeader) {
       const cookieStrings = Array.isArray(setCookieHeader)
         ? setCookieHeader
         : [setCookieHeader];
-      cookieStrings.forEach((cookieString) => {
+      cookieStrings.forEach((cookieString: string) => {
         const [name] = cookieString.split('=')[0];
         if (name) {
           cookies[name] = cookieString;
@@ -194,8 +215,8 @@ export class ApiTestClient {
     }
 
     return {
-      status: response.status,
-      data: response.body,
+      status: response.statusCode,
+      data: response.json ? response.json() : response.payload,
       headers,
       cookies,
     };
@@ -374,6 +395,6 @@ export class TestModuleBuilder {
       imports: [...this.imports],
       providers: [...this.providers],
       controllers: [...this.controllers],
-    });
+    }).compile();
   }
 }

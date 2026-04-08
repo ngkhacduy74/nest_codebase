@@ -1,22 +1,76 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
 RED='\033[0;31m'
 GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 NC='\033[0m'
 
-echo "${YELLOW}🔍 Running code quality checks...${NC}"
+set -e  # Exit immediately if any command fails
 
-# Chạy các kiểm tra code trước
-echo "${YELLOW}1. Running lint-staged...${NC}"
-if ! pnpm lint-staged; then
-  echo "${RED}❌ Lint-staged failed${NC}"
+echo "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo "${YELLOW}🔍  CODE QUALITY VALIDATION (Cannot be bypassed)${NC}"
+echo "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+
+# Step 1: Lint-staged
+echo "${YELLOW}[1/5] Running lint-staged on staged files...${NC}"
+if ! pnpm lint-staged --verbose; then
+  echo "${RED}✗ Lint-staged failed - fix code style and formatting issues${NC}"
   exit 1
 fi
+echo "${GREEN}✓ Lint-staged passed${NC}"
 
-echo "${YELLOW}2. Running typecheck...${NC}"
+# Step 2: ESLint strict check
+echo "${YELLOW}[2/5] Running strict ESLint check (no warnings allowed)...${NC}"
+if ! pnpm run lint:strict > /dev/null 2>&1; then
+  echo "${RED}✗ ESLint strict check failed - code has errors or warnings${NC}"
+  echo "${YELLOW}Common issues:${NC}"
+  echo "  • Using 'any' type - use proper types instead"
+  echo "  • Missing return types - add explicit return types"
+  echo "  • Unused imports/variables - remove them"
+  echo "  • Too complex functions - refactor into smaller functions"
+  echo "  • Unsafe operations - use proper type guards"
+  pnpm run lint:strict
+  exit 1
+fi
+echo "${GREEN}✓ ESLint strict check passed (no errors/warnings)${NC}"
+
+# Step 3: TypeScript type checking
+echo "${YELLOW}[3/5] Running TypeScript strict mode type check...${NC}"
 if ! pnpm typecheck; then
-  echo "${RED}❌ Typecheck failed${NC}"
+  echo "${RED}✗ TypeScript strict mode type check failed${NC}"
+  echo "${YELLOW}Common issues:${NC}"
+  echo "  • Implicit 'any' types - add explicit types"
+  echo "  • Null/undefined not handled - use proper checks"
+  echo "  • Missing return statements - add returns"
+  echo "  • Unused variables/parameters - remove them"
   exit 1
 fi
+echo "${GREEN}✓ TypeScript strict mode type check passed${NC}"
+
+# Step 4: Spell check
+echo "${YELLOW}[4/5] Running spell check...${NC}"
+if ! pnpm spellcheck; then
+  echo "${RED}✗ Spell check failed${NC}"
+  exit 1
+fi
+echo "${GREEN}✓ Spell check passed${NC}"
+
+# Step 5: Format check
+echo "${YELLOW}[5/5] Checking code formatting...${NC}"
+if ! pnpm run format:check > /dev/null 2>&1; then
+  echo "${RED}✗ Code formatting check failed${NC}"
+  echo "${YELLOW}Run 'pnpm format' to fix formatting issues${NC}"
+  exit 1
+fi
+echo "${GREEN}✓ Code formatting check passed${NC}"
+
+echo "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo "${GREEN}✓ All validation checks passed! Ready to commit.${NC}"
+echo "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+
+exit 0
 
 echo "${YELLOW}3. Running spellcheck...${NC}"
 if ! pnpm spellcheck; then

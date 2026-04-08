@@ -32,7 +32,7 @@ export class RateLimitGuard implements CanActivate {
 
   constructor(
     private readonly reflector: Reflector,
-    private readonly configService: ConfigService,
+    _configService: ConfigService,
     private readonly logger: AppLoggerService,
   ) {
     this.store = new MemoryRateLimitStore(logger);
@@ -109,19 +109,28 @@ export class RateLimitGuard implements CanActivate {
     }
   }
 
-  private getRateLimitOptions(context: ExecutionContext): RateLimitOptions {
+  private getRateLimitOptions(_context: ExecutionContext): RateLimitOptions {
     const customOptions = this.reflector.get<Partial<RateLimitOptions>>(
       'rateLimit',
-      {},
+      _context.getHandler(),
     );
 
     return {
       ...this.defaultOptions,
-      ...customOptions,
+      ...(customOptions ?? {}),
     };
   }
 
-  private generateKey(request: any, options: RateLimitOptions): string {
+  private generateKey(
+    request: {
+      user?: { id: string };
+      ip?: string;
+      connection?: { remoteAddress?: string };
+      socket?: { remoteAddress?: string };
+      path: string;
+    },
+    _options: RateLimitOptions,
+  ): string {
     // Get user ID if authenticated
     const userId = request.user?.id;
 
@@ -260,7 +269,7 @@ export class MemoryRateLimitStore implements RateLimitStore {
 // Decorator for setting rate limit options
 export const RateLimit =
   (options: Partial<RateLimitOptions>) =>
-  (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+  (_target: unknown, _propertyKey: string, descriptor: PropertyDescriptor) => {
     Reflect.defineMetadata('rateLimit', options, descriptor.value);
     return descriptor;
   };

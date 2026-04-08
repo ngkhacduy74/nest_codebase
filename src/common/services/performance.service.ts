@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { AppLoggerService } from '@/common/services/logger.service';
+import { AppLoggerService, LogContext } from '@/common/services/logger.service';
 
 export interface PerformanceMetric {
   name: string;
@@ -48,7 +47,6 @@ export class PerformanceService {
   private readonly timers = new Map<string, number>();
 
   constructor(
-    private readonly configService: ConfigService,
     private readonly logger: AppLoggerService,
   ) {
     this.initializeDefaultThresholds();
@@ -76,7 +74,7 @@ export class PerformanceService {
       this.metrics.splice(0, this.metrics.length - 10000);
     }
 
-    this.logger.trace(`Performance metric recorded: ${name}`, {
+    this.logger.trace(`Performance metric recorded: ${name}`, LogContext.PERFORMANCE, {
       metric: name,
       value,
       unit,
@@ -119,7 +117,7 @@ export class PerformanceService {
   ): void {
     this.recordMetric(name, duration, 'ms', {
       ...tags,
-      rowCount: rowCount?.toString(),
+      ...(rowCount !== undefined && { rowCount: rowCount.toString() }),
     });
   }
 
@@ -167,7 +165,7 @@ export class PerformanceService {
   addThreshold(threshold: PerformanceThreshold): void {
     this.thresholds.set(threshold.name, threshold);
 
-    this.logger.trace(`Performance threshold added: ${threshold.name}`, {
+    this.logger.trace(`Performance threshold added: ${threshold.name}`, LogContext.PERFORMANCE, {
       threshold: threshold.name,
       warning: threshold.warning,
       critical: threshold.critical,
@@ -179,7 +177,7 @@ export class PerformanceService {
     const removed = this.thresholds.delete(name);
 
     if (removed) {
-      this.logger.trace(`Performance threshold removed: ${name}`, {
+      this.logger.trace(`Performance threshold removed: ${name}`, LogContext.PERFORMANCE, {
         threshold: name,
       });
     }
@@ -199,7 +197,7 @@ export class PerformanceService {
     const clearedCount = this.alerts.length;
     this.alerts.splice(0, this.alerts.length);
 
-    this.logger.trace(`Performance alerts cleared`, {
+    this.logger.trace(`Performance alerts cleared`, LogContext.PERFORMANCE, {
       clearedCount,
     });
   }
@@ -382,7 +380,7 @@ export class PerformanceService {
 
     const cleanedCount = initialLength - this.metrics.length;
 
-    this.logger.trace(`Performance metrics cleanup completed`, {
+    this.logger.trace(`Performance metrics cleanup completed`, LogContext.PERFORMANCE, {
       operation: 'cleanup',
       cleanedCount,
       remainingMetrics: this.metrics.length,
@@ -524,12 +522,12 @@ export class PerformanceService {
 
 // Performance monitoring decorator
 export const PerformanceMonitor =
-  (metricName: string) =>
+  (_metricName: string) =>
   (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: any[]) {
-      const performanceService = this.performanceService as PerformanceService;
+      const performanceService = (this as any).performanceService as PerformanceService;
       const timer = performanceService.startTimer(
         `${target.constructor.name}:${propertyKey}`,
       );

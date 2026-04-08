@@ -26,8 +26,11 @@ export class AwsS3Provider implements StorageProvider {
   private readonly s3Client: S3Client;
   private readonly bucket: string;
 
-  constructor(@Inject(ConfigService) private readonly configService: ConfigService) {
-    const storageConfig = this.configService.get<StorageConfig>(STORAGE_CONFIG_KEY)!;
+  constructor(
+    @Inject(ConfigService) private readonly configService: ConfigService,
+  ) {
+    const storageConfig =
+      this.configService.get<StorageConfig>(STORAGE_CONFIG_KEY)!;
 
     this.s3Client = new S3Client({
       region: storageConfig.awsS3!.region,
@@ -42,7 +45,11 @@ export class AwsS3Provider implements StorageProvider {
     this.bucket = storageConfig.awsS3!.bucket;
   }
 
-async upload(key: string, buffer: Buffer | Readable, options?: StorageUploadOptions): Promise<StorageUploadResult> {
+  async upload(
+    key: string,
+    buffer: Buffer | Readable,
+    options?: StorageUploadOptions,
+  ): Promise<StorageUploadResult> {
     try {
       const command = new PutObjectCommand({
         Bucket: this.bucket,
@@ -74,7 +81,7 @@ async upload(key: string, buffer: Buffer | Readable, options?: StorageUploadOpti
     }
   }
 
-async download(key: string): Promise<StorageDownloadResult> {
+  async download(key: string): Promise<StorageDownloadResult> {
     try {
       const command = new GetObjectCommand({
         Bucket: this.bucket,
@@ -101,7 +108,7 @@ async download(key: string): Promise<StorageDownloadResult> {
     }
   }
 
-async delete(key: string): Promise<StorageDeleteResult> {
+  async delete(key: string): Promise<StorageDeleteResult> {
     try {
       const command = new DeleteObjectCommand({
         Bucket: this.bucket,
@@ -124,7 +131,7 @@ async delete(key: string): Promise<StorageDeleteResult> {
     }
   }
 
-async list(prefix?: string, maxKeys?: number): Promise<StorageListResult> {
+  async list(prefix?: string, maxKeys?: number): Promise<StorageListResult> {
     try {
       const command = new ListObjectsV2Command({
         Bucket: this.bucket,
@@ -136,7 +143,7 @@ async list(prefix?: string, maxKeys?: number): Promise<StorageListResult> {
 
       return {
         success: true,
-        files: response.Contents?.map(obj => ({
+        files: response.Contents?.map((obj) => ({
           key: obj.Key!,
           size: obj.Size!,
           lastModified: obj.LastModified!,
@@ -154,7 +161,7 @@ async list(prefix?: string, maxKeys?: number): Promise<StorageListResult> {
     }
   }
 
-async getSignedUrl(key: string, expiresIn: number): Promise<string> {
+  async getSignedUrl(key: string, expiresIn: number): Promise<string> {
     try {
       const command = new GetObjectCommand({
         Bucket: this.bucket,
@@ -169,7 +176,7 @@ async getSignedUrl(key: string, expiresIn: number): Promise<string> {
     }
   }
 
-async exists(key: string): Promise<boolean> {
+  async exists(key: string): Promise<boolean> {
     try {
       const command = new HeadObjectCommand({
         Bucket: this.bucket,
@@ -183,7 +190,7 @@ async exists(key: string): Promise<boolean> {
     }
   }
 
-async getMetadata(key: string): Promise<{
+  async getMetadata(key: string): Promise<{
     size: number;
     contentType?: string;
     lastModified: Date;
@@ -208,20 +215,32 @@ async getMetadata(key: string): Promise<{
     }
   }
 
-getProviderName(): string {
+  getProviderName(): string {
     return 'AWS S3';
   }
 
-async validateConfig(): Promise<boolean> {
+  async validateConfig(): Promise<boolean> {
     try {
-      const storageConfig = this.configService.get<StorageConfig>(STORAGE_CONFIG_KEY)!;
+      const storageConfig =
+        this.configService.get<StorageConfig>(STORAGE_CONFIG_KEY)!;
 
-      if (!storageConfig.awsS3?.accessKeyId || !storageConfig.awsS3?.secretAccessKey || !storageConfig.awsS3?.bucket) {
+      if (
+        !storageConfig.awsS3?.accessKeyId ||
+        !storageConfig.awsS3?.secretAccessKey ||
+        !storageConfig.awsS3?.bucket
+      ) {
         return false;
       }
 
-      const validationMaxKeys = parseInt(this.configService.get('AWS_S3_VALIDATION_MAX_KEYS', '1'));
-      await this.s3Client.send(new ListObjectsV2Command({ Bucket: this.bucket, MaxKeys: validationMaxKeys }));
+      const validationMaxKeys = parseInt(
+        this.configService.get('AWS_S3_VALIDATION_MAX_KEYS', '1'),
+      );
+      await this.s3Client.send(
+        new ListObjectsV2Command({
+          Bucket: this.bucket,
+          MaxKeys: validationMaxKeys,
+        }),
+      );
       return true;
     } catch {
       return false;

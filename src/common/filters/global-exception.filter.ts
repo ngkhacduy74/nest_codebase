@@ -9,6 +9,7 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import { ConfigService } from '@nestjs/config';
 import { AppError } from '@/common/errors/app.error';
 import { ApplicationError } from '@/common/domain/errors/application.error';
+import { ErrorType } from '@/common/errors/error.types';
 import {
   createErrorResponse,
   createValidationErrorResponse,
@@ -31,8 +32,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
-    const response = ctx.getResponse<FastifyReply>();   // FastifyReply
-    const request = ctx.getRequest<FastifyRequest>();   // FastifyRequest
+    const response = ctx.getResponse<FastifyReply>(); // FastifyReply
+    const request = ctx.getRequest<FastifyRequest>(); // FastifyRequest
 
     const errorResponse = this.getErrorResponse(exception, request);
 
@@ -79,7 +80,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       metadata.method = request.method;
 
       // Handle validation errors specially
-      if (exception.errorType === 'VALIDATION' && exception.details) {
+      if (exception.errorType === ErrorType.VALIDATION && exception.details) {
         return createValidationErrorResponse(
           metadata,
           exception.details as Array<{
@@ -239,7 +240,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     return 'UNKNOWN';
   }
 
-  private createUnknownErrorResponse(exception: unknown, request: FastifyRequest) {
+  private createUnknownErrorResponse(
+    exception: unknown,
+    request: FastifyRequest,
+  ) {
     const requestId = request.headers['x-request-id'] as string | undefined;
     const traceId = request.headers['x-trace-id'] as string | undefined;
     const isProduction = this.configService.get('app.nodeEnv') === 'production';

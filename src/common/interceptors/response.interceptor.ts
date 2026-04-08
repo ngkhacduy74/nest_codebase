@@ -21,7 +21,6 @@ export class ResponseInterceptor<T = unknown> implements NestInterceptor<
     next: CallHandler,
   ): Observable<BaseResponse<T>> {
     const ctx = context.switchToHttp();
-    const response = ctx.getResponse();
     const request = ctx.getRequest();
 
     return next.handle().pipe(

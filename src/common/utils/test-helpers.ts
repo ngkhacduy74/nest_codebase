@@ -1,6 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
-import { Provider, Type, DynamicModule, ForwardReference } from '@nestjs/common';
+import {
+  Provider,
+  Type,
+  DynamicModule,
+  ForwardReference,
+} from '@nestjs/common';
 
 // Mock providers for testing
 export const mockProviders = {

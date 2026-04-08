@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { AppLoggerService } from '@/common/services/logger.service';
+import { AppLoggerService, LogContext } from '@/common/services/logger.service';
 
 export interface CacheOptions {
   ttl?: number; // Time to live in seconds
@@ -46,7 +46,7 @@ export class CacheService {
 
     if (!entry) {
       this.stats.misses++;
-      this.logger.trace(`Cache miss: ${key}`, {
+      this.logger.trace(`Cache miss: ${key}`, undefined, {
         key,
         operation: 'get',
         result: 'miss',
@@ -60,7 +60,7 @@ export class CacheService {
       this.cache.delete(key);
       this.stats.misses++;
 
-      this.logger.trace(`Cache miss (expired): ${key}`, {
+      this.logger.trace(`Cache miss (expired): ${key}`, undefined, {
         key,
         operation: 'get',
         result: 'expired',
@@ -74,7 +74,7 @@ export class CacheService {
     entry.hits++;
     this.stats.hits++;
 
-    this.logger.trace(`Cache hit: ${key}`, {
+    this.logger.trace(`Cache hit: ${key}`, undefined, {
       key,
       operation: 'get',
       result: 'hit',
@@ -107,7 +107,7 @@ export class CacheService {
     this.cache.set(key, entry);
     this.stats.sets++;
 
-    this.logger.trace(`Cache set: ${key}`, {
+    this.logger.trace(`Cache set: ${key}`, undefined, {
       key,
       operation: 'set',
       ttl,
@@ -122,13 +122,13 @@ export class CacheService {
     if (deleted) {
       this.stats.deletes++;
 
-      this.logger.trace(`Cache delete: ${key}`, {
+      this.logger.trace(`Cache delete: ${key}`, undefined, {
         key,
         operation: 'delete',
         result: 'success',
       });
     } else {
-      this.logger.trace(`Cache delete (not found): ${key}`, {
+      this.logger.trace(`Cache delete (not found): ${key}`, undefined, {
         key,
         operation: 'delete',
         result: 'not_found',
@@ -148,7 +148,7 @@ export class CacheService {
       }
     }
 
-    this.logger.trace(`Cache invalidation by tag: ${tag}`, {
+    this.logger.trace(`Cache invalidation by tag: ${tag}`, undefined, {
       tag,
       operation: 'invalidate_by_tag',
       invalidatedCount,
@@ -168,7 +168,7 @@ export class CacheService {
       }
     }
 
-    this.logger.trace(`Cache invalidation by pattern: ${pattern}`, {
+    this.logger.trace(`Cache invalidation by pattern: ${pattern}`, undefined, {
       pattern,
       operation: 'invalidate_by_pattern',
       invalidatedCount,
@@ -181,7 +181,7 @@ export class CacheService {
     const size = this.cache.size;
     this.cache.clear();
 
-    this.logger.trace(`Cache cleared`, {
+    this.logger.trace(`Cache cleared`, undefined, {
       operation: 'clear',
       clearedEntries: size,
     });
@@ -266,7 +266,7 @@ export class CacheService {
       }
     }
 
-    this.logger.trace(`Cache cleanup completed`, {
+    this.logger.trace(`Cache cleanup completed`, undefined, {
       operation: 'cleanup',
       cleanedCount,
       remainingEntries: this.cache.size,
@@ -294,7 +294,7 @@ export class CacheService {
   async warmup<T>(
     entries: Map<string, { data: T; options?: CacheOptions }>,
   ): Promise<void> {
-    this.logger.trace(`Cache warmup started`, {
+    this.logger.trace(`Cache warmup started`, LogContext.SYSTEM, {
       operation: 'warmup',
       entryCount: entries.size,
     });
@@ -303,7 +303,7 @@ export class CacheService {
       await this.set(key, data, options);
     }
 
-    this.logger.trace(`Cache warmup completed`, {
+    this.logger.trace(`Cache warmup completed`, LogContext.SYSTEM, {
       operation: 'warmup',
       entryCount: entries.size,
     });
@@ -373,7 +373,7 @@ export const Cache =
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: any[]) {
-      const cacheService = this.cacheService as CacheService;
+      const cacheService = (this as any).cacheService as CacheService;
       const cacheKey = `${target.constructor.name}:${propertyKey}:${JSON.stringify(args)}`;
 
       // Try to get from cache
@@ -397,11 +397,11 @@ export const Cache =
 // Cache invalidation decorator
 export const CacheInvalidate =
   (tags: string[]) =>
-  (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+  (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => {
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: any[]) {
-      const cacheService = this.cacheService as CacheService;
+      const cacheService = (this as any).cacheService as CacheService;
 
       // Execute original method
       const result = await originalMethod.apply(this, args);

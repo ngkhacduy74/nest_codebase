@@ -2,11 +2,15 @@ import { AuthService } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { ClsService } from 'nestjs-cls';
-import { USER_REPOSITORY, INJECTION_TOKENS } from '@/constants/injection-tokens';
+import {
+  USER_REPOSITORY,
+  INJECTION_TOKENS,
+} from '@/constants/injection-tokens';
 import { InvalidCredentialsError } from '@/common/domain/errors/application.error';
-import { createTestModule, PERFORMANCE_TOKENS } from '@/common/utils/test-helpers';
-import { InjectMetric } from '@willsoto/nestjs-prometheus';
-import { Gauge } from 'prom-client';
+import {
+  createTestModule,
+  PERFORMANCE_TOKENS,
+} from '@/common/utils/test-helpers';
 
 // Mock uuid module
 jest.mock('uuid', () => ({
@@ -59,7 +63,10 @@ describe('AuthService', () => {
         { provide: INJECTION_TOKENS.TOKEN_STORE, useValue: tokenStore },
         { provide: ConfigService, useValue: configService },
         { provide: ClsService, useValue: cls },
-        { provide: PERFORMANCE_TOKENS.ACTIVE_SESSIONS_TOTAL, useValue: { dec: jest.fn(), inc: jest.fn() } },
+        {
+          provide: PERFORMANCE_TOKENS.ACTIVE_SESSIONS_TOTAL,
+          useValue: { dec: jest.fn(), inc: jest.fn() },
+        },
       ],
     });
 

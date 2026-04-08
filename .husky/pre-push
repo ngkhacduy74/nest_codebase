@@ -1,11 +1,38 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+RED='\033[0;31m'
 GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
-changed_files=$(git diff --name-only HEAD HEAD~ -- '*.ts' '*.js')
+
+set -e
+
+echo "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo "${YELLOW}🧪 PRE-PUSH VALIDATION CHECKS${NC}"
+echo "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+
+# Check if there are any TypeScript/JS changes
+changed_files=$(git diff --name-only HEAD origin/HEAD~ -- '*.ts' '*.js' 2>/dev/null || echo "")
+
 if [ -n "$changed_files" ]; then
-  echo "${BLUE}Running tests due to changes in the following TS/JS files:${NC}"
-  echo "$changed_files"
-  pnpm test
+  echo "${YELLOW}Detected changes in TypeScript/JavaScript files:${NC}"
+  echo "$changed_files" | sed 's/^/  • /'
+  
+  echo "${YELLOW}Running unit tests...${NC}"
+  if ! pnpm test:cov; then
+    echo "${RED}✗ Unit tests failed${NC}"
+    echo "${YELLOW}Fix failing tests before pushing${NC}"
+    exit 1
+  fi
+  echo "${GREEN}✓ Unit tests passed${NC}"
 else
-  echo "${GREEN}No TS/JS files have been changed. Skipping tests.${NC}"
+  echo "${GREEN}No TypeScript/JavaScript changes detected${NC}"
 fi
+
+echo "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo "${GREEN}✓ All push validation checks passed${NC}"
+echo "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+
+exit 0

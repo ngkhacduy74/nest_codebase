@@ -13,10 +13,14 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "lint:check": "eslint \"{src,apps,libs,test}/**/*.ts\" --max-warnings 0",
+    "lint:check": "eslint \"{src,apps,libs,test}/**/*.ts\"",
+    "lint:strict": "eslint \"{src,apps,libs,test}/**/*.ts\" --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "spellcheck": "cspell lint \"src/**/*.ts\" \"test/**/*.ts\" --no-progress",
-    "pre-commit": "npm run lint:check && npm run typecheck",
+    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
+    "validate:code": "npm run lint:check && npm run typecheck && npm run spellcheck",
+    "validate:commit": "npm run validate:code && npm run format:check",
+    "pre-commit": "npm run validate:code",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
@@ -32,6 +36,7 @@
       "eslint --max-warnings 0"
     ],
     "*.{json,md,yml,yaml}": [
+      "prettier --check",
       "prettier --write"
     ],
     "*.{css,scss,less}": [

@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
-import { Request, Response } from 'express';
+import { FastifyRequest, FastifyReply } from 'fastify';
 import {
   AppLoggerService,
   LogMetadata,
@@ -18,8 +18,8 @@ export class LoggingInterceptor implements NestInterceptor {
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const startTime = Date.now();
-    const request = context.switchToHttp().getRequest<Request>();
-    const response = context.switchToHttp().getResponse<Response>();
+    const request = context.switchToHttp().getRequest<FastifyRequest>();
+    const response = context.switchToHttp().getResponse<FastifyReply>();
 
     const { method, url, ip, headers } = request;
     const requestId = headers['x-request-id'] as string | undefined;

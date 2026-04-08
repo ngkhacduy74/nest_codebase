@@ -9,7 +9,7 @@ import {
   IsNotEmpty,
 } from 'class-validator';
 import { AppConfig, Environment } from './app-config.type';
-import { validateConfig } from '@/utils/config/validate-config';
+import { validateConfig } from '@/common/utils/config/validate-config';
 
 class EnvironmentVariablesValidator {
   @IsEnum(Environment)
@@ -48,13 +48,13 @@ export default registerAs<AppConfig>('app', () => {
     EnvironmentVariablesValidator,
   );
 
-  const nodeEnv = validatedConfig.NODE_ENV || Environment.DEVELOPMENT;
-  const port = validatedConfig.APP_PORT || 3000;
-  const name = validatedConfig.APP_NAME || 'NestJS SaaS';
-  const apiPrefix = validatedConfig.API_PREFIX || 'api/v1';
-  const apiVersion = validatedConfig.API_VERSION || '1';
-  const shutdownTimeout = validatedConfig.SHUTDOWN_TIMEOUT_MS || 30000;
-  const fallbackLanguage = validatedConfig.FALLBACK_LANGUAGE || 'en';
+  const nodeEnv = validatedConfig.NODE_ENV ?? Environment.DEVELOPMENT;
+  const port = validatedConfig.APP_PORT ?? 3000;
+  const name = validatedConfig.APP_NAME ?? 'NestJS SaaS';
+  const apiPrefix = validatedConfig.API_PREFIX ?? 'api/v1';
+  const apiVersion = validatedConfig.API_VERSION ?? '1';
+  const shutdownTimeout = validatedConfig.SHUTDOWN_TIMEOUT_MS ?? 30000;
+  const fallbackLanguage = validatedConfig.FALLBACK_LANGUAGE ?? 'en';
 
   return {
     nodeEnv,

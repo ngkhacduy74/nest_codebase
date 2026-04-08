@@ -7,7 +7,7 @@ import {
   IsNotEmpty,
 } from 'class-validator';
 import { DatabaseConfig } from './database-config.type';
-import { validateConfig } from '@/utils/config/validate-config';
+import { validateConfig } from '@/common/utils/config/validate-config';
 
 class EnvironmentVariablesValidator {
   @IsString()
@@ -34,7 +34,7 @@ export default registerAs<DatabaseConfig>('database', () => {
   );
 
   return {
-    url: validatedConfig.DATABASE_URL || '',
+    url: validatedConfig.DATABASE_URL ?? '',
     ssl: validatedConfig.DATABASE_SSL,
     connectionTimeout: validatedConfig.DATABASE_CONNECTION_TIMEOUT,
     idleTimeout: validatedConfig.DATABASE_IDLE_TIMEOUT,

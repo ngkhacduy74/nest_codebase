@@ -7,7 +7,7 @@ import {
   IsNotEmpty,
 } from 'class-validator';
 import { AuthConfig } from './auth-config.type';
-import { validateConfig } from '@/utils/config/validate-config';
+import { validateConfig } from '@/common/utils/config/validate-config';
 
 class EnvironmentVariablesValidator {
   @IsString()
@@ -64,21 +64,21 @@ export default registerAs<AuthConfig>('auth', () => {
   return {
     jwt: {
       accessToken: {
-        secret: validatedConfig.AUTH_JWT_ACCESS_SECRET || '',
-        expiresIn: validatedConfig.AUTH_JWT_ACCESS_EXPIRES_IN || '15m',
+        secret: validatedConfig.AUTH_JWT_ACCESS_SECRET ?? '',
+        expiresIn: validatedConfig.AUTH_JWT_ACCESS_EXPIRES_IN ?? '15m',
       },
       refreshToken: {
-        secret: validatedConfig.AUTH_JWT_REFRESH_SECRET || '',
-        expiresIn: validatedConfig.AUTH_JWT_REFRESH_EXPIRES_IN || '7d',
+        secret: validatedConfig.AUTH_JWT_REFRESH_SECRET ?? '',
+        expiresIn: validatedConfig.AUTH_JWT_REFRESH_EXPIRES_IN ?? '7d',
       },
     },
     session: {
-      maxActive: validatedConfig.AUTH_SESSION_MAX_ACTIVE || 5,
+      maxActive: validatedConfig.AUTH_SESSION_MAX_ACTIVE ?? 5,
       blacklistEnabled:
         validatedConfig.AUTH_SESSION_BLACKLIST_ENABLED !== false,
     },
     password: {
-      minLength: validatedConfig.AUTH_PASSWORD_MIN_LENGTH || 8,
+      minLength: validatedConfig.AUTH_PASSWORD_MIN_LENGTH ?? 8,
       requireUppercase:
         validatedConfig.AUTH_PASSWORD_REQUIRE_UPPERCASE !== false,
       requireLowercase:

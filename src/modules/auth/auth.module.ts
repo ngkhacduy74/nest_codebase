@@ -4,9 +4,7 @@ import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './application/services/auth.service';
 import { AuthController } from './presentation/controllers/auth.controller';
-import {
-  RedisTokenStore,
-} from './infrastructure/token-store/redis-token-store';
+import { RedisTokenStore } from './infrastructure/token-store/redis-token-store';
 import { LocalStrategy } from './infrastructure/strategies/local.strategy';
 import { JwtStrategy } from './infrastructure/strategies/jwt.strategy';
 import { INJECTION_TOKENS } from '@/constants/injection-tokens';

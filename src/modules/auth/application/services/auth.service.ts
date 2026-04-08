@@ -12,10 +12,11 @@ import { ClsService } from 'nestjs-cls';
 import type { Role } from '../../../user/domain/enums/role.enum';
 import type { AppClsStore } from '@/modules/cls/cls.module';
 import type { IUserRepository } from '../../../user/domain/repositories/user.repository.interface';
+import { type ITokenStore } from '../../infrastructure/token-store/redis-token-store';
 import {
-  type ITokenStore,
-} from '../../infrastructure/token-store/redis-token-store';
-import { USER_REPOSITORY, INJECTION_TOKENS } from '@/constants/injection-tokens';
+  USER_REPOSITORY,
+  INJECTION_TOKENS,
+} from '@/constants/injection-tokens';
 import {
   AccountDeletedError,
   AccountInactiveError,
@@ -63,7 +64,8 @@ export class AuthService {
     @Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository,
     private readonly jwtService: JwtService,
     private readonly cls: ClsService<AppClsStore>,
-    @Inject(INJECTION_TOKENS.TOKEN_STORE) private readonly tokenStore: ITokenStore,
+    @Inject(INJECTION_TOKENS.TOKEN_STORE)
+    private readonly tokenStore: ITokenStore,
     private readonly configService: ConfigService,
     @InjectMetric('active_sessions_total')
     private readonly sessionsGauge: Gauge<string>,
@@ -166,19 +168,21 @@ export class AuthService {
   ): Promise<void> {
     // 1. Blacklist access token with proper TTL from token expiry
     let blacklistTtl = 900; // fallback 15 mins
-    
+
     if (accessTokenPayload?.exp) {
       // Calculate TTL from token's exp claim
       const currentTime = Math.floor(Date.now() / 1000);
       blacklistTtl = Math.max(0, accessTokenPayload.exp - currentTime);
     }
-    
+
     await this.tokenStore.blacklistAccessToken(jti, blacklistTtl);
 
     await this.tokenStore.revoke(userId, refreshTokenId);
     this.sessionsGauge.dec();
 
-    this.logger.log(`[Auth] Logout: userId=${userId}, jti=${jti}, ttl=${blacklistTtl}s`);
+    this.logger.log(
+      `[Auth] Logout: userId=${userId}, jti=${jti}, ttl=${blacklistTtl}s`,
+    );
   }
 
   async logoutAllDevices(userId: string): Promise<void> {

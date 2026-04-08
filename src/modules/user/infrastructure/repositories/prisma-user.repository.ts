@@ -71,13 +71,13 @@ export class PrismaUserRepository implements IUserRepository {
           orderBy: { [sortBy]: sortOrder },
           where: {
             deletedAt: null, // Filter out soft-deleted users
-            isActive: true,   // Only active users
+            isActive: true, // Only active users
           },
         }),
         this.prisma.user.count({
           where: {
             deletedAt: null, // Filter out soft-deleted users
-            isActive: true,   // Only active users
+            isActive: true, // Only active users
           },
         }),
       ]);

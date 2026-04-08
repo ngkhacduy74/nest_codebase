@@ -278,10 +278,14 @@ export class AppLoggerService {
         this.nestLogger.log(logEntry.message, logData);
         break;
       case LogLevel.DEBUG:
-        this.nestLogger.debug(logEntry.message, logEntry.context, logData);
+        if (this.nestLogger) {
+          (this.nestLogger as any).debug(logEntry.message, logEntry.context, logData);
+        }
         break;
       case LogLevel.TRACE:
-        this.nestLogger.verbose(logEntry.message, logEntry.context, logData);
+        if (this.nestLogger) {
+          (this.nestLogger as any).verbose(logEntry.message, logEntry.context, logData);
+        }
         break;
     }
   }

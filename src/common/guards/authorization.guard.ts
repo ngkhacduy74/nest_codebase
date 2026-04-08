@@ -6,7 +6,7 @@ import { AppError } from '@/common/errors/app.error';
 export interface Permission {
   resource: string;
   action: string;
-  conditions?: string[];
+  conditions?: readonly string[];
 }
 
 export interface Role {
@@ -49,7 +49,7 @@ export const PERMISSIONS = {
   PRODUCT_DELETE_ALL: { resource: 'product', action: 'delete' },
 } as const;
 
-export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
+export const ROLE_PERMISSIONS: Record<string, readonly Permission[]> = {
   [ROLES.USER]: [
     PERMISSIONS.USER_READ_OWN,
     PERMISSIONS.USER_UPDATE_OWN,
@@ -60,11 +60,24 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     PERMISSIONS.PRODUCT_DELETE_OWN,
   ],
   [ROLES.MODERATOR]: [
-    ...ROLE_PERMISSIONS[ROLES.USER],
+    PERMISSIONS.USER_READ_OWN,
+    PERMISSIONS.USER_UPDATE_OWN,
+    PERMISSIONS.USER_DELETE_OWN,
+    PERMISSIONS.PRODUCT_READ,
+    PERMISSIONS.PRODUCT_CREATE,
+    PERMISSIONS.PRODUCT_UPDATE_OWN,
+    PERMISSIONS.PRODUCT_DELETE_OWN,
     PERMISSIONS.PRODUCT_UPDATE_ALL,
   ],
   [ROLES.ADMIN]: [
-    ...ROLE_PERMISSIONS[ROLES.MODERATOR],
+    PERMISSIONS.USER_READ_OWN,
+    PERMISSIONS.USER_UPDATE_OWN,
+    PERMISSIONS.USER_DELETE_OWN,
+    PERMISSIONS.PRODUCT_READ,
+    PERMISSIONS.PRODUCT_CREATE,
+    PERMISSIONS.PRODUCT_UPDATE_OWN,
+    PERMISSIONS.PRODUCT_DELETE_OWN,
+    PERMISSIONS.PRODUCT_UPDATE_ALL,
     PERMISSIONS.USER_READ_ALL,
     PERMISSIONS.USER_UPDATE_ALL,
     PERMISSIONS.PRODUCT_DELETE_ALL,
@@ -98,12 +111,19 @@ export class AuthorizationGuard implements CanActivate {
     }
 
     // Get required permissions from metadata
-    const requiredPermissions = this.reflector.get<string[]>('permissions', []);
-    const requiredRoles = this.reflector.get<string[]>('roles', []);
+    const requiredPermissions = this.reflector.get<string[]>(
+      'permissions',
+      context.getHandler(),
+    );
+    const requiredRoles = this.reflector.get<string[]>(
+      'roles',
+      context.getHandler(),
+    );
 
     try {
       // Check if user has required roles
       if (
+        requiredRoles &&
         requiredRoles.length > 0 &&
         !this.hasRequiredRoles(user.role, requiredRoles)
       ) {
@@ -121,6 +141,7 @@ export class AuthorizationGuard implements CanActivate {
 
       // Check if user has required permissions
       if (
+        requiredPermissions &&
         requiredPermissions.length > 0 &&
         !this.hasRequiredPermissions(user, requiredPermissions, request)
       ) {
@@ -168,12 +189,10 @@ export class AuthorizationGuard implements CanActivate {
   }
 
   private hasRequiredPermissions(
-    user: any,
+    user: { id: string; role: string },
     requiredPermissions: string[],
-    request: any,
+    request: { params: Record<string, string> },
   ): boolean {
-    const userPermissions = ROLE_PERMISSIONS[user.role] || [];
-
     return requiredPermissions.every((requiredPermission) => {
       const permission = this.parsePermission(requiredPermission);
       return this.checkPermission(user, permission, request);
@@ -186,9 +205,9 @@ export class AuthorizationGuard implements CanActivate {
   }
 
   private checkPermission(
-    user: any,
+    user: { id: string; role: string },
     permission: Permission,
-    request: any,
+    request: { params: Record<string, string> },
   ): boolean {
     const userPermissions = ROLE_PERMISSIONS[user.role] || [];
 
@@ -211,10 +230,14 @@ export class AuthorizationGuard implements CanActivate {
   }
 
   private checkConditions(
-    user: any,
+    user: { id: string; role: string },
     permission: Permission,
-    request: any,
+    request: { params: Record<string, string> },
   ): boolean {
+    if (!permission.conditions || permission.conditions.length === 0) {
+      return true;
+    }
+
     return permission.conditions.every((condition) => {
       switch (condition) {
         case 'own':
@@ -225,7 +248,11 @@ export class AuthorizationGuard implements CanActivate {
     });
   }
 
-  private checkOwnership(user: any, resource: string, request: any): boolean {
+  private checkOwnership(
+    user: { id: string; role: string },
+    resource: string,
+    request: { params: Record<string, string> },
+  ): boolean {
     // Extract resource ID from request parameters
     const resourceId =
       request.params.id || request.params.userId || request.params.productId;
@@ -239,34 +266,34 @@ export class AuthorizationGuard implements CanActivate {
       case 'user':
         return user.id === resourceId;
       case 'product':
-        return this.checkProductOwnership(user.id, resourceId);
+        return this.checkProductOwnershipSync(user.id, resourceId);
       default:
         return false;
     }
   }
 
-  private async checkProductOwnership(
+  private checkProductOwnershipSync(
     userId: string,
     productId: string,
-  ): Promise<boolean> {
+  ): boolean {
     // This would typically involve a database call
     // For now, we'll implement a simple check
     // In a real implementation, you would query the database
-    return userId && productId; // Placeholder implementation
+    return Boolean(userId && productId); // Placeholder implementation
   }
 }
 
 // Decorators for setting required permissions/roles
 export const Permissions =
   (...permissions: string[]) =>
-  (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+  (_target: unknown, _propertyKey: string, descriptor: PropertyDescriptor) => {
     Reflect.defineMetadata('permissions', permissions, descriptor.value);
     return descriptor;
   };
 
 export const Roles =
   (...roles: string[]) =>
-  (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+  (_target: unknown, _propertyKey: string, descriptor: PropertyDescriptor) => {
     Reflect.defineMetadata('roles', roles, descriptor.value);
     return descriptor;
   };

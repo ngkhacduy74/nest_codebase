@@ -6,8 +6,6 @@ import {
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
 import { AppModule } from './modules/app.module';
-import { AppClsStore } from './modules/cls/cls.module';
-import { ClsService } from 'nestjs-cls';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Logger as PinoLoggerService } from 'nestjs-pino';
