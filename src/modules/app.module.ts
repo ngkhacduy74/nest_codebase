@@ -17,6 +17,8 @@ import { PrismaModule } from '@modules/prisma/prisma.module';
 import { RedisModule } from '@/infrastructure/redis/redis.module';
 import { GlobalExceptionFilter } from '@common/filters/global-exception.filter';
 import { LoggingInterceptor } from '@common/interceptors/logging.interceptor';
+import { AuthGuard } from '@common/guards/auth.guard';
+import { RolesGuard } from '@common/guards/roles.guard';
 
 import { HealthModule } from '@modules/health/health.module';
 import { MetricsModule } from '@modules/metrics/metrics.module';
@@ -134,13 +136,19 @@ import { UserModule } from '@modules/user/user.module';
     NotificationModule,
   ],
   providers: [
-    // Apply ThrottlerGuard globally
+    // Rate limiting
     { provide: APP_GUARD, useClass: ThrottlerGuard },
 
-    // Global exception filter
+    // Auth global - order is important
+    { provide: APP_GUARD, useClass: AuthGuard },
+
+    // RBAC global
+    { provide: APP_GUARD, useClass: RolesGuard },
+
+    // Exception filter
     { provide: APP_FILTER, useClass: GlobalExceptionFilter },
 
-    // Global logging interceptor
+    // Logging
     { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
   ],
 })

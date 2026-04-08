@@ -1,11 +1,39 @@
-node_modules
-# Keep environment variables out of version control
-.env
+# Dependencies
+node_modules/
+.pnpm-store/
 
-# Generated files
-src/generated/
+# Build
 dist/
 *.tsbuildinfo
+src/generated/
 
-# Environment files
-.env.local
+# Environment - NEVER COMMIT
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Docker env - NEVER COMMIT
+.env.docker
+.env.production
+.env.staging
+
+# Logs
+*.log
+logs/
+
+# Uploads / temp files
+tmp/
+uploads/
+
+# IDE
+.vscode/settings.json
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test artifacts
+coverage/
+test-results/

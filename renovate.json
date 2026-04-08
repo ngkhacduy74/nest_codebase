@@ -1,0 +1,65 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "timezone": "Asia/Ho_Chi_Minh",
+  "schedule": ["every weekend"],
+  "labels": ["dependencies"],
+  "prHourlyLimit": 5,
+  "prConcurrentLimit": 10,
+  "automerge": false,
+  "separateMajorReleases": true,
+  "separateMinorPatch": false,
+
+  "packageRules": [
+    {
+      "description": "Major updates - need manual review",
+      "matchUpdateTypes": ["major"],
+      "labels": ["dependencies", "breaking-change"],
+      "automerge": false
+    },
+    {
+      "description": "Minor + patch - auto-merge if CI pass",
+      "matchUpdateTypes": ["minor", "patch"],
+      "matchDepTypes": ["dependencies"],
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash"
+    },
+    {
+      "description": "NestJS core - always manual review",
+      "matchPackagePatterns": ["^@nestjs/"],
+      "groupName": "NestJS",
+      "automerge": false,
+      "labels": ["dependencies", "nestjs"]
+    },
+    {
+      "description": "Prisma - group together to update at same time",
+      "matchPackageNames": ["prisma", "@prisma/client"],
+      "groupName": "Prisma",
+      "automerge": false
+    },
+    {
+      "description": "Security advisories - update immediately",
+      "matchCategories": ["security"],
+      "schedule": ["at any time"],
+      "labels": ["dependencies", "security"],
+      "automerge": false,
+      "prPriority": 10
+    },
+    {
+      "description": "Dev dependencies patch",
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["patch"],
+      "automerge": true
+    }
+  ],
+
+  "ignoreDeps": [
+    "typescript"
+  ],
+
+  "vulnerabilityAlerts": {
+    "labels": ["security"],
+    "automerge": false
+  }
+}

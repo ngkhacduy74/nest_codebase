@@ -5,7 +5,7 @@ import {
   HttpException,
   Logger,
 } from '@nestjs/common';
-import { Request, Response } from 'express';
+import { FastifyRequest, FastifyReply } from 'fastify';
 import { ConfigService } from '@nestjs/config';
 import { AppError } from '@/common/errors/app.error';
 import { ApplicationError } from '@/common/domain/errors/application.error';
@@ -31,18 +31,19 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
-    const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest<Request>();
+    const response = ctx.getResponse<FastifyReply>();   // FastifyReply
+    const request = ctx.getRequest<FastifyRequest>();   // FastifyRequest
 
     const errorResponse = this.getErrorResponse(exception, request);
 
     // Log the error with correlation
     this.logError(exception, request, errorResponse);
 
-    response.status(errorResponse.meta.statusCode).json(errorResponse);
+    // Fastify uses .code() instead of .status()
+    response.code(errorResponse.meta.statusCode).send(errorResponse);
   }
 
-  private getErrorResponse(exception: unknown, request: Request) {
+  private getErrorResponse(exception: unknown, request: FastifyRequest) {
     const requestId = request.headers['x-request-id'] as string | undefined;
     const traceId = request.headers['x-trace-id'] as string | undefined;
 
@@ -238,7 +239,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     return 'UNKNOWN';
   }
 
-  private createUnknownErrorResponse(exception: unknown, request: Request) {
+  private createUnknownErrorResponse(exception: unknown, request: FastifyRequest) {
     const requestId = request.headers['x-request-id'] as string | undefined;
     const traceId = request.headers['x-trace-id'] as string | undefined;
     const isProduction = this.configService.get('app.nodeEnv') === 'production';
@@ -285,7 +286,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
   private logError(
     exception: unknown,
-    request: Request,
+    request: FastifyRequest,
     errorResponse: any,
   ): void {
     const isProduction = this.configService.get('app.nodeEnv') === 'production';

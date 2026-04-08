@@ -1,18 +1,40 @@
 version: '3.9'
 
 services:
+  app:
+    image: ${REGISTRY}/saas-backend:${IMAGE_TAG:-latest}
+    container_name: saas_app
+    env_file: .env.docker
+    ports:
+      - "${PORT:-3000}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/v1/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+
   postgres:
     image: postgres:16-alpine
-    container_name: saas_postgres
     env_file: .env.docker
     environment:
       POSTGRES_USER: ${DATABASE_USER}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: ${DATABASE_NAME}
-    ports:
-      - "${DATABASE_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    # Port NOT exposed in production
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}"]
       interval: 10s
@@ -22,14 +44,8 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: saas_redis
     env_file: .env.docker
-    command: >
-      redis-server
-      --requirepass ${REDIS_PASSWORD}
-      --appendonly yes
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
+    command: redis-server --requirepass ${REDIS_PASSWORD} --appendonly yes
     volumes:
       - redis_data:/data
     healthcheck:
@@ -39,16 +55,8 @@ services:
       retries: 5
     restart: unless-stopped
 
-  adminer:
-    image: adminer:latest
-    container_name: saas_adminer
-    ports:
-      - "8080:8080"
-    depends_on:
-      postgres:
-        condition: service_healthy
-    profiles: ["tools"]  # only start with: docker compose --profile tools up
-
 volumes:
   postgres_data:
+    driver: local
   redis_data:
+    driver: local

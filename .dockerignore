@@ -1,0 +1,40 @@
+# Source control
+.git
+.gitignore
+
+# Dependencies (will be reinstalled in image)
+node_modules
+.pnpm-store
+
+# Build output (will be generated in image)
+dist
+*.tsbuildinfo
+src/generated/
+
+# Environment files - NEVER commit to image
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Dev tools
+.husky
+.github
+coverage
+test
+docs
+*.md
+!README.md
+
+# IDE
+.vscode
+.idea
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads / temp files
+tmp/
+uploads/

@@ -5,6 +5,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { IUserRepository } from '../../domain/repositories/user.repository.interface';
 import { INJECTION_TOKENS } from '@/constants/injection-tokens';
 import { CacheKeys } from '@/constants/cache.constant';
+import type { ITokenStore } from '@/modules/auth/infrastructure/token-store/redis-token-store';
 
 @Injectable()
 export class DeleteUserUseCase {
@@ -14,6 +15,9 @@ export class DeleteUserUseCase {
     @Inject(INJECTION_TOKENS.USER_REPOSITORY)
     private readonly userRepo: IUserRepository,
     @Inject(CACHE_MANAGER) private readonly cache: Cache,
+    // Add: inject token store
+    @Inject(INJECTION_TOKENS.TOKEN_STORE)
+    private readonly tokenStore: ITokenStore,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -23,18 +27,27 @@ export class DeleteUserUseCase {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
+    // Soft delete
     await this.userRepo.delete(id);
 
+    // Add: Revoke all sessions of user in Redis
+    try {
+      await this.tokenStore.revokeAll(id);
+      this.logger.log(`[DeleteUser] Revoked all sessions: userId=${id}`);
+    } catch (err) {
+      // Log warning but don't block - user already soft deleted
+      this.logger.error(`[DeleteUser] Failed to revoke sessions: userId=${id}`, err);
+    }
+
+    // Invalidate cache
     try {
       await Promise.all([
         this.cache.del(CacheKeys.user(id)),
         this.cache.del(CacheKeys.userByEmail(user.email)),
-        // Clear user list cache
-        this.cache.del(CacheKeys.userList(1, 20)), // Clear first page
+        this.cache.del(CacheKeys.userList(1, 20)),
       ]);
     } catch (err) {
       this.logger.warn('Cache invalidation failed', { id, err });
-      // Không throw — tiếp tục
     }
 
     this.eventEmitter.emit('user.deleted', {

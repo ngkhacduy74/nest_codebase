@@ -1,70 +1,50 @@
-// import { Module, DynamicModule } from '@nestjs/common';
-// import { ConfigService } from '@nestjs/config';
-// import { StorageService } from './storage.service';
-// import { STORAGE_CONFIG_KEY, StorageConfig } from './storage.interface';
-// import { AwsS3Provider } from './providers/aws-s3.provider';
-// import type { StorageProvider } from './storage.interface';
+import { Module, DynamicModule } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { StorageService } from './storage.service';
+import { STORAGE_CONFIG_KEY, StorageConfig } from './storage.interface';
+import { AwsS3Provider } from './providers/aws-s3.provider';
+import type { StorageProvider } from './storage.interface';
 
-// @Module({})
-// export class StorageModule {
-//   static forRoot(): DynamicModule {
-//     return {
-//       module: StorageModule,
-//       providers: [
-//         {
-//           provide: STORAGE_CONFIG_KEY,
-//           useFactory: (configService: ConfigService) => configService.get<StorageConfig>(STORAGE_CONFIG_KEY),
-//           inject: [ConfigService],
-//         },
-//         {
-//           provide: 'StorageProvider',
-//           useFactory: (configService: ConfigService) => {
-//             const storageConfig = configService.get<StorageConfig>(STORAGE_CONFIG_KEY)!;
+export const STORAGE_PROVIDER = 'StorageProvider';
 
-//             switch (storageConfig.provider) {
-//               case 'aws-s3':
-//                 return new AwsS3Provider(configService);
-//               default:
-//                 throw new Error(`Unsupported storage provider: ${storageConfig.provider}`);
-//             }
-//           },
-//           inject: [ConfigService],
-//         },
-//         StorageService,
-//       ],
-//       exports: [StorageService],
-//     };
-//   }
+@Module({})
+export class StorageModule {
+  static forRoot(): DynamicModule {
+    return {
+      module: StorageModule,
+      providers: [
+        {
+          provide: STORAGE_PROVIDER,
+          inject: [ConfigService],
+          useFactory: (config: ConfigService) => {
+            const provider = config.get<string>('storage.provider');
 
-//   static forRootAsync(options: {
-//     useFactory: (...args: any[]) => Promise<StorageConfig> | StorageConfig;
-//     inject?: any[];
-//   }): DynamicModule {
-//     return {
-//       module: StorageModule,
-//       providers: [
-//         {
-//           provide: STORAGE_CONFIG_KEY,
-//           useFactory: options.useFactory,
-//           inject: options.inject || [],
-//         },
-//         {
-//           provide: 'StorageProvider',
-//           useFactory: (configService: ConfigService) => {
-//             const storageConfig = configService.get<StorageConfig>(STORAGE_CONFIG_KEY)!;
+            if (!provider) {
+              throw new Error(
+                '[StorageModule] STORAGE_PROVIDER không été configuré. ' +
+                'Set STORAGE_PROVIDER=aws-s3 trong .env',
+              );
+            }
 
-//             switch (storageConfig.provider) {
-//               case 'aws-s3':
-//                 return new AwsS3Provider(configService);
-//               default:
-//                 throw new Error(`Unsupported storage provider: ${storageConfig.provider}`);
-//             }
-//           },
-//           inject: [ConfigService],
-//         },
-//         StorageService,
-//       ],
-//       exports: [StorageService],
-//     };
-//   }
-// }
+            // Never allow local storage in production
+            if (provider === 'local' && config.get('app.nodeEnv') === 'production') {
+              throw new Error(
+                '[StorageModule] Local storage interdit en production. ' +
+                'Utilisez aws-s3, cloudinary, ou google-cloud.',
+              );
+            }
+
+            switch (provider) {
+              case 'aws-s3':
+                return new AwsS3Provider(config);
+              default:
+                throw new Error(`[StorageModule] Provider non supporté: ${provider}`);
+            }
+          },
+        },
+        StorageService,
+      ],
+      exports: [StorageService],
+    };
+  }
+}

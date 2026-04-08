@@ -8,8 +8,11 @@ import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
+import { Inject } from '@nestjs/common';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { IS_OPTIONAL_KEY } from '../decorators/optional.decorator';
+import { INJECTION_TOKENS } from '@/constants/injection-tokens';
+import type { ITokenStore } from '@/modules/auth/infrastructure/token-store/redis-token-store';
 
 interface AuthenticatedRequest extends Request {
   user?: any;
@@ -21,6 +24,9 @@ export class AuthGuard implements CanActivate {
     private readonly reflector: Reflector,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    // Add: inject token store to check blacklist
+    @Inject(INJECTION_TOKENS.TOKEN_STORE)
+    private readonly tokenStore: ITokenStore,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -48,8 +54,14 @@ export class AuthGuard implements CanActivate {
         secret: this.configService.get<string>('auth.jwt.accessToken.secret'),
       });
 
-      if (!payload.sub || !payload.email) {
+      if (!payload.sub || !payload.email || !payload.jti) {
         throw new UnauthorizedException('INVALID_TOKEN_PAYLOAD');
+      }
+
+      // Add: check if token is blacklisted
+      const isBlacklisted = await this.tokenStore.isAccessTokenBlacklisted(payload.jti);
+      if (isBlacklisted) {
+        throw new UnauthorizedException('TOKEN_REVOKED');
       }
 
       request.user = payload;

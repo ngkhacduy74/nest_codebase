@@ -133,3 +133,76 @@ Trước khi yêu cầu review, hãy tự kiểm tra:
 - [ ] Swagger documentation đầy đủ (@ApiBody, @ApiResponse).
 - [ ] Error được throw đúng loại (Domain/App Error).
 - [ ] Định dạng code chuẩn qua `Prettier`.
+
+---
+
+## 9. QUY TẮC BAO MAT & AUTHENTICATION
+
+### 9.1 JWT Token Management
+- **Access Token**: 15 phút expiry, có blacklist trong Redis
+- **Refresh Token**: 7 ngày expiry, lưu trong Redis
+- **Blacklist**: Token revoked sẽ được blacklist trong Redis
+- **Session Revocation**: Khi user xóa, revoke tất cả session
+
+### 9.2 Security Guards
+- **AuthGuard**: Global guard, kiểm tra JWT và blacklist
+- **RolesGuard**: Global RBAC, kiểm tra permissions
+- **@Public()**: Dùng cho routes không cần authentication
+- **@Roles()**: Dùng cho routes cần phân quyền
+
+### 9.3 Storage Security
+- **Production**: CHỈ cho phép cloud storage (AWS S3, Cloudinary, Google Cloud)
+- **Local Storage**: BỊ cấm trong production environment
+- **Validation**: Storage provider phải validate config trước khi sử dụng
+
+### 9.4 Exception Handling
+- **GlobalExceptionFilter**: Dùng FastifyRequest/FastifyReply (không Express)
+- **Error Types**: DomainError, ApplicationError, InfrastructureError
+- **Production Safety**: Không hiển thị stack trace trong production
+
+---
+
+## 10. DOCKER & DEPLOYMENT
+
+### 10.1 Multi-stage Build
+- **Stage 1 (deps)**: Install production dependencies
+- **Stage 2 (builder)**: Build TypeScript và generate Prisma client
+- **Stage 3 (runner)**: Runtime image với non-root user
+
+### 10.2 Migration Strategy
+- **KHÔNG** chạy migration trong Dockerfile
+- **Dùng scripts/migrate.sh** trước khi deploy
+- **Separate concern**: Build vs Deploy
+
+### 10.3 Environment Files
+- **.env.example**: Template cho local dev
+- **.env.docker.example**: Template cho Docker containers
+- **KHÔNG** commit các .env files
+
+---
+
+## 11. CHECKLIST TRƯỚC KHI MỞ PR
+
+Trước khi yêu cầu review, hãy tự kiểm tra:
+
+### 11.1 Code Quality
+- [ ] Đã viết spec cho use-case mới.
+- [ ] KHÔNG có import Prisma/Framework trong domain layer.
+- [ ] Không có concrete class nào được inject trực tiếp vào use-case.
+- [ ] Cache được clear sau khi Update/Delete.
+- [ ] Swagger documentation đầy đủ (@ApiBody, @ApiResponse).
+- [ ] Error được throw đúng loại (Domain/App Error).
+- [ ] Định dạng code chuẩn qua `Prettier`.
+
+### 11.2 Security
+- [ ] AuthGuard kiểm tra Redis blacklist
+- [ ] DeleteUserUseCase revokeAll sessions
+- [ ] StorageModule enforce cloud-only trong production
+- [ ] Không có sensitive data trong logs/exceptions
+- [ ] GlobalExceptionFilter dùng Fastify types
+
+### 11.3 Docker & Deployment
+- [ ] Dockerfile multi-stage với non-root user
+- [ ] .dockerignore đầy đủ và chính xác
+- [ ] Environment variables không hardcode
+- [ ] Scripts có executable permissions (Linux/Mac)

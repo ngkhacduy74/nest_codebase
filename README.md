@@ -45,37 +45,38 @@ Enterprise-grade NestJS SaaS template designed for teams of 5-15 developers. Thi
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Clone & Install
 ```bash
 git clone <repo-url>
-cd nest_codebase
+cd nest-base
 pnpm install
 ```
 
 ### 2. Environment Setup
 ```bash
+# Local development
 cp .env.example .env
-# Edit .env with your values
+
+# Docker environment
+cp .env.docker.example .env.docker
+# Edit files with your configuration
 ```
 
-### 3. Start Services
+### 3. Quick Setup (Recommended)
 ```bash
-# Using Docker Compose (recommended)
+# Automated setup with script
+chmod +x scripts/setup-dev.sh
+./scripts/setup-dev.sh
+
+# Manual setup
 docker-compose up -d postgres redis
-
-# Or start services manually
-# Start PostgreSQL and Redis
-```
-
-### 4. Database Setup
-```bash
 pnpm prisma generate
 pnpm prisma migrate dev
 ```
 
-### 5. Run Application
+### 4. Run Application
 ```bash
 # Development mode
 pnpm start:dev
@@ -201,7 +202,57 @@ For handling heavy tasks (like Sending Emails) asynchronously. This prevents blo
 
 ---
 
-## 🔑 Environment Variables
+## Docker Deployment
+
+### Build & Deploy
+```bash
+# Build Docker image
+chmod +x scripts/docker-build.sh
+./scripts/docker-build.sh
+
+# Run production migrations
+./scripts/migrate.sh .env.docker
+
+# Deploy with Docker Compose (production)
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+### Docker Architecture
+- **Multi-stage build**: Optimized production images
+- **Non-root user**: Security best practice
+- **Separate migrations**: Database migrations run outside of container startup
+- **Health checks**: Automatic service monitoring
+
+### Environment Files
+- **Development**: `.env.example` 
+- **Docker**: `.env.docker.example`
+- **Never commit**: Actual `.env` files with secrets
+
+---
+
+## Security Features
+
+### Authentication & Authorization
+- **Custom JWT**: Access tokens (15min) + Refresh tokens (7days)
+- **Redis Blacklist**: Revoked tokens immediately invalidated
+- **Global Guards**: AuthGuard + RolesGuard applied globally
+- **Session Management**: Automatic session revocation on user deletion
+
+### Infrastructure Security
+- **Cloud Storage Only**: Local storage blocked in production
+- **Non-root Containers**: All services run as non-root users
+- **Environment Isolation**: Separate configs for dev/staging/production
+- **Rate Limiting**: Built-in throttling protection
+
+### Data Protection
+- **Fastify Exception Handling**: Secure error responses
+- **Production Logging**: No sensitive data in logs
+- **Input Validation**: Comprehensive DTO validation
+- **CORS Security**: Configurable origin restrictions
+
+---
+
+## Environment Variables
 
 | Variable | Description | Default |
 | :--- | :--- | :--- |
