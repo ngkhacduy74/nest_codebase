@@ -1,283 +1,147 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# NestJS Base - Professional Enterprise Boilerplate 🚀
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+![NestJS](https://img.shields.io/badge/nestjs-%23E0234E.svg?style=for-the-badge&logo=nestjs&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white)
+![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white)
+![Fastify](https://img.shields.io/badge/fastify-%23000000.svg?style=for-the-badge&logo=fastify&logoColor=white)
+![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
-# 🚀 NestJS SaaS Enterprise Boilerplate
-
-Enterprise-grade NestJS SaaS template designed for teams of 5-15 developers. This codebase follows strict **Domain-Driven Design (DDD)** principles and is built for scalability, maintainability, and observability.
+A robust, enterprise-grade NestJS boilerplate designed for scalability, maintainability, and high-performance, featuring a strict development workflow and state-of-the-art backend technologies.
 
 ---
 
-## 🏗️ Architecture Overview
+## 🛠 Technology Stack
 
-```
-┌─────────────────┬──────────────────┬─────────────────┐
-│   Presentation  │   Application   │   Domain       │
-│   (Controllers) │   (Use-cases)  │   (Entities)    │
-│                 │                  │                 │
-│ • HTTP API     │ • Business Logic │ • Value Objects │
-│ • DTOs        │ • Cache/Events  │ • Repo Interface│
-│ • Swagger      │ • Orchestration │ • Domain Events │
-└─────────────────┴──────────────────┴─────────────────┘
-                      ↑
-              Infrastructure
-          (Repositories, DB, Redis)
+- **Core Framework**: [NestJS](https://nestjs.com/) (v11+) with **Fastify** for maximum performance.
+- **Language**: [TypeScript](https://www.typescriptlang.org/) (Strict Mode).
+- **Database Engine**: [Prisma ORM](https://www.prisma.io/) with PostgreSQL support.
+- **Caching & Messaging**: [Redis](https://redis.io/) (ioredis) & [BullMQ](https://docs.bullmq.io/) for high-throughput background jobs.
+- **Authentication**: [Passport.js](https://www.passportjs.org/) (JWT & Local Strategy) with Redis-backed session/token management.
+- **Observability**: [Prometheus](https://prometheus.io/) metrics, Pino logging, and integrated Health Checks.
+- **Integrations**: AWS S3 (Storage), Amazon SES / SendGrid (Email).
+- **DevOps**: Docker, Husky, Commitlint, ESLint (Airbnb Style Guide), and Prettier.
+
+---
+
+## 📂 Project Structure
+
+```text
+src/
+├── common/           # Shared modules, decorators, filters, and utilities
+├── config/           # Centralized configuration management (app, database, redis, etc.)
+├── constants/        # Application-wide constants and injection tokens
+├── i18n/             # Multi-language (i18n) support files
+└── modules/          # Domain-specific business logic
+    ├── auth/         # Authentication & Authorization domain
+    ├── user/         # User management domain
+    ├── product/      # Product domain example
+    ├── notification/ # Background jobs and email processing
+    └── ...           # Other business modules
 ```
 
 ---
 
-## Quick Start
+## 🚀 Getting Started
 
-### 1. Clone & Install
+### 1. Prerequisites
+
+- **Node.js**: v22+
+- **pnpm**: v10+ (Recommended)
+- **Docker**: For running Postgres & Redis
+
+### 2. Environment Setup
+
+Copy the example environment file and fill in your credentials:
+
 ```bash
-git clone <repo-url>
-cd nest-base
+cp .env.example .env
+```
+
+### 3. Installation
+
+```bash
 pnpm install
 ```
 
-### 2. Environment Setup
+### 4. Database Migration
+
 ```bash
-# Local development
-cp .env.example .env
-
-# Docker environment
-cp .env.docker.example .env.docker
-# Edit files with your configuration
-```
-
-### 3. Quick Setup (Recommended)
-```bash
-# Automated setup with script
-chmod +x scripts/setup-dev.sh
-./scripts/setup-dev.sh
-
-# Manual setup
-docker-compose up -d postgres redis
 pnpm prisma generate
 pnpm prisma migrate dev
 ```
 
-### 4. Run Application
+### 5. Running the App
+
 ```bash
 # Development mode
-pnpm start:dev
+pnpm run start:dev
 
-# Production mode  
-pnpm build
-pnpm start:prod
+# Production mode
+pnpm run build
+pnpm run start:prod
 ```
 
 ---
 
-## 📋 Prerequisites
+## 🛡 Development Workflow & Standards
 
-Before you begin, ensure you have the following installed:
-- **Node.js**: v20 or later
-- **pnpm**: v9 or later (`npm install -g pnpm`)
-- **Docker & Docker Compose**: For local infrastructure (Postgres, Redis)
+We enforce strict coding standards to ensure code quality and consistency across the team.
+
+### 📝 Commit Message Convention
+
+This project follows [Conventional Commits](https://www.conventionalcommits.org/). Every commit message is validated against these rules:
+
+- `feat: ...` (New feature)
+- `fix: ...` (Bug fix)
+- `docs: ...` (Documentation changes)
+- `style: ...` (Formatting, missing semi-colons, etc)
+- `refactor: ...` (Code change that neither fixes a bug nor adds a feature)
+- `test: ...` (Adding or fixing tests)
+- `build: ...` (Changes to the build system or external dependencies)
+
+### ⚓ Git Hooks (Husky)
+
+The following checks are automated via **Husky** hooks:
+
+1. **lint-staged**: Checks formatting (Prettier) and coding rules (ESLint) **only on files you changed**.
+2. **TypeScript Check**: Ensures there are no type errors globally.
+3. **Format Check**: Validates project-wide Prettier compliance.
+4. **Branch Naming**: Enforces branch names like `feature.xxx`, `bugfix.xxx`, etc. (allows `main`).
+5. **Pre-push**: Runs all **Unit Tests** before pushing to the remote repository.
+
+### 🧩 Linting & Formatting
+
+- All code must pass the **Airbnb ESLint Style Guide**.
+- Strict TypeScript rules are active (no `any`, explicit return types required).
+- Run `pnpm run lint` to fix common issues automatically.
+- Run `pnpm format` to beautify the entire codebase.
 
 ---
 
-## ⚡ Quick Start (3 Steps)
-
-Get the application running locally in minutes:
-
-1. **Setup Environment & Infrastructure**:
-   ```bash
-   cp .env.example .env
-   docker-compose up -d
-   ```
-
-2. **Install & Sync Database**:
-   ```bash
-   pnpm install
-   pnpx prisma migrate dev
-   ```
-
-3. **Start Development Server**:
-   ```bash
-   pnpm run start:dev
-   ```
-   *API will be available at http://localhost:3000/api/v1*  
-   *Swagger docs at http://localhost:3000/api/v1/docs*
-
----
-
-## 📁 Folder Structure Overview
+## 🧪 Testing
 
 ```bash
-src/
-├── common/           # Shared logic (interceptors, filters, guards, domain base)
-├── config/           # Centralized configuration (Joi validation)
-├── constants/        # Global constants and DI Tokens (Symbols)
-├── modules/          # Domain-driven feature modules
-│   ├── auth/         # Authentication, Token Store, Session management
-│   ├── user/         # Core User domain (Entities, Use-cases, Repositories)
-│   └── notification/ # Event listeners and BullMQ background workers
-├── main.ts           # App entry point (Helmet, CORS, Versioning, Graceful Shutdown)
-└── app.module.ts     # Root module (Module registration)
+# Run all unit tests
+pnpm run test
+
+# Run e2e tests
+pnpm run test:e2e
+
+# Code coverage report
+pnpm run test:cov
 ```
 
-> [!TIP]
-> Each module under `src/modules/` follows the 4-layer architecture:
-> **Presentation** → **Application** → **Domain** ← **Infrastructure**
-
 ---
 
-## 📜 Coding Conventions
-
-We follow strict architectural rules to ensure the codebase remains "clean" and database-swappable.
-
-**READ THIS BEFORE CODING:**  
-� **[CONVENTION.md](./CONVENTION.md)** - Complete architectural rules and module creation guide
-
----
-
-## ✅ Development Checklist
-
-**Before committing code, run these checks:**
+## 🐳 Deployment (Docker)
 
 ```bash
-# 1. Code Quality
-pnpm typecheck      # No TypeScript errors
-pnpm lint:check     # No ESLint warnings
-pnpm spellcheck      # No typos in comments/docs
-
-# 2. Testing
-pnpm test:cov       # All tests pass, coverage ≥ 70%
-```
-
-**Manual Checklist:**
-- [ ] Domain layer has **NO** framework imports (Prisma/NestJS)
-- [ ] Use-cases inject via **DI Tokens**, not concrete classes
-- [ ] Cache is invalidated after Update/Delete operations
-- [ ] Swagger documentation is complete (`@ApiBody`, `@ApiResponse`)
-- [ ] Error types are correct (`DomainError`, `ApplicationError`, `InfrastructureError`)
-- [ ] Code is formatted with Prettier
-- [ ] New module follows folder structure in CONVENTION.md
-
-**Quick Commands:**
-```bash
-# Create new module (example: Product)
-mkdir -p src/modules/product/{domain/{entities,repositories},application/use-cases,infrastructure/repositories,presentation/{controllers,dtos}}
-
-# Add new repository token
-# Edit src/constants/injection-tokens.ts
-
-# Register module
-# Edit src/modules/app.module.ts
+# Build and run with Docker Compose
+docker-compose up --build
 ```
 
 ---
 
-## 🔑 Architecture Decision Records (ADR)
+## 📜 License
 
-### 1. Why Domain-Driven Design (DDD)?
-To prevent the "Big Ball of Mud". By isolating business logic (Domain) from external concerns (Prisma/TypeORM), we ensure the core logic is testable and robust.
-
-### 2. Why the Repository Pattern?
-To allow switching databases (e.g., Prisma to TypeORM) by simply changing a Dependency Injection token in the Module, without touching any business logic in Use-cases.
-
-### 3. Why BullMQ (Redis)?
-For handling heavy tasks (like Sending Emails) asynchronously. This prevents blocking the main request loop, improves user experience, and provides automatic retries.
-
----
-
-## Docker Deployment
-
-### Build & Deploy
-```bash
-# Build Docker image
-chmod +x scripts/docker-build.sh
-./scripts/docker-build.sh
-
-# Run production migrations
-./scripts/migrate.sh .env.docker
-
-# Deploy with Docker Compose (production)
-docker-compose -f docker-compose.prod.yml up -d
-```
-
-### Docker Architecture
-- **Multi-stage build**: Optimized production images
-- **Non-root user**: Security best practice
-- **Separate migrations**: Database migrations run outside of container startup
-- **Health checks**: Automatic service monitoring
-
-### Environment Files
-- **Development**: `.env.example` 
-- **Docker**: `.env.docker.example`
-- **Never commit**: Actual `.env` files with secrets
-
----
-
-## Security Features
-
-### Authentication & Authorization
-- **Custom JWT**: Access tokens (15min) + Refresh tokens (7days)
-- **Redis Blacklist**: Revoked tokens immediately invalidated
-- **Global Guards**: AuthGuard + RolesGuard applied globally
-- **Session Management**: Automatic session revocation on user deletion
-
-### Infrastructure Security
-- **Cloud Storage Only**: Local storage blocked in production
-- **Non-root Containers**: All services run as non-root users
-- **Environment Isolation**: Separate configs for dev/staging/production
-- **Rate Limiting**: Built-in throttling protection
-
-### Data Protection
-- **Fastify Exception Handling**: Secure error responses
-- **Production Logging**: No sensitive data in logs
-- **Input Validation**: Comprehensive DTO validation
-- **CORS Security**: Configurable origin restrictions
-
----
-
-## Environment Variables
-
-| Variable | Description | Default |
-| :--- | :--- | :--- |
-| `NODE_ENV` | Environment (development/production) | `development` |
-| `PORT` | API Port | `3000` |
-| `DATABASE_URL` | PostgreSQL connection string | - |
-| `REDIS_URL` | Redis connection string | `redis://localhost:6379` |
-| `JWT_SECRET` | Secret for signing Access Tokens | - |
-| `REFRESH_SECRET` | Secret for signing Refresh Tokens | - |
-
----
-
-## 🛠 Available Scripts
-
-- `pnpm run start:dev`: Start development server with hot reload.
-- `pnpm run build`: Build the production bundle.
-- `pnpm run test`: Run unit tests.
-- `pnpm run typecheck`: Run TypeScript compiler checks.
-- `pnpm run lint`: Run ESLint and Prettier checks.
-
----
-
-## 🤝 Contributing
-
-1. Ensure you've read [CONVENTION.md](./CONVENTION.md).
-2. Write unit tests for every new Use-case.
-3. Keep the Domain layer free of external dependencies.
-4. Open a PR and ensure the CI passes.
+This project is [UNLICENSED](LICENSE).

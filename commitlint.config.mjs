@@ -23,14 +23,14 @@ export default {
     'type-empty': [2, 'never'],
     // Type phải viết thường
     'type-case': [2, 'always', 'lower-case'],
-    // Scope không được để trống (nếu có)
-    'scope-empty': [2, 'never'],
+    // Scope có thể để trống
+    'scope-empty': [0, 'always'],
     // Scope phải viết thường
     'scope-case': [2, 'always', 'lower-case'],
     // Subject không được để trống
     'subject-empty': [2, 'never'],
-    // Subject phải viết thường
-    'subject-case': [2, 'always', 'lower-case'],
+    // Subject có thể viết tự do
+    'subject-case': [0, 'always'],
     // Subject không được kết thúc bằng dấu chấm
     'subject-full-stop': [2, 'never', '.'],
     // Subject không được vượt quá 72 ký tự
