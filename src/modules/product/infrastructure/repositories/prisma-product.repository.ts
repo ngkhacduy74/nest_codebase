@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Product } from '@/generated/prisma/client';
 import { ProductEntity } from '../../domain/entities/product.entity';
 import {
   IProductRepository,
@@ -8,27 +9,27 @@ import {
   UpdateProductDto,
 } from '../../domain/repositories/product.repository.interface';
 import { PrismaService } from '@/modules/prisma/prisma.service';
-import { BaseRepository } from '@/common/repositories/base.repository';
+import { PrismaBaseRepository } from '@/common/repositories/prisma-base.repository';
 import { AppLoggerService } from '@/common/services/logger.service';
 
 @Injectable()
 export class PrismaProductRepository
-  extends BaseRepository<ProductEntity>
+  extends PrismaBaseRepository<ProductEntity>
   implements IProductRepository
 {
   constructor(prisma: PrismaService, logger: AppLoggerService) {
     super(prisma, logger, 'Product');
   }
 
-  protected getModel() {
-    return this.prisma.product;
+  protected getModelDelegate() {
+    return (this.prisma as any).product;
   }
 
-  private mapToDomain(product: any): ProductEntity {
+  private mapToDomain(product: Product): ProductEntity {
     return ProductEntity.reconstitute({
       id: product.id,
       name: product.name,
-      description: product.description,
+      description: product.description ?? undefined,
       price: product.price,
       stock: product.stock,
       isActive: product.isActive,
@@ -39,12 +40,10 @@ export class PrismaProductRepository
 
   async findById(id: string): Promise<ProductEntity | null> {
     const product = await super.findById(id);
-    return product ? this.mapToDomain(product) : null;
+    return product ? this.mapToDomain(product as unknown as Product) : null;
   }
 
-  async findAll(
-    options: PaginationOptions,
-  ): Promise<PaginatedResult<ProductEntity>> {
+  async findAll(options: PaginationOptions): Promise<PaginatedResult<ProductEntity>> {
     const { page, limit, sortBy = 'createdAt', sortOrder = 'desc' } = options;
 
     const result = await super.findManyWithPagination(undefined, {
@@ -55,34 +54,43 @@ export class PrismaProductRepository
     });
 
     return {
-      data: result.data.map((product) => this.mapToDomain(product)),
-      pagination: result.pagination,
+      data: result.data.map((product) => this.mapToDomain(product as unknown as Product)),
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
     };
   }
 
-  async create(data: CreateProductDto): Promise<ProductEntity> {
-    const product = await super.create(data);
-    return this.mapToDomain(product);
+  async create(data: Record<string, unknown>): Promise<ProductEntity>;
+  async create(data: CreateProductDto): Promise<ProductEntity>;
+  async create(data: Record<string, unknown> | CreateProductDto): Promise<ProductEntity> {
+    const product = await super.create(data as Record<string, unknown>);
+    return this.mapToDomain(product as unknown as Product);
   }
 
-  async update(id: string, data: UpdateProductDto): Promise<ProductEntity> {
-    const product = await super.update(id, data);
-    return this.mapToDomain(product);
+  async update(id: string, data: Record<string, unknown>): Promise<ProductEntity>;
+  async update(id: string, data: UpdateProductDto): Promise<ProductEntity>;
+  async update(
+    id: string,
+    data: Record<string, unknown> | UpdateProductDto,
+  ): Promise<ProductEntity> {
+    const product = await super.update(id, data as Record<string, unknown>);
+    return this.mapToDomain(product as unknown as Product);
   }
 
   async delete(id: string): Promise<void> {
     await super.delete(id);
   }
 
-  async count(where?: any): Promise<number> {
-    return await super.count(where);
+  async count(where?: Record<string, unknown>): Promise<number> {
+    return super.count(where);
   }
 
-  async exists(where: any): Promise<boolean> {
-    return await super.exists(where);
+  async exists(where: Record<string, unknown>): Promise<boolean> {
+    return super.exists(where);
   }
 
   async existsByName(name: string): Promise<boolean> {
-    return await super.exists({ name });
+    return super.exists({ name });
   }
 }

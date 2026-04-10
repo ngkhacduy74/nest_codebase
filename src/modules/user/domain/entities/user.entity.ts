@@ -2,10 +2,7 @@ import { BaseEntity } from '@/common/domain/base.entity';
 
 import { Role } from '../enums/role.enum';
 import { Email } from '../value-objects/email.value-object';
-import {
-  InvalidNameError,
-  UserAlreadyDeactivatedError,
-} from '@/common/domain/errors/domain.error';
+import { InvalidNameError, UserAlreadyDeactivatedError } from '@/common/domain/errors/domain.error';
 
 // ── No Prisma imports here — domain is pure ──────────────────────────────────
 
@@ -19,18 +16,18 @@ export interface UserProps {
   isEmailVerified: boolean;
   createdAt: Date;
   updatedAt: Date;
-  deletedAt?: Date | null;
+  deletedAt: Date | null;
   passwordHash?: string | null;
 }
 
-export class UserEntity extends BaseEntity<string> {
+export class UserEntity extends BaseEntity {
   private _email: Email;
   private _firstName: string;
   private _lastName: string;
   private _role: Role;
   private _isActive: boolean;
   readonly isEmailVerified: boolean;
-  readonly deletedAt?: Date | null;
+  protected _deletedAt: Date | null;
   private _passwordHash?: string | null;
 
   private constructor(props: UserProps) {
@@ -41,7 +38,7 @@ export class UserEntity extends BaseEntity<string> {
     this._role = props.role;
     this._isActive = props.isActive;
     this.isEmailVerified = props.isEmailVerified;
-    this.deletedAt = props.deletedAt;
+    this._deletedAt = props.deletedAt ?? null;
     this._passwordHash = props.passwordHash;
   }
 
@@ -67,6 +64,10 @@ export class UserEntity extends BaseEntity<string> {
   get isActive(): boolean {
     return this._isActive;
   }
+  get deletedAt(): Date | null {
+    return this._deletedAt;
+  }
+
   get isDeleted(): boolean {
     return !!this.deletedAt;
   }

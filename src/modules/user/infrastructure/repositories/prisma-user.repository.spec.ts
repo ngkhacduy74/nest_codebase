@@ -19,10 +19,7 @@ describe('PrismaUserRepository', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        PrismaUserRepository,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [PrismaUserRepository, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     repository = module.get<PrismaUserRepository>(PrismaUserRepository);

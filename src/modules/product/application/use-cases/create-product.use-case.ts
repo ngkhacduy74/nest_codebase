@@ -16,17 +16,10 @@ export class CreateProductUseCase {
   async execute(dto: CreateProductDto): Promise<ProductEntity> {
     const exists = await this.productRepo.existsByName(dto.name);
     if (exists) {
-      throw new ConflictException(
-        `Product with name "${dto.name}" already exists`,
-      );
+      throw new ConflictException(`Product with name "${dto.name}" already exists`);
     }
 
-    const product = ProductEntity.create(
-      dto.name,
-      dto.description,
-      dto.price,
-      dto.stock,
-    );
+    const product = ProductEntity.create(dto.name, dto.description, dto.price, dto.stock);
 
     return this.productRepo.create({
       name: product.name,

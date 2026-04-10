@@ -203,9 +203,7 @@ export class ApiTestClient {
     const cookies: Record<string, string> = {};
     const setCookieHeader = response.headers?.['set-cookie'];
     if (setCookieHeader) {
-      const cookieStrings = Array.isArray(setCookieHeader)
-        ? setCookieHeader
-        : [setCookieHeader];
+      const cookieStrings = Array.isArray(setCookieHeader) ? setCookieHeader : [setCookieHeader];
       cookieStrings.forEach((cookieString: string) => {
         const [name] = cookieString.split('=')[0];
         if (name) {
@@ -224,16 +222,9 @@ export class ApiTestClient {
 }
 
 export class ApiTestAssertions {
-  static assertStatus(
-    response: ApiTestResponse,
-    expectedStatus: number,
-    message?: string,
-  ): void {
+  static assertStatus(response: ApiTestResponse, expectedStatus: number, message?: string): void {
     if (response.status !== expectedStatus) {
-      throw new Error(
-        message ||
-          `Expected status ${expectedStatus}, but got ${response.status}`,
-      );
+      throw new Error(message || `Expected status ${expectedStatus}, but got ${response.status}`);
     }
   }
 
@@ -246,19 +237,11 @@ export class ApiTestAssertions {
   }
 
   static assertBadRequest(response: ApiTestResponse, message?: string): void {
-    this.assertStatus(
-      response,
-      400,
-      message || 'Expected bad request response',
-    );
+    this.assertStatus(response, 400, message || 'Expected bad request response');
   }
 
   static assertUnauthorized(response: ApiTestResponse, message?: string): void {
-    this.assertStatus(
-      response,
-      401,
-      message || 'Expected unauthorized response',
-    );
+    this.assertStatus(response, 401, message || 'Expected unauthorized response');
   }
 
   static assertForbidden(response: ApiTestResponse, message?: string): void {
@@ -279,9 +262,7 @@ export class ApiTestAssertions {
     message?: string,
   ): void {
     if (!this.matchesStructure(response.data, expectedStructure)) {
-      throw new Error(
-        message || `Response data structure does not match expected structure`,
-      );
+      throw new Error(message || `Response data structure does not match expected structure`);
     }
   }
 
@@ -291,15 +272,11 @@ export class ApiTestAssertions {
     path?: string,
     message?: string,
   ): void {
-    const actualValue = path
-      ? this.getNestedValue(response.data, path)
-      : response.data;
+    const actualValue = path ? this.getNestedValue(response.data, path) : response.data;
 
     if (!this.containsValue(actualValue, expectedValue)) {
       const pathInfo = path ? ` at path "${path}"` : '';
-      throw new Error(
-        message || `Expected response to contain ${expectedValue}${pathInfo}`,
-      );
+      throw new Error(message || `Expected response to contain ${expectedValue}${pathInfo}`);
     }
   }
 
@@ -312,8 +289,7 @@ export class ApiTestAssertions {
     const actualValue = response.headers[headerName.toLowerCase()];
     if (actualValue !== expectedValue) {
       throw new Error(
-        message ||
-          `Expected header ${headerName} to be ${expectedValue}, but got ${actualValue}`,
+        message || `Expected header ${headerName} to be ${expectedValue}, but got ${actualValue}`,
       );
     }
   }

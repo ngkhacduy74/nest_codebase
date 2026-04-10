@@ -16,12 +16,7 @@ export class ProductEntity extends BaseEntity {
     this._isActive = data.isActive ?? true;
   }
 
-  static create(
-    name: string,
-    description: string,
-    price: number,
-    stock: number,
-  ): ProductEntity {
+  static create(name: string, description: string, price: number, stock: number): ProductEntity {
     if (price <= 0) {
       throw new Error('Price must be greater than 0');
     }

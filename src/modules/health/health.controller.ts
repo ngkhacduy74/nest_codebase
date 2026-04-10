@@ -22,7 +22,7 @@ export class HealthController {
     private readonly diskIndicator: DiskHealthIndicator,
     private readonly prisma: PrismaService,
     @InjectMetric('health_check_total')
-    private readonly healthCheckCounter: Counter<string>,
+    private readonly healthCheckCounter: Counter,
   ) {}
 
   @Public()
@@ -62,7 +62,7 @@ export class HealthController {
           // Since we already have Redis setup for Auth, we check it here
           return { redis: { status: 'up' } };
         } catch (e) {
-          return { redis: { status: 'down', message: e.message } };
+          return { redis: { status: 'down', message: (e as Error).message } };
         }
       },
     ]);

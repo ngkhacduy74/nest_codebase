@@ -27,23 +27,22 @@ import { Role } from '@/modules/user/domain/enums/role.enum';
 import { CreateUserUseCase } from '../../application/use-cases/create-user.use-case';
 import { GetUserByIdUseCase } from '../../application/use-cases/get-user-by-id.use-case';
 import { GetUsersUseCase } from '../../application/use-cases/get-users.use-case';
-import { UpdateUserUseCase } from '../../application/use-cases/update-user.use-case';
-import { DeleteUserUseCase } from '../../application/use-cases/delete-user.use-case';
+
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { AuthorizationGuard } from '@/common/guards/authorization.guard';
 import { Roles } from '@/common/guards/authorization.guard';
 
 class UserResponse {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  fullName: string;
-  role: Role;
-  isActive: boolean;
-  isEmailVerified: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  id!: string;
+  email!: string;
+  firstName!: string;
+  lastName!: string;
+  fullName!: string;
+  role!: Role;
+  isActive!: boolean;
+  isEmailVerified!: boolean;
+  createdAt!: Date;
+  updatedAt!: Date;
 }
 
 interface UsersResponse {
@@ -69,8 +68,6 @@ export class UserController {
     private readonly createUserUseCase: CreateUserUseCase,
     private readonly getUserByIdUseCase: GetUserByIdUseCase,
     private readonly getUsersUseCase: GetUsersUseCase,
-    private readonly updateUserUseCase: UpdateUserUseCase,
-    private readonly deleteUserUseCase: DeleteUserUseCase,
   ) {}
 
   private toResponse(user: any): UserResponse {
@@ -111,9 +108,7 @@ export class UserController {
     }),
   )
   @Roles(Role.ADMIN)
-  async createUser(
-    @Body() createUserDto: CreateUserDataDto,
-  ): Promise<BaseResponse<UserResponse>> {
+  async createUser(@Body() createUserDto: CreateUserDataDto): Promise<BaseResponse<UserResponse>> {
     const user = await this.createUserUseCase.execute(createUserDto);
     return {
       success: true,
@@ -253,9 +248,7 @@ export class UserController {
     status: HttpStatus.NOT_FOUND,
     description: 'User not found',
   })
-  async getUserById(
-    @Param('id') id: string,
-  ): Promise<BaseResponse<UserResponse>> {
+  async getUserById(@Param('id') id: string): Promise<BaseResponse<UserResponse>> {
     const user = await this.getUserByIdUseCase.execute(id);
     return {
       success: true,

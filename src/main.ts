@@ -1,10 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { Logger, VersioningType, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import {
-  FastifyAdapter,
-  NestFastifyApplication,
-} from '@nestjs/platform-fastify';
+import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { AppModule } from './modules/app.module';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -26,29 +23,23 @@ async function bootstrap(): Promise<void> {
   const port = configService.get<number>('app.port') || 3000;
   const apiPrefix = configService.get<string>('app.apiPrefix') || 'api/v1';
   const nodeEnv = configService.get<string>('app.nodeEnv') || 'development';
-  const shutdownTimeout =
-    configService.get<number>('app.shutdownTimeout') || 30000;
+  const shutdownTimeout = configService.get<number>('app.shutdownTimeout') || 30000;
   const apiVersion = configService.get<string>('app.apiVersion') || '1';
 
-  const corsOrigins = configService.get<string[]>(
-    'security.cors.allowedOrigins',
-  ) || ['*'];
-  const corsMethods = configService.get<string[]>(
-    'security.cors.allowedMethods',
-  ) || ['GET'];
-  const corsHeaders =
-    configService.get<string[]>('security.cors.allowedHeaders') || [];
-  const corsCredentials =
-    configService.get<boolean>('security.cors.credentials') || false;
+  const corsOrigins = configService.get<string[]>('security.cors.allowedOrigins') || [];
+  if (corsOrigins.includes('*')) {
+    throw new Error(
+      'CORS allowedOrigins cannot include "*" in production. Please specify explicit origins.',
+    );
+  }
+  const corsMethods = configService.get<string[]>('security.cors.allowedMethods') || ['GET'];
+  const corsHeaders = configService.get<string[]>('security.cors.allowedHeaders') || [];
+  const corsCredentials = configService.get<boolean>('security.cors.credentials') || false;
   const corsMaxAge = configService.get<number>('security.cors.maxAge') || 86400;
 
-  const helmetCsp =
-    configService.get<boolean>('security.helmet.contentSecurityPolicy') !==
-    false;
-  const helmetHsts =
-    configService.get<boolean>('security.helmet.hsts') !== false;
-  const helmetNoSniff =
-    configService.get<boolean>('security.helmet.noSniff') !== false;
+  const helmetCsp = configService.get<boolean>('security.helmet.contentSecurityPolicy') !== false;
+  const helmetHsts = configService.get<boolean>('security.helmet.hsts') !== false;
+  const helmetNoSniff = configService.get<boolean>('security.helmet.noSniff') !== false;
 
   // ── Fastify Helmet Plugin ─────────────────────────────────────────────────────
   await app.register(import('@fastify/helmet'), {
@@ -120,12 +111,9 @@ async function bootstrap(): Promise<void> {
       .addBearerAuth()
       .addServer(`http://localhost:${port}`, 'Local')
       .build();
-    SwaggerModule.setup(
-      `${apiPrefix}/docs`,
-      app,
-      SwaggerModule.createDocument(app, doc),
-      { swaggerOptions: { persistAuthorization: true } },
-    );
+    SwaggerModule.setup(`${apiPrefix}/docs`, app, SwaggerModule.createDocument(app, doc), {
+      swaggerOptions: { persistAuthorization: true },
+    });
     logger.log(`📚 Swagger: http://localhost:${port}/${apiPrefix}/docs`);
   }
 
@@ -133,9 +121,7 @@ async function bootstrap(): Promise<void> {
   app.enableShutdownHooks();
   (['SIGTERM', 'SIGINT'] as NodeJS.Signals[]).forEach((signal) => {
     process.on(signal, async () => {
-      logger.log(
-        `[${signal}] Shutting down gracefully (${shutdownTimeout}ms)...`,
-      );
+      logger.log(`[${signal}] Shutting down gracefully (${shutdownTimeout}ms)...`);
       setTimeout(() => process.exit(1), shutdownTimeout).unref();
       await app.close();
       process.exit(0);

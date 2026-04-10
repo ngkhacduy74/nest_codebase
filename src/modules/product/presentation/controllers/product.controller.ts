@@ -21,9 +21,7 @@ export class ProductController {
     status: HttpStatus.CONFLICT,
     description: 'Product with this name already exists',
   })
-  async create(
-    @Body() createProductDto: CreateProductDto,
-  ): Promise<ProductEntity> {
+  async create(@Body() createProductDto: CreateProductDto): Promise<ProductEntity> {
     return this.createProductUseCase.execute(createProductDto);
   }
 
@@ -38,7 +36,7 @@ export class ProductController {
     status: HttpStatus.NOT_FOUND,
     description: 'Product not found',
   })
-  async findById(@Param('id') id: string): Promise<ProductEntity> {
+  async findById(@Param('id') _id: string): Promise<ProductEntity> {
     // TODO: Implement GetProductByIdUseCase
     throw new Error('Not implemented yet');
   }

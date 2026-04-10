@@ -36,10 +36,7 @@ export class DeleteUserUseCase {
       this.logger.log(`[DeleteUser] Revoked all sessions: userId=${id}`);
     } catch (err) {
       // Log warning but don't block - user already soft deleted
-      this.logger.error(
-        `[DeleteUser] Failed to revoke sessions: userId=${id}`,
-        err,
-      );
+      this.logger.error(`[DeleteUser] Failed to revoke sessions: userId=${id}`, err);
     }
 
     // Invalidate cache

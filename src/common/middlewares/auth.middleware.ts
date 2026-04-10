@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  NestMiddleware,
-} from '@nestjs/common';
+import { Injectable, NestMiddleware } from '@nestjs/common';
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -46,11 +43,7 @@ export class AuthMiddleware implements NestMiddleware {
     ];
   }
 
-  async use(
-    req: AuthenticatedRequest,
-    res: FastifyReply,
-    next: () => void,
-  ): Promise<void> {
+  async use(req: AuthenticatedRequest, res: FastifyReply, next: () => void): Promise<void> {
     const startTime = Date.now();
 
     try {
@@ -59,15 +52,12 @@ export class AuthMiddleware implements NestMiddleware {
 
       // Skip authentication for excluded paths
       if (this.isExcludedPath(req.url)) {
-        this.logger.http(
-          `Skipping authentication for excluded path: ${req.url}`,
-          {
-            requestId: req.requestId,
-            traceId: req.traceId,
-            path: req.url,
-            method: req.method,
-          },
-        );
+        this.logger.http(`Skipping authentication for excluded path: ${req.url}`, {
+          requestId: req.requestId,
+          traceId: req.traceId,
+          path: req.url,
+          method: req.method,
+        });
 
         req.user = undefined;
         return next();
@@ -101,7 +91,7 @@ export class AuthMiddleware implements NestMiddleware {
           method: req.method,
           ip: req.ip,
           userAgent: req.headers['user-agent'],
-          token: token.substring(0, 20) + '...', // Don't log full token
+          token: `${token.substring(0, 20)}...`, // Don't log full token
         });
 
         req.user = undefined;
@@ -194,7 +184,7 @@ export class AuthMiddleware implements NestMiddleware {
   private extractToken(req: AuthenticatedRequest): string | null {
     // Try Authorization header first
     const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
+    if (authHeader?.startsWith('Bearer ')) {
       return authHeader.substring(7);
     }
 
@@ -229,7 +219,7 @@ export class AuthMiddleware implements NestMiddleware {
     } catch (error) {
       this.logger.security('Token validation failed', {
         error: error instanceof Error ? error.message : String(error),
-        token: token.substring(0, 20) + '...', // Don't log full token
+        token: `${token.substring(0, 20)}...`, // Don't log full token
       });
 
       return null;
@@ -241,10 +231,7 @@ export class AuthMiddleware implements NestMiddleware {
     res.header('X-Content-Type-Options', 'nosniff');
     res.header('X-Frame-Options', 'DENY');
     res.header('X-XSS-Protection', '1; mode=block');
-    res.header(
-      'Strict-Transport-Security',
-      'max-age=31536000; includeSubDomains',
-    );
+    res.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
     res.header('Referrer-Policy', 'strict-origin-when-cross-origin');
 
     // Add CORS headers if needed

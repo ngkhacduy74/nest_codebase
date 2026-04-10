@@ -39,7 +39,7 @@ describe('EmailValueObject', () => {
 
   it('should throw InvalidEmailError if email length > 255', () => {
     // Arrange
-    const longEmail = 'a'.repeat(250) + '@example.com';
+    const longEmail = `${'a'.repeat(250)}@example.com`;
 
     // Act & Assert
     expect(() => Email.create(longEmail)).toThrow(InvalidEmailError);

@@ -15,9 +15,9 @@ export class GetUserByIdUseCase {
     private readonly userRepo: IUserRepository,
     @Inject(CACHE_MANAGER) private readonly cache: Cache,
     @InjectMetric('cache_hits_total')
-    private readonly cacheHits: Counter<string>,
+    private readonly cacheHits: Counter,
     @InjectMetric('cache_misses_total')
-    private readonly cacheMisses: Counter<string>,
+    private readonly cacheMisses: Counter,
   ) {}
 
   async execute(id: string): Promise<UserEntity> {

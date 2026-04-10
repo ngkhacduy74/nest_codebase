@@ -8,5 +8,5 @@ export class RefreshTokenDto {
   })
   @IsString()
   @IsJWT()
-  refreshToken: string;
+  refreshToken!: string;
 }

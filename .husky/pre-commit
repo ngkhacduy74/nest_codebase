@@ -9,10 +9,6 @@ NC='\033[0m'
 
 set -e  # Exit immediately if any command fails
 
-echo "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo "${YELLOW}🔍  CODE QUALITY VALIDATION (Cannot be bypassed)${NC}"
-echo "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-
 # Step 1: Lint-staged
 echo "${YELLOW}[1/5] Running lint-staged on staged files...${NC}"
 if ! pnpm lint-staged --verbose; then

@@ -1,11 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
-import {
-  Provider,
-  Type,
-  DynamicModule,
-  ForwardReference,
-} from '@nestjs/common';
+import { Provider, Type, DynamicModule, ForwardReference } from '@nestjs/common';
 
 // Mock providers for testing
 export const mockProviders = {
@@ -45,14 +40,10 @@ export const PERFORMANCE_TOKENS = {
 
 export interface TestModuleOptions {
   providers?: Provider[];
-  imports?: Array<
-    Type<any> | DynamicModule | Promise<DynamicModule> | ForwardReference
-  >;
+  imports?: Array<Type | DynamicModule | Promise<DynamicModule> | ForwardReference>;
 }
 
-export async function createTestModule(
-  options: TestModuleOptions = {},
-): Promise<TestingModule> {
+export async function createTestModule(options: TestModuleOptions = {}): Promise<TestingModule> {
   const defaultProviders = [
     ...Object.entries(mockProviders).map(([key, value]) => ({
       provide: key,
@@ -81,9 +72,7 @@ export async function createTestModule(
   }).compile();
 }
 
-export function createMockRepository<T extends Record<string, any>>(
-  methods: Partial<T> = {},
-): T {
+export function createMockRepository<T extends Record<string, any>>(methods: Partial<T> = {}): T {
   const mock = {
     findById: jest.fn(),
     findByEmail: jest.fn(),

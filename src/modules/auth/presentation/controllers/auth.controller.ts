@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Post,
-  HttpCode,
-  HttpStatus,
-  UseGuards,
-  Req,
-} from '@nestjs/common';
+import { Body, Controller, Post, HttpCode, HttpStatus, UseGuards, Req } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -15,7 +7,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { AuthService } from '../../application/services/auth.service';
-import { LoginDto } from '../dtos/login.dto';
+
 import { RefreshTokenDto } from '../dtos/refresh-token.dto';
 import { AuthResponseDto } from '../dtos/auth-response.dto';
 import { Public } from '@/common/decorators/public.decorator';
@@ -33,10 +25,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'User login' })
   @ApiResponse({ status: HttpStatus.OK, type: AuthResponseDto })
-  async login(
-    @Req() req: any,
-    @Body() loginDto: LoginDto,
-  ): Promise<AuthResponseDto> {
+  async login(@Req() req: any): Promise<AuthResponseDto> {
     const tokens = await this.authService.login(req.user);
 
     return {
@@ -55,12 +44,8 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Refresh access token' })
   @ApiResponse({ status: HttpStatus.OK, type: AuthResponseDto })
-  async refreshToken(
-    @Body() refreshTokenDto: RefreshTokenDto,
-  ): Promise<AuthResponseDto> {
-    const tokens = await this.authService.refreshTokens(
-      refreshTokenDto.refreshToken,
-    );
+  async refreshToken(@Body() refreshTokenDto: RefreshTokenDto): Promise<AuthResponseDto> {
+    const tokens = await this.authService.refreshTokens(refreshTokenDto.refreshToken);
     const payload = this.authService.decodePayload(tokens.accessToken);
 
     return {
@@ -91,11 +76,8 @@ export class AuthController {
       },
     },
   })
-  async logout(
-    @Req() req: any,
-    @Body() body: { refreshToken?: string },
-  ): Promise<void> {
-    const user = req.user;
+  async logout(@Req() req: any, @Body() body: { refreshToken?: string }): Promise<void> {
+    const { user } = req;
     // Revoking access token (blacklist) and refresh token
     await this.authService.logout(user.id, user.jti, body.refreshToken || '', {
       exp: user.exp,

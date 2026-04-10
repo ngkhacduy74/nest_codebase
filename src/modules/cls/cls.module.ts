@@ -21,10 +21,8 @@ export interface AppClsStore {
         mount: true,
         generateId: true,
         setup: (cls, req: FastifyRequest) => {
-          const traceId =
-            (req.headers['x-trace-id'] as string | undefined) ?? uuidv4();
-          const requestId =
-            (req.headers['x-request-id'] as string | undefined) ?? uuidv4();
+          const traceId = (req.headers['x-trace-id'] as string | undefined) ?? uuidv4();
+          const requestId = (req.headers['x-request-id'] as string | undefined) ?? uuidv4();
 
           cls.set('requestId', requestId);
           cls.set('traceId', traceId);

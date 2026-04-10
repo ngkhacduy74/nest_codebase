@@ -1,51 +1,80 @@
 import { registerAs } from '@nestjs/config';
 import { IsString, IsOptional, IsInt, IsBoolean } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { RedisConfig } from './redis-config.type';
 import { validateConfig } from '@/common/utils/config/validate-config';
 
 class EnvironmentVariablesValidator {
   @IsString()
   @IsOptional()
-  cacheRedisHost: string = 'localhost';
+  CACHE_REDIS_HOST!: string;
 
+  @Transform(({ value }) => {
+    if (value === null || value === undefined || value === '') {
+      return undefined;
+    }
+    return parseInt(value, 10);
+  })
   @IsInt()
   @IsOptional()
-  cacheRedisPort: number = 6379;
+  CACHE_REDIS_PORT!: number;
 
   @IsString()
   @IsOptional()
-  cacheRedisPassword: string = '';
+  CACHE_REDIS_PASSWORD!: string;
 
+  @Transform(({ value }) => {
+    if (value === null || value === undefined || value === '') {
+      return undefined;
+    }
+    return parseInt(value, 10);
+  })
   @IsInt()
   @IsOptional()
-  cacheRedisDb: number = 0;
+  CACHE_REDIS_DB!: number;
 
+  @Transform(({ value }) => {
+    if (value === null || value === undefined || value === '') {
+      return undefined;
+    }
+    return parseInt(value, 10);
+  })
   @IsInt()
   @IsOptional()
-  cacheRedisConnectTimeout: number = 5000;
+  CACHE_REDIS_CONNECT_TIMEOUT!: number;
 
+  @Transform(({ value }) => {
+    if (value === null || value === undefined || value === '') {
+      return undefined;
+    }
+    if (typeof value === 'boolean') return value;
+    return value === 'true' || value === '1';
+  })
   @IsBoolean()
   @IsOptional()
-  cacheRedisLazyConnect: boolean = false;
+  CACHE_REDIS_LAZY_CONNECT!: boolean;
 
+  @Transform(({ value }) => {
+    if (value === null || value === undefined || value === '') {
+      return undefined;
+    }
+    return parseInt(value, 10);
+  })
   @IsInt()
   @IsOptional()
-  cacheRedisMaxRetries: number = 3;
+  CACHE_REDIS_MAX_RETRIES!: number;
 }
 
 export default registerAs<RedisConfig>('redis', () => {
-  const validatedConfig = validateConfig(
-    process.env,
-    EnvironmentVariablesValidator,
-  );
+  const validatedConfig = validateConfig(process.env, EnvironmentVariablesValidator);
 
   return {
-    host: validatedConfig.cacheRedisHost ?? 'localhost',
-    port: validatedConfig.cacheRedisPort ?? 6379,
-    password: validatedConfig.cacheRedisPassword ?? '',
-    db: validatedConfig.cacheRedisDb ?? 0,
-    connectTimeout: validatedConfig.cacheRedisConnectTimeout ?? 5000,
-    lazyConnect: validatedConfig.cacheRedisLazyConnect ?? false,
-    maxRetriesPerRequest: validatedConfig.cacheRedisMaxRetries ?? 3,
+    host: validatedConfig.CACHE_REDIS_HOST ?? 'localhost',
+    port: validatedConfig.CACHE_REDIS_PORT ?? 6379,
+    password: validatedConfig.CACHE_REDIS_PASSWORD ?? '',
+    db: validatedConfig.CACHE_REDIS_DB,
+    connectTimeout: validatedConfig.CACHE_REDIS_CONNECT_TIMEOUT,
+    lazyConnect: validatedConfig.CACHE_REDIS_LAZY_CONNECT,
+    maxRetriesPerRequest: validatedConfig.CACHE_REDIS_MAX_RETRIES,
   };
 });

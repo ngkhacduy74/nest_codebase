@@ -1,7 +1,7 @@
-import { EmailField } from '@/decorators/field.decorators';
-import { StringField } from '@/decorators/field.decorators';
-import { PasswordField } from '@/decorators/field.decorators';
-import { EnumField } from '@/decorators/field.decorators';
+import { EmailField } from '@/common/decorators/field.decorators';
+import { StringField } from '@/common/decorators/field.decorators';
+import { PasswordField } from '@/common/decorators/field.decorators';
+import { EnumField } from '@/common/decorators/field.decorators';
 import { Role } from '../../domain/enums/role.enum';
 
 export class CreateUserDto {
@@ -9,7 +9,7 @@ export class CreateUserDto {
     description: 'User email address',
     example: 'john.doe@example.com',
   })
-  email: string;
+  email!: string;
 
   @StringField({
     description: 'User first name',
@@ -17,7 +17,7 @@ export class CreateUserDto {
     minLength: 2,
     maxLength: 50,
   })
-  firstName: string;
+  firstName!: string;
 
   @StringField({
     description: 'User last name',
@@ -25,7 +25,7 @@ export class CreateUserDto {
     minLength: 2,
     maxLength: 50,
   })
-  lastName: string;
+  lastName!: string;
 
   @PasswordField({
     description: 'User password',
@@ -33,7 +33,7 @@ export class CreateUserDto {
     minLength: 8,
     maxLength: 128,
   })
-  password: string;
+  password!: string;
 
   @EnumField(Role, {
     description: 'User role (optional)',

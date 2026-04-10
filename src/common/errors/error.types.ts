@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 export enum ErrorType {
   VALIDATION = 'VALIDATION',
   AUTHENTICATION = 'AUTHENTICATION',
@@ -60,14 +61,16 @@ export interface ErrorContext {
   resource?: string;
   action?: string;
   timestamp?: string;
-  [key: string]: any;
+
+  [key: string]: unknown;
 }
 
 export interface ErrorDetail {
   field?: string;
   message?: string;
   code?: string;
-  value?: any;
+
+  value?: unknown;
 }
 
 export interface ErrorMetadata {

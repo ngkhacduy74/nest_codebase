@@ -1,4 +1,4 @@
-import { Injectable, LoggerService as NestLoggerService } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 export enum LogLevel {
@@ -60,11 +60,10 @@ export class AppLoggerService {
   private readonly isProduction: boolean;
   private readonly serviceName: string;
   private readonly version: string;
+  private readonly nestLogger: Logger;
 
-  constructor(
-    private readonly configService: ConfigService,
-    private readonly nestLogger: NestLoggerService,
-  ) {
+  constructor(private readonly configService: ConfigService) {
+    this.nestLogger = new Logger('AppLogger');
     this.isProduction = this.configService.get('app.nodeEnv') === 'production';
     this.serviceName = this.configService.get('app.name', 'NestJS SaaS');
     this.version = this.configService.get('app.apiVersion', '1.0.0');
@@ -224,11 +223,7 @@ export class AppLoggerService {
   }
 
   // Business event logging
-  logBusinessEvent(
-    event: string,
-    userId?: string,
-    metadata?: LogMetadata,
-  ): void {
+  logBusinessEvent(event: string, userId?: string, metadata?: LogMetadata): void {
     this.business(`Business event: ${event}`, {
       ...metadata,
       userId,

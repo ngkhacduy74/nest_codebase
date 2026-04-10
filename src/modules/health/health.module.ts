@@ -1,20 +1,12 @@
 import { Module } from '@nestjs/common';
 import { TerminusModule } from '@nestjs/terminus';
-import {
-  PrometheusModule,
-  makeCounterProvider,
-} from '@willsoto/nestjs-prometheus';
 import { PrismaModule } from '@modules/prisma/prisma.module';
+import { MetricsModule } from '@modules/metrics/metrics.module';
 import { HealthController } from './health.controller';
 
 @Module({
-  imports: [TerminusModule, PrometheusModule.register(), PrismaModule],
+  imports: [TerminusModule, MetricsModule, PrismaModule],
   controllers: [HealthController],
-  providers: [
-    makeCounterProvider({
-      name: 'health_check_total',
-      help: 'Total number of health check requests',
-    }),
-  ],
+  providers: [],
 })
 export class HealthModule {}

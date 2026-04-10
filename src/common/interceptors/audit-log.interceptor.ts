@@ -1,4 +1,9 @@
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
+import {
+  Injectable,
+  NestInterceptor,
+  ExecutionContext,
+  CallHandler,
+} from '@nestjs/common';
 import { Observable, tap } from 'rxjs';
 import { ClsService } from 'nestjs-cls';
 import { AppLoggerService } from '@/common/services/logger.service';
@@ -34,12 +39,16 @@ export class AuditLogInterceptor implements NestInterceptor {
           });
         },
         error: (err: Error) => {
-          this.logger.warn(`Audit failure: ${method} ${url} - ${err.message}`, undefined, {
-            userId: user?.id ?? 'anonymous',
-            action: `${method} ${url}`,
-            duration: Date.now() - startTime,
-            error: err.message,
-          });
+          this.logger.warn(
+            `Audit failure: ${method} ${url} - ${err.message}`,
+            undefined,
+            {
+              userId: user?.id ?? 'anonymous',
+              action: `${method} ${url}`,
+              duration: Date.now() - startTime,
+              error: err.message,
+            },
+          );
         },
       }),
     );

@@ -4,9 +4,7 @@ import { PrismaService } from './prisma.service';
 import { DatabaseError } from '@/common/domain/errors/infrastructure.error';
 
 export type PrismaTransactionClient = Prisma.TransactionClient;
-export type TransactionCallback<T> = (
-  tx: PrismaTransactionClient,
-) => Promise<T>;
+export type TransactionCallback<T> = (tx: PrismaTransactionClient) => Promise<T>;
 
 @Injectable()
 export class UnitOfWork {
@@ -39,9 +37,7 @@ export class UnitOfWork {
     }
   }
 
-  private isPrismaKnownError(
-    error: unknown,
-  ): error is Prisma.PrismaClientKnownRequestError {
+  private isPrismaKnownError(error: unknown): error is Prisma.PrismaClientKnownRequestError {
     return error instanceof Prisma.PrismaClientKnownRequestError;
   }
 }

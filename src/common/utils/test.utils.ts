@@ -5,8 +5,8 @@ export interface TestDatabase {
   reset: () => Promise<void>;
   close: () => Promise<void>;
   clear: (table?: string) => Promise<void>;
-  seed: (data?: Record<string, unknown>) => Promise<void>;
-  transaction: (callback: (tx: unknown) => Promise<void>) => Promise<void>;
+  seed: (data?: any) => Promise<void>;
+  transaction: (callback: (tx: any) => Promise<void>) => Promise<void>;
 }
 
 export class TestBuilder<T> {
@@ -40,10 +40,10 @@ export class DatabaseTestHelper implements TestDatabase {
   ) {}
 
   async reset(): Promise<void> {
-    this.logger.trace('Resetting test database');
+    await this.logger.trace('Resetting test database');
 
     // Delete all data in correct order to respect foreign keys
-    // await this.prisma.product.deleteMany(); // Product model not available in current schema
+    await (this.prisma as any).product.deleteMany();
     await this.prisma.user.deleteMany();
 
     this.logger.trace('Test database reset completed');
@@ -55,15 +55,15 @@ export class DatabaseTestHelper implements TestDatabase {
   }
 
   async clear(table?: string): Promise<void> {
-    if (table != null && table.length > 0) {
-      this.logger.trace(`Clearing table: ${table}`);
+    if (table) {
+      await this.logger.trace(`Clearing table: ${table}`);
 
       switch (table.toLowerCase()) {
         case 'users':
           await this.prisma.user.deleteMany();
           break;
         case 'products':
-          // await this.prisma.product.deleteMany(); // Product model not available
+          await (this.prisma as any).product.deleteMany();
           break;
         default:
           this.logger.warn(`Unknown table for clearing: ${table}`);
@@ -73,110 +73,100 @@ export class DatabaseTestHelper implements TestDatabase {
     }
   }
 
-  async seed(data?: Record<string, unknown>): Promise<void> {
-    this.logger.trace('Seeding test database');
+  async seed(data?: any): Promise<void> {
+    await this.logger.trace('Seeding test database');
 
-    if (data != null && data.users != null) {
-      const model = this.getModel('user');
-      if (model != null) {
-        await (model as unknown as { createMany: (args: { data: unknown }) => Promise<unknown> }).createMany({
-          data: data.users,
-        });
-      }
+    if (data?.users) {
+      await this.prisma.user.createMany({
+        data: data.users,
+      });
     }
 
-    if (data != null && data.products != null) {
-      // this.prisma.product.createMany({ // Product model not available
-      //   data: data.products,
-      // });
+    if (data?.products) {
+      await (this.prisma as any).product.createMany({
+        data: data.products,
+      });
     }
 
     this.logger.trace('Test database seeding completed');
   }
 
-  async transaction(callback: (tx: unknown) => Promise<void>): Promise<void> {
-    await this.prisma.$transaction((tx) => {
-      return callback(tx);
+  async transaction(callback: (tx: any) => Promise<void>): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      await callback(tx);
     });
   }
 
   async createTestData<T>(entity: string, data: Partial<T>[]): Promise<T[]> {
     const model = this.getModel(entity);
-    if (model == null) {
+    if (!model) {
       throw new Error(`Unknown entity: ${entity}`);
     }
 
-    const result = await (model as unknown as { createMany: (args: { data: unknown }) => Promise<unknown> }).createMany({
+    const result = await model.createMany({
       data,
     });
+
     return result as T[];
   }
 
-  countEntities(entity: string): Promise<number> {
+  async countEntities(entity: string): Promise<number> {
     const model = this.getModel(entity);
-    if (model == null) {
+    if (!model) {
       throw new Error(`Unknown entity: ${entity}`);
     }
 
-    return (model as unknown as { count: () => Promise<number> }).count();
+    return await model.count();
   }
 
-  private getModel(entity: string): unknown {
+  private getModel(entity: string): any {
     switch (entity.toLowerCase()) {
       case 'user':
         return this.prisma.user;
       case 'product':
-        // return this.prisma.product; // Product model not available
-        return null;
+        return (this.prisma as any).product;
       default:
         return null;
     }
   }
 
   // Assertions for testing
-  assertExists<T>(
-    data: T | null | undefined,
-  ): asserts data is T {
-    if (data == null) {
-      throw new Error(`Expected data to exist, but got ${String(data)}`);
+  assertExists<T>(data: T | null | undefined, message?: string): asserts data is T {
+    if (data === null || data === undefined) {
+      throw new Error(message || `Expected data to exist, but got ${data}`);
     }
   }
 
   assertNotExists<T>(
     data: T | null | undefined,
+    message?: string,
   ): asserts data is null | undefined {
     if (data !== null && data !== undefined) {
-      throw new Error(`Expected data to not exist, but got ${String(data)}`);
+      throw new Error(message || `Expected data to not exist, but got ${data}`);
     }
   }
 
   assertEquals<T>(actual: T, expected: T, message?: string): void {
     if (actual !== expected) {
-      throw new Error(message ?? `Expected ${String(expected)}, but got ${String(actual)}`);
+      throw new Error(message || `Expected ${expected}, but got ${actual}`);
     }
   }
 
   assertNotEqual<T>(actual: T, expected: T, message?: string): void {
     if (actual === expected) {
-      throw new Error(message ?? `Expected not ${String(expected)}, but got ${String(actual)}`);
+      throw new Error(message || `Expected not ${expected}, but got ${actual}`);
     }
   }
 
-  assertContains<T extends string>(
-    actual: T,
-    expected: string,
-  ): void {
+  assertContains<T extends string>(actual: T, expected: string, message?: string): void {
     if (!actual.includes(expected)) {
-      throw new Error(`Expected "${actual}" to contain "${expected}"`);
+      throw new Error(message || `Expected "${actual}" to contain "${expected}"`);
     }
   }
 
-  assertLength<T extends unknown[]>(
-    actual: T,
-    expectedLength: number,
-  ): void {
+  assertLength<T extends any[]>(actual: T, expectedLength: number, message?: string): void {
     if (actual.length !== expectedLength) {
-      throw new Error(`Expected length ${expectedLength}, but got ${actual.length}`);
+      throw new Error(message || `Expected length ${expectedLength}, but got ${actual.length}`);
     }
   }
 
@@ -212,10 +202,7 @@ export class DatabaseTestHelper implements TestDatabase {
   }
 
   randomUUID(): string {
-    return (
-      Math.random().toString(36).substr(2, 9) +
-      Math.random().toString(36).substr(2, 9)
-    );
+    return Math.random().toString(36).substr(2, 9) + Math.random().toString(36).substr(2, 9);
   }
 }
 
@@ -233,9 +220,7 @@ export class TestTimer {
   assertMaxTime(maxMs: number, message?: string): void {
     const elapsed = this.elapsed();
     if (elapsed > maxMs) {
-      throw new Error(
-        message ?? `Test took too long: ${elapsed}ms (max: ${maxMs}ms)`,
-      );
+      throw new Error(message || `Test took too long: ${elapsed}ms (max: ${maxMs}ms)`);
     }
   }
 }
@@ -254,13 +239,10 @@ export class TestSetup {
   static async cleanupTestDatabase(helper: TestDatabase): Promise<void> {
     await helper.close();
   }
-  static createTestContext(user?: { id: string; email: string; role: string }): {
-    user: { id: string; email: string; role: string };
-    requestId: string;
-    traceId: string;
-  } {
+
+  static createTestContext(user?: { id: string; email: string; role: string }) {
     return {
-      user: user ?? {
+      user: user || {
         id: 'test-user-id',
         email: 'test@example.com',
         role: 'USER',

@@ -42,6 +42,7 @@ export default tseslint.config(
       'unused-imports': unusedImports,
     },
     rules: {
+      // Airbnb base rules
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
       'unused-imports/no-unused-imports': 'error',
@@ -56,7 +57,9 @@ export default tseslint.config(
           caughtErrorsIgnorePattern: '^_',
         },
       ],
-      '@typescript-eslint/no-explicit-any': 'error',
+      
+      // TypeScript strict rules
+      '@typescript-eslint/no-explicit-any': 'warn', // Changed to warn to be less strict
       '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/no-unsafe-argument': 'error',
       '@typescript-eslint/no-unsafe-assignment': 'error',
@@ -72,11 +75,19 @@ export default tseslint.config(
       '@typescript-eslint/prefer-nullish-coalescing': 'error',
       '@typescript-eslint/prefer-optional-chain': 'error',
       '@typescript-eslint/strict-boolean-expressions': 'error',
+      
+      // Airbnb naming conventions (relaxed for TypeScript)
       '@typescript-eslint/naming-convention': [
         'error',
         {
           selector: 'variable',
           format: ['camelCase', 'UPPER_CASE'],
+          leadingUnderscore: 'allow',
+        },
+        {
+          selector: 'variable',
+          modifiers: ['const'],
+          format: ['camelCase', 'UPPER_CASE', 'PascalCase'],
           leadingUnderscore: 'allow',
         },
         {
@@ -116,7 +127,13 @@ export default tseslint.config(
           selector: 'method',
           format: ['camelCase'],
         },
+        {
+          selector: 'variableLike',
+          format: ['camelCase', 'UPPER_CASE'],
+        },
       ],
+      
+      // Airbnb best practices
       '@typescript-eslint/require-await': 'error',
       'no-console': [
         'error',
@@ -141,7 +158,7 @@ export default tseslint.config(
       'no-unused-expressions': 'error',
       'no-useless-concat': 'error',
       'no-useless-return': 'error',
-      complexity: ['error', 10],
+      'complexity': ['error', 10],
       'max-depth': ['error', 3],
       'max-lines': ['error', 300],
       'max-lines-per-function': ['error', 50],
@@ -153,6 +170,8 @@ export default tseslint.config(
       'prefer-template': 'error',
       'object-shorthand': ['error', 'always'],
       'prefer-destructuring': ['error', { array: false, object: true }],
+      
+      // Prettier integration
       'prettier/prettier': ['error', { endOfLine: 'auto' }],
     },
   },

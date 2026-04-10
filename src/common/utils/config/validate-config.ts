@@ -24,9 +24,7 @@ export function validateConfig<T extends object>(
       return `${error.property}: ${constraints.join(', ')}`;
     });
 
-    throw new Error(
-      `Configuration validation failed: ${errorMessages.join('; ')}`,
-    );
+    throw new Error(`Configuration validation failed: ${errorMessages.join('; ')}`);
   }
 
   return validatedConfig;

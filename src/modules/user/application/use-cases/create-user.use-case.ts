@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   IUserRepository,
@@ -11,8 +11,6 @@ import * as argon2 from 'argon2';
 
 @Injectable()
 export class CreateUserUseCase {
-  private readonly logger = new Logger(CreateUserUseCase.name);
-
   constructor(
     @Inject(INJECTION_TOKENS.USER_REPOSITORY)
     private readonly userRepo: IUserRepository,

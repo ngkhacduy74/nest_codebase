@@ -46,19 +46,12 @@ export class PerformanceService {
   private readonly alerts: PerformanceAlert[] = [];
   private readonly timers = new Map<string, number>();
 
-  constructor(
-    private readonly logger: AppLoggerService,
-  ) {
+  constructor(private readonly logger: AppLoggerService) {
     this.initializeDefaultThresholds();
   }
 
   // Metric recording
-  recordMetric(
-    name: string,
-    value: number,
-    unit: string,
-    tags?: Record<string, string>,
-  ): void {
+  recordMetric(name: string, value: number, unit: string, tags?: Record<string, string>): void {
     const metric: PerformanceMetric = {
       name,
       value,
@@ -85,27 +78,15 @@ export class PerformanceService {
     this.checkThresholds(metric);
   }
 
-  recordDuration(
-    name: string,
-    duration: number,
-    tags?: Record<string, string>,
-  ): void {
+  recordDuration(name: string, duration: number, tags?: Record<string, string>): void {
     this.recordMetric(name, duration, 'ms', tags);
   }
 
-  recordMemoryUsage(
-    name: string,
-    memoryUsage: number,
-    tags?: Record<string, string>,
-  ): void {
+  recordMemoryUsage(name: string, memoryUsage: number, tags?: Record<string, string>): void {
     this.recordMetric(name, memoryUsage, 'bytes', tags);
   }
 
-  recordCpuUsage(
-    name: string,
-    cpuUsage: number,
-    tags?: Record<string, string>,
-  ): void {
+  recordCpuUsage(name: string, cpuUsage: number, tags?: Record<string, string>): void {
     this.recordMetric(name, cpuUsage, 'percent', tags);
   }
 
@@ -203,29 +184,20 @@ export class PerformanceService {
   }
 
   // Reporting
-  generateReport(timeRange?: {
-    start: number;
-    end: number;
-  }): PerformanceReport {
+  generateReport(timeRange?: { start: number; end: number }): PerformanceReport {
     let filteredMetrics = this.metrics;
 
     if (timeRange) {
       filteredMetrics = this.metrics.filter(
-        (metric) =>
-          metric.timestamp >= timeRange.start &&
-          metric.timestamp <= timeRange.end,
+        (metric) => metric.timestamp >= timeRange.start && metric.timestamp <= timeRange.end,
       );
     }
 
     const thresholdArray = Array.from(this.thresholds.values());
     const activeAlerts = this.getActiveAlerts();
 
-    const warnings = activeAlerts.filter(
-      (alert) => alert.severity === 'warning',
-    ).length;
-    const criticals = activeAlerts.filter(
-      (alert) => alert.severity === 'critical',
-    ).length;
+    const warnings = activeAlerts.filter((alert) => alert.severity === 'warning').length;
+    const criticals = activeAlerts.filter((alert) => alert.severity === 'critical').length;
 
     return {
       metrics: filteredMetrics,
@@ -240,17 +212,12 @@ export class PerformanceService {
     };
   }
 
-  getMetricsByName(
-    name: string,
-    timeRange?: { start: number; end: number },
-  ): PerformanceMetric[] {
+  getMetricsByName(name: string, timeRange?: { start: number; end: number }): PerformanceMetric[] {
     let filteredMetrics = this.metrics.filter((metric) => metric.name === name);
 
     if (timeRange) {
       filteredMetrics = filteredMetrics.filter(
-        (metric) =>
-          metric.timestamp >= timeRange.start &&
-          metric.timestamp <= timeRange.end,
+        (metric) => metric.timestamp >= timeRange.start && metric.timestamp <= timeRange.end,
       );
     }
 
@@ -258,16 +225,11 @@ export class PerformanceService {
   }
 
   getMetricsByTag(tagKey: string, tagValue: string): PerformanceMetric[] {
-    return this.metrics.filter(
-      (metric) => metric.tags && metric.tags[tagKey] === tagValue,
-    );
+    return this.metrics.filter((metric) => metric.tags?.[tagKey] === tagValue);
   }
 
   // Statistics
-  getAverageMetric(
-    name: string,
-    timeRange?: { start: number; end: number },
-  ): number | null {
+  getAverageMetric(name: string, timeRange?: { start: number; end: number }): number | null {
     const metrics = this.getMetricsByName(name, timeRange);
 
     if (metrics.length === 0) {
@@ -278,10 +240,7 @@ export class PerformanceService {
     return sum / metrics.length;
   }
 
-  getMaxMetric(
-    name: string,
-    timeRange?: { start: number; end: number },
-  ): number | null {
+  getMaxMetric(name: string, timeRange?: { start: number; end: number }): number | null {
     const metrics = this.getMetricsByName(name, timeRange);
 
     if (metrics.length === 0) {
@@ -291,10 +250,7 @@ export class PerformanceService {
     return Math.max(...metrics.map((metric) => metric.value));
   }
 
-  getMinMetric(
-    name: string,
-    timeRange?: { start: number; end: number },
-  ): number | null {
+  getMinMetric(name: string, timeRange?: { start: number; end: number }): number | null {
     const metrics = this.getMetricsByName(name, timeRange);
 
     if (metrics.length === 0) {
@@ -315,9 +271,7 @@ export class PerformanceService {
       return null;
     }
 
-    const sortedMetrics = metrics
-      .map((metric) => metric.value)
-      .sort((a, b) => a - b);
+    const sortedMetrics = metrics.map((metric) => metric.value).sort((a, b) => a - b);
     const index = Math.ceil((percentile / 100) * sortedMetrics.length) - 1;
 
     return sortedMetrics[Math.max(0, index)];
@@ -337,9 +291,7 @@ export class PerformanceService {
     const activeAlerts = this.getActiveAlerts();
 
     // Check for too many critical alerts
-    const criticalAlerts = activeAlerts.filter(
-      (alert) => alert.severity === 'critical',
-    );
+    const criticalAlerts = activeAlerts.filter((alert) => alert.severity === 'critical');
     if (criticalAlerts.length > 5) {
       issues.push('Too many critical performance alerts');
     }
@@ -347,9 +299,7 @@ export class PerformanceService {
     // Check for old metrics (stale data)
     const now = Date.now();
     const staleThreshold = 10 * 60 * 1000; // 10 minutes
-    const staleMetrics = this.metrics.filter(
-      (metric) => now - metric.timestamp > staleThreshold,
-    );
+    const staleMetrics = this.metrics.filter((metric) => now - metric.timestamp > staleThreshold);
 
     if (staleMetrics.length > this.metrics.length * 0.8) {
       issues.push('Most performance metrics are stale');
@@ -498,8 +448,7 @@ export class PerformanceService {
         alert: alert.message,
         metric: metric.name,
         value: metric.value,
-        threshold:
-          severity === 'critical' ? threshold.critical : threshold.warning,
+        threshold: severity === 'critical' ? threshold.critical : threshold.warning,
         unit: threshold.unit,
         tags: metric.tags,
       });
@@ -511,8 +460,7 @@ export class PerformanceService {
     let totalSize = 0;
 
     totalSize += JSON.stringify(this.metrics).length * 2;
-    totalSize +=
-      JSON.stringify(Array.from(this.thresholds.entries())).length * 2;
+    totalSize += JSON.stringify(Array.from(this.thresholds.entries())).length * 2;
     totalSize += JSON.stringify(this.alerts).length * 2;
     totalSize += JSON.stringify(Array.from(this.timers.entries())).length * 2;
 
@@ -522,15 +470,12 @@ export class PerformanceService {
 
 // Performance monitoring decorator
 export const PerformanceMonitor =
-  (_metricName: string) =>
-  (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+  (_metricName: string) => (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: any[]) {
       const performanceService = (this as any).performanceService as PerformanceService;
-      const timer = performanceService.startTimer(
-        `${target.constructor.name}:${propertyKey}`,
-      );
+      const timer = performanceService.startTimer(`${target.constructor.name}:${propertyKey}`);
 
       try {
         const result = await originalMethod.apply(this, args);

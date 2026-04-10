@@ -8,7 +8,7 @@ import {
   buildPaginationMeta,
 } from '@/common/types/pagination.types';
 
-export abstract class PrismaBaseRepository<T> extends BaseRepository<T> {
+export abstract class PrismaBaseRepository<T> extends BaseRepository<T, string> {
   constructor(
     protected readonly prisma: PrismaService,
     protected readonly logger: AppLoggerService,

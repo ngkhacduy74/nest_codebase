@@ -2,15 +2,9 @@ import { AuthService } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { ClsService } from 'nestjs-cls';
-import {
-  USER_REPOSITORY,
-  INJECTION_TOKENS,
-} from '@/constants/injection-tokens';
+import { USER_REPOSITORY, INJECTION_TOKENS } from '@/constants/injection-tokens';
 import { InvalidCredentialsError } from '@/common/domain/errors/application.error';
-import {
-  createTestModule,
-  PERFORMANCE_TOKENS,
-} from '@/common/utils/test-helpers';
+import { createTestModule, PERFORMANCE_TOKENS } from '@/common/utils/test-helpers';
 
 // Mock uuid module
 jest.mock('uuid', () => ({
@@ -76,9 +70,9 @@ describe('AuthService', () => {
   describe('validateUser', () => {
     it('should throw InvalidCredentialsError if user not found', async () => {
       userRepo.findByEmail.mockResolvedValue(null);
-      await expect(
-        service.validateUser('test@example.com', 'pw'),
-      ).rejects.toThrow(InvalidCredentialsError);
+      await expect(service.validateUser('test@example.com', 'pw')).rejects.toThrow(
+        InvalidCredentialsError,
+      );
     });
 
     it('should throw InvalidCredentialsError if password invalid', async () => {
@@ -90,9 +84,9 @@ describe('AuthService', () => {
         isDeleted: false,
       };
       userRepo.findByEmail.mockResolvedValue(user);
-      await expect(
-        service.validateUser('test@example.com', 'pw'),
-      ).rejects.toThrow(InvalidCredentialsError);
+      await expect(service.validateUser('test@example.com', 'pw')).rejects.toThrow(
+        InvalidCredentialsError,
+      );
     });
 
     it('should return user payload if valid', async () => {

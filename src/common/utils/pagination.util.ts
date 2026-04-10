@@ -14,10 +14,7 @@ export interface PaginationResult<T> {
 }
 
 export class PaginationUtil {
-  static createPagination<T>(
-    items: T[],
-    options: PaginationOptions = {},
-  ): PaginationResult<T> {
+  static createPagination<T>(items: T[], options: PaginationOptions = {}): PaginationResult<T> {
     const page = options.page || 1;
     const limit = options.limit || 10;
     const total = items.length;
@@ -38,10 +35,7 @@ export class PaginationUtil {
     };
   }
 
-  static getSkipAndTake(
-    page?: number,
-    limit?: number,
-  ): { skip?: number; take?: number } {
+  static getSkipAndTake(page?: number, limit?: number): { skip?: number; take?: number } {
     const parsedPage = page || 1;
     const parsedLimit = limit || 10;
 

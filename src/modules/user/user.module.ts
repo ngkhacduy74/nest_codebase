@@ -1,7 +1,10 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { UserController } from './presentation/controllers/user.controller';
 import { PrismaUserRepository } from './infrastructure/repositories/prisma-user.repository';
 import { INJECTION_TOKENS } from '@/constants/injection-tokens';
+import { MetricsModule } from '@modules/metrics/metrics.module';
+import { AuthModule } from '@modules/auth/auth.module';
+import { AppLoggerService } from '@common/services/logger.service';
 
 // Import use-cases
 import { CreateUserUseCase } from './application/use-cases/create-user.use-case';
@@ -11,8 +14,10 @@ import { UpdateUserUseCase } from './application/use-cases/update-user.use-case'
 import { DeleteUserUseCase } from './application/use-cases/delete-user.use-case';
 
 @Module({
+  imports: [MetricsModule, forwardRef(() => AuthModule)],
   controllers: [UserController],
   providers: [
+    AppLoggerService,
     // Repository binding - chỉ đổi 1 dòng này để swap DB
     {
       provide: INJECTION_TOKENS.USER_REPOSITORY,

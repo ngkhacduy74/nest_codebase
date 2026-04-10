@@ -1,9 +1,4 @@
-import {
-  Inject,
-  Injectable,
-  Logger,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { v4 as uuidv4 } from 'uuid';
@@ -13,10 +8,7 @@ import type { Role } from '../../../user/domain/enums/role.enum';
 import type { AppClsStore } from '@/modules/cls/cls.module';
 import type { IUserRepository } from '../../../user/domain/repositories/user.repository.interface';
 import { type ITokenStore } from '../../infrastructure/token-store/redis-token-store';
-import {
-  USER_REPOSITORY,
-  INJECTION_TOKENS,
-} from '@/constants/injection-tokens';
+import { USER_REPOSITORY, INJECTION_TOKENS } from '@/constants/injection-tokens';
 import {
   AccountDeletedError,
   AccountInactiveError,
@@ -68,11 +60,11 @@ export class AuthService {
     private readonly tokenStore: ITokenStore,
     private readonly configService: ConfigService,
     @InjectMetric('active_sessions_total')
-    private readonly sessionsGauge: Gauge<string>,
+    private readonly sessionsGauge: Gauge,
   ) {}
 
   private get authConf(): AuthConfig {
-    const auth = this.configService.get<any>(AUTH_CONFIG_KEY);
+    const auth = this.configService.get(AUTH_CONFIG_KEY);
     return {
       accessToken: auth?.jwt?.accessToken || {
         secret: 'secret',
@@ -86,10 +78,7 @@ export class AuthService {
     };
   }
 
-  async validateUser(
-    email: string,
-    password: string,
-  ): Promise<AuthUserPayload> {
+  async validateUser(email: string, password: string): Promise<AuthUserPayload> {
     const user = await this.userRepository.findByEmail(email);
 
     if (!user) throw new InvalidCredentialsError();
@@ -111,9 +100,7 @@ export class AuthService {
     const tokens = await this.issueTokenPair(user);
     this.cls.set('userId', user.id);
     this.cls.set('userRole', user.role);
-    this.logger.log(
-      `[Auth] Login success: userId=${user.id} traceId=${this.cls.get('traceId')}`,
-    );
+    this.logger.log(`[Auth] Login success: userId=${user.id} traceId=${this.cls.get('traceId')}`);
     return tokens;
   }
 
@@ -124,7 +111,7 @@ export class AuthService {
         secret: this.authConf.refreshToken.secret,
       });
     } catch (e) {
-      this.logger.warn(`Refresh token verification failed: ${e.message}`);
+      this.logger.warn(`Refresh token verification failed: ${(e as Error).message}`);
       throw new TokenRevokedError();
     }
 
@@ -134,9 +121,7 @@ export class AuthService {
     // Verify against Redis (existence and hash)
     const isValid = await this.tokenStore.verify(userId, tokenId, refreshToken);
     if (!isValid) {
-      this.logger.warn(
-        `Refresh token reuse or invalid: userId=${userId} tokenId=${tokenId}`,
-      );
+      this.logger.warn(`Refresh token reuse or invalid: userId=${userId} tokenId=${tokenId}`);
       await this.tokenStore.revokeAll(userId);
       throw new UnauthorizedException('Invalid refresh token');
     }
@@ -163,7 +148,7 @@ export class AuthService {
   async logout(
     userId: string,
     jti: string,
-    refreshTokenId: string,
+    _refreshTokenId: string,
     accessTokenPayload?: { exp?: number },
   ): Promise<void> {
     // 1. Blacklist access token with proper TTL from token expiry
@@ -177,11 +162,12 @@ export class AuthService {
 
     await this.tokenStore.blacklistAccessToken(jti, blacklistTtl);
 
-    await this.tokenStore.revoke(userId, refreshTokenId);
+    // Revoke all refresh tokens for the user to ensure complete logout
+    await this.tokenStore.revokeAll(userId);
     this.sessionsGauge.dec();
 
     this.logger.log(
-      `[Auth] Logout: userId=${userId}, jti=${jti}, ttl=${blacklistTtl}s`,
+      `[Auth] Logout: userId=${userId}, jti=${jti}, ttl=${blacklistTtl}s - all tokens revoked`,
     );
   }
 

@@ -2,15 +2,10 @@ import { Injectable, Logger, OnModuleDestroy, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 import * as argon2 from 'argon2';
-import { REDIS_CLIENT } from '@/infrastructure/redis/redis.module';
+import { REDIS_CLIENT } from '@/modules/redis/redis.module';
 
 export interface ITokenStore {
-  save(
-    userId: string,
-    tokenId: string,
-    tokenHash: string,
-    ttlSeconds: number,
-  ): Promise<void>;
+  save(userId: string, tokenId: string, tokenHash: string, ttlSeconds: number): Promise<void>;
   verify(userId: string, tokenId: string, token: string): Promise<boolean>;
   revoke(userId: string, tokenId: string): Promise<void>;
   revokeAll(userId: string): Promise<void>;
@@ -21,17 +16,12 @@ export interface ITokenStore {
 @Injectable()
 export class RedisTokenStore implements ITokenStore, OnModuleDestroy {
   private readonly logger = new Logger(RedisTokenStore.name);
-  private readonly redis: Redis;
   private readonly redisTokenStore: Redis;
   private readonly keyPrefix: string;
   private readonly MAX_ACTIVE_SESSIONS = 5;
 
-  constructor(
-    configService: ConfigService,
-    @Inject(REDIS_CLIENT) redisClient: Redis,
-  ) {
+  constructor(configService: ConfigService, @Inject(REDIS_CLIENT) redisClient: Redis) {
     this.keyPrefix = configService.get<string>('cache.keyPrefix') || 'cache:';
-    this.redis = redisClient;
 
     // Create separate Redis instance for token store with different DB
     this.redisTokenStore = redisClient.duplicate();
@@ -46,12 +36,7 @@ export class RedisTokenStore implements ITokenStore, OnModuleDestroy {
     await this.redisTokenStore.quit();
   }
 
-  async save(
-    userId: string,
-    tokenId: string,
-    token: string,
-    ttlSeconds: number,
-  ): Promise<void> {
+  async save(userId: string, tokenId: string, token: string, ttlSeconds: number): Promise<void> {
     const key = this.refreshKey(userId, tokenId);
     const sessionsKey = this.userSessionsKey(userId);
     const tokenHash = await argon2.hash(token);
@@ -75,9 +60,7 @@ export class RedisTokenStore implements ITokenStore, OnModuleDestroy {
         sessionCount - this.MAX_ACTIVE_SESSIONS - 1,
       );
       if (toRemove.length > 0) {
-        this.logger.log(
-          `Pruning ${toRemove.length} old sessions for user ${userId}`,
-        );
+        this.logger.log(`Pruning ${toRemove.length} old sessions for user ${userId}`);
         const pruneMulti = this.redisTokenStore.multi();
         for (const tid of toRemove) {
           pruneMulti.del(this.refreshKey(userId, tid));
@@ -88,11 +71,7 @@ export class RedisTokenStore implements ITokenStore, OnModuleDestroy {
     }
   }
 
-  async verify(
-    userId: string,
-    tokenId: string,
-    token: string,
-  ): Promise<boolean> {
+  async verify(userId: string, tokenId: string, token: string): Promise<boolean> {
     const key = this.refreshKey(userId, tokenId);
     const storedHash = await this.redisTokenStore.get(key);
 
@@ -151,9 +130,5 @@ export class RedisTokenStore implements ITokenStore, OnModuleDestroy {
 
   private userSessionsKey(userId: string): string {
     return `sessions:${userId}`;
-  }
-
-  private blacklistKey(jti: string): string {
-    return `blacklist:${jti}`;
   }
 }

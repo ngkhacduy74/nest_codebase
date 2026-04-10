@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { BullModule } from '@nestjs/bullmq';
@@ -12,13 +11,17 @@ import appConfig from '@config/app/app.config';
 import databaseConfig from '@config/database/database.config';
 import redisConfig from '@config/redis/redis.config';
 import authConfig from '@config/auth/auth.config';
+import securityConfig from '@config/security/security.config';
+import throttlerConfig from '@config/throttler/throttler.config';
 import { AppClsModule } from '@modules/cls/cls.module';
 import { PrismaModule } from '@modules/prisma/prisma.module';
 import { RedisModule } from '@modules/redis/redis.module';
 import { GlobalExceptionFilter } from '@common/filters/global-exception.filter';
 import { LoggingInterceptor } from '@common/interceptors/logging.interceptor';
+import { CustomThrottlerGuard } from '@common/guards/custom-throttler.guard';
 import { AuthGuard } from '@common/guards/auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
+import { AppLoggerService } from '@common/services/logger.service';
 
 import { HealthModule } from '@modules/health/health.module';
 import { MetricsModule } from '@modules/metrics/metrics.module';
@@ -30,7 +33,7 @@ import { UserModule } from '@modules/user/user.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, databaseConfig, redisConfig, authConfig],
+      load: [appConfig, databaseConfig, redisConfig, authConfig, securityConfig, throttlerConfig],
       envFilePath: ['.env.local', '.env'],
       expandVariables: true,
     }),
@@ -40,9 +43,9 @@ import { UserModule } from '@modules/user/user.module';
     LoggerModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
-        const level = config.get('logger.level');
+        const level = config.get<string>('LOG_LEVEL') || config.get('logger.level') || 'info';
         const redactPaths = config.get('logger.redactPaths') || [];
-        const prettyPrint = config.get('logger.prettyPrint');
+        const prettyPrint = config.get('logger.prettyPrint') !== 'false';
 
         return {
           pinoHttp: {
@@ -62,24 +65,8 @@ import { UserModule } from '@modules/user/user.module';
                   options: { colorize: true, singleLine: true },
                 }
               : undefined,
-            genReqId: (req) =>
-              (req.headers['x-request-id'] as string | undefined) ??
-              randomUUID(),
+            genReqId: (req) => (req.headers['x-request-id'] as string | undefined) ?? randomUUID(),
           },
-        };
-      },
-    }),
-
-    ThrottlerModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => {
-        return {
-          throttlers: [
-            {
-              ttl: 60000, // 1 minute default
-              limit: 100, // 100 requests per minute default
-            },
-          ],
         };
       },
     }),
@@ -136,11 +123,13 @@ import { UserModule } from '@modules/user/user.module';
     NotificationModule,
   ],
   providers: [
-    // Rate limiting
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    AppLoggerService,
+
+    // Rate limiting - custom guard with configurable limits
+    { provide: APP_GUARD, useClass: CustomThrottlerGuard },
 
     // Auth global - order is important
-    { provide: APP_GUARD, useClass: AuthGuard },
+    { provide: APP_GUARD, useExisting: AuthGuard },
 
     // RBAC global
     { provide: APP_GUARD, useClass: RolesGuard },

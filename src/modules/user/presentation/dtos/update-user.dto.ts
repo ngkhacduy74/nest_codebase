@@ -1,5 +1,5 @@
-import { StringField } from '@/decorators/field.decorators';
-import { EnumField } from '@/decorators/field.decorators';
+import { StringField } from '@/common/decorators/field.decorators';
+import { EnumField } from '@/common/decorators/field.decorators';
 import { Role } from '../../domain/enums/role.enum';
 
 export class UpdateUserDto {

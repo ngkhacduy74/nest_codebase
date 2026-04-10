@@ -1,10 +1,7 @@
 import { CreateUserUseCase } from './create-user.use-case';
 import { ConflictError } from '@/common/domain/errors/application.error';
 import { USER_REPOSITORY } from '@/constants/injection-tokens';
-import {
-  createMockRepository,
-  createTestModule,
-} from '@/common/utils/test-helpers';
+import { createMockRepository, createTestModule } from '@/common/utils/test-helpers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CreateUserDataDto } from '../../domain/repositories/user.repository.interface';
 import { Role } from '../../domain/enums/role.enum';

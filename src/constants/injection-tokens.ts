@@ -17,6 +17,6 @@ export const INJECTION_TOKENS = {
 } as const;
 
 // Export individual tokens for backward compatibility
-export const USER_REPOSITORY = INJECTION_TOKENS.USER_REPOSITORY;
-export const EMAIL_SERVICE = INJECTION_TOKENS.EMAIL_SERVICE;
-export const STORAGE_SERVICE = INJECTION_TOKENS.STORAGE_SERVICE;
+export const { USER_REPOSITORY } = INJECTION_TOKENS;
+export const { EMAIL_SERVICE } = INJECTION_TOKENS;
+export const { STORAGE_SERVICE } = INJECTION_TOKENS;
