@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 export enum ErrorType {
   VALIDATION = 'VALIDATION',
   AUTHENTICATION = 'AUTHENTICATION',

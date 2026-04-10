@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 import { plainToInstance } from 'class-transformer';
 
 export abstract class BaseEntity<TId = string> {

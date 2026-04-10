@@ -20,7 +20,7 @@ describe('AppConfig', () => {
     process.env.NODE_ENV = 'development';
     process.env.API_VERSION = '1';
 
-    const module = await Test.createTestingModule({
+    await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({
           load: [appConfig],
