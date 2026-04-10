@@ -1,25 +1,11 @@
-import {
-  CallHandler,
-  ExecutionContext,
-  Injectable,
-  NestInterceptor,
-} from '@nestjs/common';
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import {
-  BaseResponse,
-  ResponseMeta,
-} from '@/common/interfaces/base-response.interface';
+import { BaseResponse, ResponseMeta } from '@/common/interfaces/base-response.interface';
 
 @Injectable()
-export class ResponseInterceptor<T = unknown> implements NestInterceptor<
-  T,
-  BaseResponse<T>
-> {
-  intercept(
-    context: ExecutionContext,
-    next: CallHandler,
-  ): Observable<BaseResponse<T>> {
+export class ResponseInterceptor<T = unknown> implements NestInterceptor<T, BaseResponse<T>> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<BaseResponse<T>> {
     const ctx = context.switchToHttp();
     const request = ctx.getRequest();
 
@@ -62,13 +48,8 @@ export class ResponseInterceptor<T = unknown> implements NestInterceptor<
     if (data && typeof data === 'object') {
       const obj = data as Record<string, unknown>;
       if (obj.pagination) return obj.pagination as ResponseMeta['pagination'];
-      if (
-        obj.meta &&
-        typeof obj.meta === 'object' &&
-        'pagination' in obj.meta
-      ) {
-        return (obj.meta as Record<string, unknown>)
-          .pagination as ResponseMeta['pagination'];
+      if (obj.meta && typeof obj.meta === 'object' && 'pagination' in obj.meta) {
+        return (obj.meta as Record<string, unknown>).pagination as ResponseMeta['pagination'];
       }
       if (obj.page !== undefined || obj.limit !== undefined) {
         return {

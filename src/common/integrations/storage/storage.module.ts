@@ -18,17 +18,11 @@ export class StorageModule {
             const provider = config.get<string>('storage.provider');
 
             if (!provider) {
-              throw new Error(
-                '[StorageModule] STORAGE_PROVIDER không été configuré. ' +
-                  'Set STORAGE_PROVIDER=aws-s3 trong .env',
-              );
+              throw new Error('[StorageModule] STORAGE_PROVIDER not configured.');
             }
 
             // Never allow local storage in production
-            if (
-              provider === 'local' &&
-              config.get('app.nodeEnv') === 'production'
-            ) {
+            if (provider === 'local' && config.get('app.nodeEnv') === 'production') {
               throw new Error(
                 '[StorageModule] Local storage interdit en production. ' +
                   'Utilisez aws-s3, cloudinary, ou google-cloud.',
@@ -39,9 +33,7 @@ export class StorageModule {
               case 'aws-s3':
                 return new AwsS3Provider(config);
               default:
-                throw new Error(
-                  `[StorageModule] Provider non supporté: ${provider}`,
-                );
+                throw new Error(`[StorageModule] Provider not supported: ${provider}`);
             }
           },
         },

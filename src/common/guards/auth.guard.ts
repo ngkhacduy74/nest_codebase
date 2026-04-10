@@ -1,9 +1,4 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -41,10 +36,10 @@ export class AuthGuard implements CanActivate {
     const token = this.extractTokenFromRequest(request);
 
     if (!token) {
-      const isOptional = this.reflector.getAllAndOverride<boolean>(
-        IS_OPTIONAL_KEY,
-        [context.getHandler(), context.getClass()],
-      );
+      const isOptional = this.reflector.getAllAndOverride<boolean>(IS_OPTIONAL_KEY, [
+        context.getHandler(),
+        context.getClass(),
+      ]);
       if (isOptional) return true;
       throw new UnauthorizedException('MISSING_TOKEN');
     }
@@ -59,9 +54,7 @@ export class AuthGuard implements CanActivate {
       }
 
       // Add: check if token is blacklisted
-      const isBlacklisted = await this.tokenStore.isAccessTokenBlacklisted(
-        payload.jti,
-      );
+      const isBlacklisted = await this.tokenStore.isAccessTokenBlacklisted(payload.jti);
       if (isBlacklisted) {
         throw new UnauthorizedException('TOKEN_REVOKED');
       }

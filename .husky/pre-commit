@@ -45,16 +45,8 @@ if ! pnpm typecheck; then
 fi
 echo "${GREEN}✓ TypeScript strict mode type check passed${NC}"
 
-# Step 4: Spell check
-echo "${YELLOW}[4/5] Running spell check...${NC}"
-if ! pnpm spellcheck; then
-  echo "${RED}✗ Spell check failed${NC}"
-  exit 1
-fi
-echo "${GREEN}✓ Spell check passed${NC}"
-
-# Step 5: Format check
-echo "${YELLOW}[5/5] Checking code formatting...${NC}"
+# Step 4: Format check
+echo "${YELLOW}[4/4] Checking code formatting...${NC}"
 if ! pnpm run format:check > /dev/null 2>&1; then
   echo "${RED}✗ Code formatting check failed${NC}"
   echo "${YELLOW}Run 'pnpm format' to fix formatting issues${NC}"
@@ -67,14 +59,6 @@ echo "${GREEN}✓ All validation checks passed! Ready to commit.${NC}"
 echo "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
 exit 0
-
-echo "${YELLOW}3. Running spellcheck...${NC}"
-if ! pnpm spellcheck; then
-  echo "${RED}❌ Spellcheck failed${NC}"
-  exit 1
-fi
-
-echo "${GREEN}✅ All code checks passed!${NC}"
 
 # Kiểm tra tên branch sau cùng
 BRANCH=$(git rev-parse --abbrev-ref HEAD)

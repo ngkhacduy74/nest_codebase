@@ -1,13 +1,6 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
-import {
-  ErrorType,
-  ErrorCode,
-  ErrorContext,
-  ErrorMetadata,
-  ErrorDetail,
-} from './error.types';
+import { ErrorType, ErrorCode, ErrorContext, ErrorMetadata, ErrorDetail } from './error.types';
 
- 
 export class AppError extends HttpException {
   public readonly errorType: ErrorType;
   public readonly errorCode: ErrorCode;
@@ -81,7 +74,7 @@ export class AppError extends HttpException {
   static invalidInput(
     message: string = 'Invalid input provided',
     field?: string,
-     
+
     value?: any,
     context?: ErrorContext,
   ): AppError {
@@ -95,10 +88,7 @@ export class AppError extends HttpException {
     );
   }
 
-  static unauthorized(
-    message: string = 'Unauthorized access',
-    context?: ErrorContext,
-  ): AppError {
+  static unauthorized(message: string = 'Unauthorized access', context?: ErrorContext): AppError {
     return new AppError(
       message,
       HttpStatus.UNAUTHORIZED,
@@ -108,10 +98,7 @@ export class AppError extends HttpException {
     );
   }
 
-  static forbidden(
-    message: string = 'Access forbidden',
-    context?: ErrorContext,
-  ): AppError {
+  static forbidden(message: string = 'Access forbidden', context?: ErrorContext): AppError {
     return new AppError(
       message,
       HttpStatus.FORBIDDEN,
@@ -121,11 +108,7 @@ export class AppError extends HttpException {
     );
   }
 
-  static notFound(
-    resource: string,
-    identifier?: string,
-    context?: ErrorContext,
-  ): AppError {
+  static notFound(resource: string, identifier?: string, context?: ErrorContext): AppError {
     const message =
       identifier != null
         ? `${resource} with identifier '${identifier}' not found`
@@ -231,11 +214,7 @@ export class AppError extends HttpException {
     );
   }
 
-  static rateLimitExceeded(
-    limit?: number,
-    windowMs?: number,
-    context?: ErrorContext,
-  ): AppError {
+  static rateLimitExceeded(limit?: number, windowMs?: number, context?: ErrorContext): AppError {
     const message =
       limit != null
         ? `Rate limit exceeded. Maximum ${limit} requests per ${windowMs}ms allowed`
@@ -270,25 +249,15 @@ export class AppError extends HttpException {
     );
   }
 
-  static timeout(
-    operation: string,
-    timeoutMs: number,
-    context?: ErrorContext,
-  ): AppError {
+  static timeout(operation: string, timeoutMs: number, context?: ErrorContext): AppError {
     const message = `${operation} operation timed out after ${timeoutMs}ms`;
 
-    return new AppError(
-      message,
-      HttpStatus.REQUEST_TIMEOUT,
-      ErrorType.TIMEOUT,
-      ErrorCode.TIMEOUT,
-      {
-        context: {
-          ...context,
-          operation,
-          timeoutMs,
-        },
+    return new AppError(message, HttpStatus.REQUEST_TIMEOUT, ErrorType.TIMEOUT, ErrorCode.TIMEOUT, {
+      context: {
+        ...context,
+        operation,
+        timeoutMs,
       },
-    );
+    });
   }
 }

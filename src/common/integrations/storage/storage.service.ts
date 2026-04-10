@@ -56,9 +56,7 @@ export class StorageService {
    */
   async downloadFile(key: string): Promise<StorageDownloadResult> {
     try {
-      this.logger.log(
-        `Downloading file via ${this.provider.getProviderName()}`,
-      );
+      this.logger.log(`Downloading file via ${this.provider.getProviderName()}`);
 
       const result = await this.provider.download(key);
 
@@ -70,10 +68,7 @@ export class StorageService {
 
       return result;
     } catch (error) {
-      this.logger.error(
-        'Unexpected error in StorageService.downloadFile',
-        error,
-      );
+      this.logger.error('Unexpected error in StorageService.downloadFile', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -109,19 +104,14 @@ export class StorageService {
   /**
    * List files in storage
    */
-  async listFiles(
-    prefix?: string,
-    maxKeys?: number,
-  ): Promise<StorageListResult> {
+  async listFiles(prefix?: string, maxKeys?: number): Promise<StorageListResult> {
     try {
       this.logger.log(`Listing files via ${this.provider.getProviderName()}`);
 
       const result = await this.provider.list(prefix, maxKeys);
 
       if (result.success) {
-        this.logger.log(
-          `Files listed successfully. Count: ${result.files?.length}`,
-        );
+        this.logger.log(`Files listed successfully. Count: ${result.files?.length}`);
       } else {
         this.logger.error(`Failed to list files: ${result.error}`);
       }
@@ -141,26 +131,18 @@ export class StorageService {
    */
   async getSignedUrl(key: string, expiresIn?: number): Promise<string> {
     try {
-      this.logger.log(
-        `Getting signed URL via ${this.provider.getProviderName()}`,
-      );
+      this.logger.log(`Getting signed URL via ${this.provider.getProviderName()}`);
 
       const defaultExpiresIn = parseInt(
         this.configService.get('STORAGE_SIGNED_URL_EXPIRES_IN', '3600'),
       );
-      const url = await this.provider.getSignedUrl(
-        key,
-        expiresIn || defaultExpiresIn,
-      );
+      const url = await this.provider.getSignedUrl(key, expiresIn || defaultExpiresIn);
 
       this.logger.log(`Signed URL generated successfully. Key: ${key}`);
 
       return url;
     } catch (error) {
-      this.logger.error(
-        'Unexpected error in StorageService.getSignedUrl',
-        error,
-      );
+      this.logger.error('Unexpected error in StorageService.getSignedUrl', error);
       throw error;
     }
   }
@@ -170,15 +152,11 @@ export class StorageService {
    */
   async fileExists(key: string): Promise<boolean> {
     try {
-      this.logger.log(
-        `Checking file existence via ${this.provider.getProviderName()}`,
-      );
+      this.logger.log(`Checking file existence via ${this.provider.getProviderName()}`);
 
       const exists = await this.provider.exists(key);
 
-      this.logger.log(
-        `File existence check completed. Key: ${key}, Exists: ${exists}`,
-      );
+      this.logger.log(`File existence check completed. Key: ${key}, Exists: ${exists}`);
 
       return exists;
     } catch (error) {
@@ -192,9 +170,7 @@ export class StorageService {
    */
   async getFileMetadata(key: string) {
     try {
-      this.logger.log(
-        `Getting file metadata via ${this.provider.getProviderName()}`,
-      );
+      this.logger.log(`Getting file metadata via ${this.provider.getProviderName()}`);
 
       const metadata = await this.provider.getMetadata(key);
 
@@ -206,10 +182,7 @@ export class StorageService {
 
       return metadata;
     } catch (error) {
-      this.logger.error(
-        'Unexpected error in StorageService.getFileMetadata',
-        error,
-      );
+      this.logger.error('Unexpected error in StorageService.getFileMetadata', error);
       return null;
     }
   }

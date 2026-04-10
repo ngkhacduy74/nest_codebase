@@ -2,10 +2,7 @@ import { Prisma } from '@/generated/prisma/client';
 import { AppError } from '@/common/errors/app.error';
 
 export class PrismaErrorMapper {
-  static toAppError(
-    error: unknown,
-    context: { entity: string; id?: string },
-  ): never {
+  static toAppError(error: unknown, context: { entity: string; id?: string }): never {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       const errorCode = error.code;
       switch (errorCode) {
@@ -15,9 +12,7 @@ export class PrismaErrorMapper {
           ]);
         case 'P2025':
           throw AppError.notFound(
-            `${context.entity}${
-              context.id != null ? ` [${context.id}]` : ''
-            } not found`,
+            `${context.entity}${context.id != null ? ` [${context.id}]` : ''} not found`,
           );
         case 'P2003':
           throw AppError.badRequest(`Invalid reference in ${context.entity}`);
@@ -28,9 +23,6 @@ export class PrismaErrorMapper {
           );
       }
     }
-    throw AppError.databaseError(
-      `Unexpected error for ${context.entity}`,
-      error as Error,
-    );
+    throw AppError.databaseError(`Unexpected error for ${context.entity}`, error as Error);
   }
 }

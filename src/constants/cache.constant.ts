@@ -2,7 +2,6 @@ export const CacheKeys = {
   user: (id: string) => `user:${id}`,
   userByEmail: (email: string) => `user:email:${email}`,
   userList: (page: number, limit: number) => `users:list:${page}:${limit}`,
-  // Thêm key mới ở đây khi cần — không hardcode string ở nơi khác
 } as const;
 
 export const CacheTTL = {

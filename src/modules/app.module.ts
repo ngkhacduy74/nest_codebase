@@ -33,14 +33,7 @@ import { UserModule } from '@modules/user/user.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [
-        appConfig,
-        databaseConfig,
-        redisConfig,
-        authConfig,
-        securityConfig,
-        throttlerConfig,
-      ],
+      load: [appConfig, databaseConfig, redisConfig, authConfig, securityConfig, throttlerConfig],
       envFilePath: ['.env.local', '.env'],
       expandVariables: true,
     }),
@@ -50,10 +43,7 @@ import { UserModule } from '@modules/user/user.module';
     LoggerModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
-        const level =
-          config.get<string>('LOG_LEVEL') ||
-          config.get('logger.level') ||
-          'info';
+        const level = config.get<string>('LOG_LEVEL') || config.get('logger.level') || 'info';
         const redactPaths = config.get('logger.redactPaths') || [];
         const prettyPrint = config.get('logger.prettyPrint') !== 'false';
 

@@ -41,10 +41,7 @@ export default registerAs<ThrottlerConfig>('throttler', () => {
     },
   ];
 
-  const endpoints: ThrottlerEndpointConfig[] = [
-    ...authEndpoints,
-    ...publicEndpoints,
-  ];
+  const endpoints: ThrottlerEndpointConfig[] = [...authEndpoints, ...publicEndpoints];
 
   const whitelist = (process.env.THROTTLE_WHITELIST || '')
     .split(',')

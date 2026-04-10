@@ -45,7 +45,7 @@ export class CacheService {
   }
 
   async invalidateByTag(_tag: string): Promise<void> {
-    // TODO: Implement với Redis SCAN pattern: `tag:${tag}:*`
-    // Cần inject Redis client trực tiếp để dùng SCAN
+    // TODO: Implement with Redis SCAN pattern: `tag:${tag}:*`
+    // Need to inject Redis client directly to use SCAN
   }
 }

@@ -1,11 +1,6 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import type { ConfigService } from '@nestjs/config';
-import type {
-  EmailProvider,
-  EmailMessage,
-  EmailSendResult,
-  EmailConfig,
-} from './email.interface';
+import type { EmailProvider, EmailMessage, EmailSendResult, EmailConfig } from './email.interface';
 import { EMAIL_CONFIG_KEY } from './email.interface';
 
 @Injectable()
@@ -30,9 +25,7 @@ export class EmailService {
       const result = await this.provider.send(message);
 
       if (result.success) {
-        this.logger.log(
-          `Email sent successfully. Message ID: ${result.messageId}`,
-        );
+        this.logger.log(`Email sent successfully. Message ID: ${result.messageId}`);
       } else {
         this.logger.error(`Failed to send email: ${result.error}`);
       }
@@ -52,26 +45,19 @@ export class EmailService {
    */
   async sendTemplateEmail(message: EmailMessage): Promise<EmailSendResult> {
     try {
-      this.logger.log(
-        `Sending template email via ${this.provider.getProviderName()}`,
-      );
+      this.logger.log(`Sending template email via ${this.provider.getProviderName()}`);
 
       const result = await this.provider.sendTemplate(message);
 
       if (result.success) {
-        this.logger.log(
-          `Template email sent successfully. Message ID: ${result.messageId}`,
-        );
+        this.logger.log(`Template email sent successfully. Message ID: ${result.messageId}`);
       } else {
         this.logger.error(`Failed to send template email: ${result.error}`);
       }
 
       return result;
     } catch (error) {
-      this.logger.error(
-        'Unexpected error in EmailService.sendTemplateEmail',
-        error,
-      );
+      this.logger.error('Unexpected error in EmailService.sendTemplateEmail', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -82,10 +68,7 @@ export class EmailService {
   /**
    * Send welcome email
    */
-  async sendWelcomeEmail(
-    to: string,
-    userName: string,
-  ): Promise<EmailSendResult> {
+  async sendWelcomeEmail(to: string, userName: string): Promise<EmailSendResult> {
     const emailConfig = this.configService.get<EmailConfig>(EMAIL_CONFIG_KEY)!;
 
     return this.sendEmail({
@@ -115,10 +98,7 @@ export class EmailService {
   /**
    * Send password reset email
    */
-  async sendPasswordResetEmail(
-    to: string,
-    resetToken: string,
-  ): Promise<EmailSendResult> {
+  async sendPasswordResetEmail(to: string, resetToken: string): Promise<EmailSendResult> {
     const emailConfig = this.configService.get<EmailConfig>(EMAIL_CONFIG_KEY)!;
 
     return this.sendEmail({

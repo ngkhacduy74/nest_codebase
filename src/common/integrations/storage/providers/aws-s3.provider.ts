@@ -26,11 +26,8 @@ export class AwsS3Provider implements StorageProvider {
   private readonly s3Client: S3Client;
   private readonly bucket: string;
 
-  constructor(
-    @Inject(ConfigService) private readonly configService: ConfigService,
-  ) {
-    const storageConfig =
-      this.configService.get<StorageConfig>(STORAGE_CONFIG_KEY)!;
+  constructor(@Inject(ConfigService) private readonly configService: ConfigService) {
+    const storageConfig = this.configService.get<StorageConfig>(STORAGE_CONFIG_KEY)!;
 
     this.s3Client = new S3Client({
       region: storageConfig.awsS3!.region,
@@ -221,8 +218,7 @@ export class AwsS3Provider implements StorageProvider {
 
   async validateConfig(): Promise<boolean> {
     try {
-      const storageConfig =
-        this.configService.get<StorageConfig>(STORAGE_CONFIG_KEY)!;
+      const storageConfig = this.configService.get<StorageConfig>(STORAGE_CONFIG_KEY)!;
 
       if (
         !storageConfig.awsS3?.accessKeyId ||
@@ -232,9 +228,7 @@ export class AwsS3Provider implements StorageProvider {
         return false;
       }
 
-      const validationMaxKeys = parseInt(
-        this.configService.get('AWS_S3_VALIDATION_MAX_KEYS', '1'),
-      );
+      const validationMaxKeys = parseInt(this.configService.get('AWS_S3_VALIDATION_MAX_KEYS', '1'));
       await this.s3Client.send(
         new ListObjectsV2Command({
           Bucket: this.bucket,

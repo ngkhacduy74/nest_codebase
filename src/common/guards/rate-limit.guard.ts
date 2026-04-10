@@ -94,16 +94,11 @@ export class RateLimitGuard implements CanActivate {
 
       return true;
     } catch (error) {
-      this.logger.errorWithException(
-        'Rate limit guard error',
-        error as Error,
-        undefined,
-        {
-          path: request.path,
-          method: request.method,
-          ip: request.ip,
-        },
-      );
+      this.logger.errorWithException('Rate limit guard error', error as Error, undefined, {
+        path: request.path,
+        method: request.method,
+        ip: request.ip,
+      });
 
       throw error;
     }
@@ -135,10 +130,7 @@ export class RateLimitGuard implements CanActivate {
     const userId = request.user?.id;
 
     // Get IP address
-    const ip =
-      request.ip ||
-      request.connection?.remoteAddress ||
-      request.socket?.remoteAddress;
+    const ip = request.ip || request.connection?.remoteAddress || request.socket?.remoteAddress;
 
     // Get endpoint
     const endpoint = request.path;
@@ -156,19 +148,10 @@ export class RateLimitGuard implements CanActivate {
     }
   }
 
-  private addRateLimitHeaders(
-    response: any,
-    rateLimitInfo: RateLimitInfo,
-  ): void {
+  private addRateLimitHeaders(response: any, rateLimitInfo: RateLimitInfo): void {
     response.setHeader('X-RateLimit-Limit', rateLimitInfo.windowMs);
-    response.setHeader(
-      'X-RateLimit-Remaining',
-      Math.max(0, rateLimitInfo.remainingHits),
-    );
-    response.setHeader(
-      'X-RateLimit-Reset',
-      rateLimitInfo.resetTime.toISOString(),
-    );
+    response.setHeader('X-RateLimit-Remaining', Math.max(0, rateLimitInfo.remainingHits));
+    response.setHeader('X-RateLimit-Reset', rateLimitInfo.resetTime.toISOString());
   }
 }
 
@@ -187,10 +170,7 @@ export class MemoryRateLimitStore implements RateLimitStore {
     );
   }
 
-  async increment(
-    key: string,
-    options: RateLimitOptions,
-  ): Promise<RateLimitInfo> {
+  async increment(key: string, options: RateLimitOptions): Promise<RateLimitInfo> {
     const now = Date.now();
     const resetTime = new Date(now + options.windowMs);
 
@@ -281,10 +261,7 @@ export class RedisRateLimitStore implements RateLimitStore {
     private readonly logger: AppLoggerService,
   ) {}
 
-  async increment(
-    key: string,
-    options: RateLimitOptions,
-  ): Promise<RateLimitInfo> {
+  async increment(key: string, options: RateLimitOptions): Promise<RateLimitInfo> {
     const now = Date.now();
     const resetTime = now + options.windowMs;
 

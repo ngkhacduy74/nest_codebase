@@ -2,11 +2,7 @@ export class DomainError extends Error {
   readonly code: string;
   readonly context?: Record<string, unknown>;
 
-  constructor(
-    message: string,
-    code: string,
-    context?: Record<string, unknown>,
-  ) {
+  constructor(message: string, code: string, context?: Record<string, unknown>) {
     super(message);
     this.name = 'DomainError';
     this.code = code;
@@ -14,11 +10,7 @@ export class DomainError extends Error {
     Error.captureStackTrace(this, this.constructor);
   }
 
-  static create(
-    message: string,
-    code: string,
-    context?: Record<string, unknown>,
-  ): DomainError {
+  static create(message: string, code: string, context?: Record<string, unknown>): DomainError {
     return new DomainError(message, code, context);
   }
 }
@@ -36,10 +28,6 @@ export class InvalidNameError extends DomainError {
 
 export class UserAlreadyDeactivatedError extends DomainError {
   constructor(userId: string) {
-    super(
-      `User "${userId}" is already deactivated`,
-      'USER_ALREADY_DEACTIVATED',
-      { userId },
-    );
+    super(`User "${userId}" is already deactivated`, 'USER_ALREADY_DEACTIVATED', { userId });
   }
 }
