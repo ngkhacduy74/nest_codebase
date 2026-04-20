@@ -27,7 +27,6 @@ describe('CreateUserUseCase', () => {
             delete: jest.fn(),
           } as unknown,
         },
-        },
         {
           provide: PASSWORD_HASHER,
           useValue: {
@@ -44,8 +43,8 @@ describe('CreateUserUseCase', () => {
     });
 
     useCase = module.get<CreateUserUseCase>(CreateUserUseCase);
-    userRepository = module.get(INJECTION_TOKENS.USER_REPOSITORY);
-    eventEmitter = module.get(EventEmitter2);
+    userRepository = module.get(INJECTION_TOKENS.USER_REPOSITORY) as jest.Mocked<IUserRepository>;
+    eventEmitter = module.get(EventEmitter2) as jest.Mocked<EventEmitter2>;
   });
 
   it('should create a user successfully and emit UserCreatedEvent', async () => {
@@ -60,10 +59,16 @@ describe('CreateUserUseCase', () => {
     userRepository.existsByEmail.mockResolvedValue(false);
     userRepository.create.mockResolvedValue({
       id: '1',
-      email: dto.email,
-      firstName: dto.firstName,
-      lastName: dto.lastName,
-      createdAt: new Date(),
+      _email: dto.email,
+      _firstName: dto.firstName,
+      _lastName: dto.lastName,
+      _role: dto.role,
+      _isActive: true,
+      _isEmailVerified: false,
+      _createdAt: new Date(),
+      _updatedAt: new Date(),
+      _deletedAt: null,
+      _passwordHash: 'hashed-password',
     });
 
     // Act
