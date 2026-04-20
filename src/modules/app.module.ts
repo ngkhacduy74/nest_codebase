@@ -20,8 +20,9 @@ import { GlobalExceptionFilter } from '@common/filters/global-exception.filter';
 import { LoggingInterceptor } from '@common/interceptors/logging.interceptor';
 import { CustomThrottlerGuard } from '@common/guards/custom-throttler.guard';
 import { AuthGuard } from '@common/guards/auth.guard';
-import { RolesGuard } from '@common/guards/roles.guard';
+import { AuthorizationGuard } from '@common/guards/authorization.guard';
 import { AppLoggerService } from '@common/services/logger.service';
+import { ResourceOwnershipService } from '@common/services/resource-ownership.service';
 
 import { HealthModule } from '@modules/health/health.module';
 import { MetricsModule } from '@modules/metrics/metrics.module';
@@ -124,15 +125,16 @@ import { UserModule } from '@modules/user/user.module';
   ],
   providers: [
     AppLoggerService,
+    ResourceOwnershipService,
 
     // Rate limiting - custom guard with configurable limits
     { provide: APP_GUARD, useClass: CustomThrottlerGuard },
 
-    // Auth global - order is important
-    { provide: APP_GUARD, useExisting: AuthGuard },
+    // Global authentication
+    { provide: APP_GUARD, useClass: AuthGuard },
 
-    // RBAC global
-    { provide: APP_GUARD, useClass: RolesGuard },
+    // Global role + permission authorization
+    { provide: APP_GUARD, useClass: AuthorizationGuard },
 
     // Exception filter
     { provide: APP_FILTER, useClass: GlobalExceptionFilter },

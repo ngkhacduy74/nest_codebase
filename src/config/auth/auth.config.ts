@@ -103,11 +103,11 @@ export default registerAs<AuthConfig>('auth', () => {
   return {
     jwt: {
       accessToken: {
-        secret: validatedConfig.AUTH_JWT_ACCESS_SECRET ?? '',
+        secret: validatedConfig.AUTH_JWT_ACCESS_SECRET,
         expiresIn: validatedConfig.AUTH_JWT_ACCESS_EXPIRES_IN ?? '15m',
       },
       refreshToken: {
-        secret: validatedConfig.AUTH_JWT_REFRESH_SECRET ?? '',
+        secret: validatedConfig.AUTH_JWT_REFRESH_SECRET,
         expiresIn: validatedConfig.AUTH_JWT_REFRESH_EXPIRES_IN ?? '7d',
       },
     },

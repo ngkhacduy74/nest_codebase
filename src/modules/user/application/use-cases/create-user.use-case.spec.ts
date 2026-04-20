@@ -5,11 +5,13 @@ import { createMockRepository, createTestModule } from '@/common/utils/test-help
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CreateUserDataDto } from '../../domain/repositories/user.repository.interface';
 import { Role } from '../../domain/enums/role.enum';
+import { PASSWORD_HASHER } from '@/common/services/password-hasher.service';
 
 describe('CreateUserUseCase', () => {
   let useCase: CreateUserUseCase;
   let repo: any;
   let eventEmitter: any;
+  let passwordHasher: any;
 
   beforeEach(async () => {
     repo = createMockRepository({
@@ -21,11 +23,15 @@ describe('CreateUserUseCase', () => {
     eventEmitter = {
       emit: jest.fn(),
     };
+    passwordHasher = {
+      hash: jest.fn().mockResolvedValue('hashed-password'),
+    };
 
     const module = await createTestModule({
       providers: [
         CreateUserUseCase,
         { provide: USER_REPOSITORY, useValue: repo },
+        { provide: PASSWORD_HASHER, useValue: passwordHasher },
         { provide: EventEmitter2, useValue: eventEmitter },
       ],
     });

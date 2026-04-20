@@ -2,6 +2,7 @@ import { Module, forwardRef } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AuthConfig } from '@/config/auth/auth-config.type';
 import { AuthService } from './application/services/auth.service';
 import { AuthController } from './presentation/controllers/auth.controller';
 import { RedisTokenStore } from './infrastructure/token-store/redis-token-store';
@@ -10,6 +11,7 @@ import { JwtStrategy } from './infrastructure/strategies/jwt.strategy';
 import { INJECTION_TOKENS } from '@/constants/injection-tokens';
 import { MetricsModule } from '@modules/metrics/metrics.module';
 import { AuthGuard } from '@common/guards/auth.guard';
+import { PasswordHasherService, PASSWORD_HASHER } from '@common/services/password-hasher.service';
 
 import { UserModule } from '../user/user.module';
 
@@ -21,12 +23,12 @@ import { UserModule } from '../user/user.module';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
-        const authConfig = configService.get('auth');
+        const authConfig = configService.getOrThrow<AuthConfig>('auth');
         return {
           global: true,
-          secret: authConfig?.jwt?.accessToken?.secret || 'secret',
+          secret: authConfig.jwt.accessToken.secret,
           signOptions: {
-            expiresIn: authConfig?.jwt?.accessToken?.expiresIn || '15m',
+            expiresIn: authConfig.jwt.accessToken.expiresIn,
           },
         };
       },
@@ -36,6 +38,7 @@ import { UserModule } from '../user/user.module';
   controllers: [AuthController],
   providers: [
     AuthService,
+    { provide: PASSWORD_HASHER, useClass: PasswordHasherService },
     LocalStrategy,
     JwtStrategy,
     AuthGuard,

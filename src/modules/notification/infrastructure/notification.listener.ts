@@ -3,7 +3,8 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { NOTIFICATION_QUEUE, NOTIFICATION_JOBS } from '../notification.constants';
-import { UserCreatedEvent, UserUpdatedEvent } from '../../user/domain/events/user-events';
+import { UserCreatedEvent } from '../../user/domain/events/user-created.event';
+import { UserUpdatedEvent } from '../../user/domain/events/user-events';
 
 interface SendWelcomeEmailJob {
   userId: string;

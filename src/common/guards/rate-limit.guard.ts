@@ -2,7 +2,7 @@ import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { AppLoggerService } from '@/common/services/logger.service';
-import { AppError } from '@/common/errors/app.error';
+import { ApplicationError } from '@/common/domain/errors/application.error';
 
 export interface RateLimitOptions {
   windowMs: number;
@@ -75,7 +75,7 @@ export class RateLimitGuard implements CanActivate {
           userAgent: request.headers['user-agent'],
         });
 
-        throw AppError.rateLimitExceeded(options.max, options.windowMs, {
+        throw new ApplicationError('Too many requests', 'RATE_LIMIT_EXCEEDED', 429, {
           key,
           totalHits: rateLimitInfo.totalHits,
           remainingHits: rateLimitInfo.remainingHits,
