@@ -3,7 +3,10 @@ import { ConflictError } from '@/common/domain/errors/application.error';
 import { INJECTION_TOKENS } from '@/constants/injection-tokens';
 import { createTestModule } from '@/common/utils/test-helpers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { CreateUserDataDto, IUserRepository } from '../../domain/repositories/user.repository.interface';
+import {
+  CreateUserDataDto,
+  IUserRepository,
+} from '../../domain/repositories/user.repository.interface';
 import { Role } from '../../domain/enums/role.enum';
 import { PASSWORD_HASHER } from '@/common/services/password-hasher.service';
 
@@ -43,8 +46,8 @@ describe('CreateUserUseCase', () => {
     });
 
     useCase = module.get<CreateUserUseCase>(CreateUserUseCase);
-    userRepository = module.get(INJECTION_TOKENS.USER_REPOSITORY) as jest.Mocked<IUserRepository>;
-    eventEmitter = module.get(EventEmitter2) as jest.Mocked<EventEmitter2>;
+    userRepository = module.get(INJECTION_TOKENS.USER_REPOSITORY);
+    eventEmitter = module.get(EventEmitter2);
   });
 
   it('should create a user successfully and emit UserCreatedEvent', async () => {

@@ -14,9 +14,7 @@ export class GetUsersUseCase {
     private readonly userRepository: IUserRepository,
   ) {}
 
-  async execute(
-    options: PaginationOptions,
-  ): Promise<PaginatedResult<UserEntity>> {
+  async execute(options: PaginationOptions): Promise<PaginatedResult<UserEntity>> {
     return this.userRepository.findAll(options);
   }
 }

@@ -11,7 +11,11 @@ import type { ITokenStore } from '@/modules/auth/infrastructure/token-store/redi
 import { AuthConfig } from '@/config/auth/auth-config.type';
 
 interface AuthenticatedRequest extends FastifyRequest {
-  user?: any;
+  user?: {
+    sub: string;
+    email: string;
+    jti: string;
+  };
 }
 
 @Injectable()
@@ -80,7 +84,7 @@ export class AuthGuard implements CanActivate {
     return context.switchToHttp().getRequest<AuthenticatedRequest>();
   }
 
-  private extractTokenFromRequest(request: any): string | undefined {
+  private extractTokenFromRequest(request: FastifyRequest): string | undefined {
     const authHeader = request.headers?.authorization;
     if (authHeader?.startsWith('Bearer ')) {
       return authHeader.substring(7);

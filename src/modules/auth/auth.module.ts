@@ -22,12 +22,13 @@ import { UserModule } from '../user/user.module';
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => {
+      useFactory: (configService: ConfigService): object => {
         const authConfig = configService.getOrThrow<AuthConfig>('auth');
-        
-        // Convert expiresIn string to number of seconds
-        const accessTokenExpiresIn = AuthModule.parseExpiresIn(authConfig.jwt.accessToken.expiresIn);
-        
+
+        const accessTokenExpiresIn = AuthModule.parseExpiresIn(
+          authConfig.jwt.accessToken.expiresIn,
+        );
+
         return {
           global: true,
           secret: authConfig.jwt.accessToken.secret,
@@ -59,23 +60,28 @@ export class AuthModule {
     if (typeof expiresIn === 'number') {
       return expiresIn;
     }
-    
+
     const duration = expiresIn?.toString() || '15m';
     const match = duration.match(/^(\d+)([smhd])$/);
-    
+
     if (!match) {
       return 900; // fallback 15 minutes
     }
-    
+
     const [, amount, unit] = match;
     const value = parseInt(amount, 10);
-    
+
     switch (unit) {
-      case 's': return value;
-      case 'm': return value * 60;
-      case 'h': return value * 3600;
-      case 'd': return value * 86400;
-      default: return 900; // fallback
+      case 's':
+        return value;
+      case 'm':
+        return value * 60;
+      case 'h':
+        return value * 3600;
+      case 'd':
+        return value * 86400;
+      default:
+        return 900; // fallback
     }
   }
 }

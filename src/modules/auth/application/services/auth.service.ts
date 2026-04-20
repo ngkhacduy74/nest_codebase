@@ -187,12 +187,7 @@ export class AuthService {
     ]);
 
     const refreshTokenTtlSeconds = this.getRefreshTokenTtlSeconds();
-    await this.tokenStore.save(
-      user.id,
-      refreshTokenId,
-      refreshToken,
-      refreshTokenTtlSeconds,
-    );
+    await this.tokenStore.save(user.id, refreshTokenId, refreshToken, refreshTokenTtlSeconds);
 
     this.sessionsGauge.inc();
 

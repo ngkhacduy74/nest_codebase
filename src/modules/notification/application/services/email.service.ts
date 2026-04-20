@@ -13,7 +13,12 @@ export class EmailService {
     private readonly templateService: any,
   ) {}
 
-  async send(to: string, subject: string, template: string, context: Record<string, unknown> = {}): Promise<void> {
+  async send(
+    to: string,
+    subject: string,
+    template: string,
+    context: Record<string, unknown> = {},
+  ): Promise<void> {
     try {
       await this.templateService.render(template, context);
       // Simulate email sending - in real app, use actual email service
@@ -27,29 +32,18 @@ export class EmailService {
   }
 
   async sendWelcomeEmail(userEmail: string, userName: string): Promise<void> {
-    this.send(
-      userEmail,
-      'Welcome to our platform!',
-      'welcome',
-      { userName, userEmail },
-    );
+    this.send(userEmail, 'Welcome to our platform!', 'welcome', { userName, userEmail });
   }
 
-  async sendAccountUpdateEmail(userEmail: string, userName: string, changes: Record<string, unknown>): Promise<void> {
-    this.send(
-      userEmail,
-      'Account updated',
-      'account-update',
-      { userName, userEmail, changes },
-    );
+  async sendAccountUpdateEmail(
+    userEmail: string,
+    userName: string,
+    changes: Record<string, unknown>,
+  ): Promise<void> {
+    this.send(userEmail, 'Account updated', 'account-update', { userName, userEmail, changes });
   }
 
   async sendPasswordReset(userEmail: string, resetToken: string): Promise<void> {
-    this.send(
-      userEmail,
-      'Password reset request',
-      'password-reset',
-      { userEmail, resetToken },
-    );
+    this.send(userEmail, 'Password reset request', 'password-reset', { userEmail, resetToken });
   }
 }

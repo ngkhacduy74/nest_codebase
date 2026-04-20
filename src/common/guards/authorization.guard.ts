@@ -15,6 +15,20 @@ export interface Role {
   permissions: Permission[];
 }
 
+export interface AuthUser {
+  id: string;
+  role: string;
+}
+
+export interface AuthRequest {
+  user?: AuthUser;
+  params: Record<string, string>;
+  path: string;
+  method: string;
+  ip: string;
+  headers: Record<string, unknown>;
+}
+
 export const ROLES = {
   ADMIN: 'ADMIN',
   USER: 'USER',
@@ -96,7 +110,7 @@ export class AuthorizationGuard implements CanActivate {
     private readonly ownershipService: ResourceOwnershipService,
   ) {}
 
-  async canActivate(context: ExecutionContext): Promise<boolean> {
+  canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest();
     const { user } = request;
 
@@ -145,7 +159,7 @@ export class AuthorizationGuard implements CanActivate {
       if (
         requiredPermissions &&
         requiredPermissions.length > 0 &&
-        !(await this.hasRequiredPermissions(user, requiredPermissions, request))
+        !this.hasRequiredPermissions(user as AuthUser, requiredPermissions, request as AuthRequest)
       ) {
         this.logger.security('Access denied - insufficient permissions', {
           userId: user.id,
@@ -188,17 +202,15 @@ export class AuthorizationGuard implements CanActivate {
     return requiredRoles.includes(userRole);
   }
 
-  private async hasRequiredPermissions(
-    user: { id: string; role: string },
+  hasRequiredPermissions(
+    user: AuthUser,
     requiredPermissions: string[],
-    request: { params: Record<string, string> },
-  ): Promise<boolean> {
-    const checks = requiredPermissions.map(async (requiredPermission) => {
+    request: AuthRequest,
+  ): boolean {
+    return requiredPermissions.every((requiredPermission) => {
       const permission = this.parsePermission(requiredPermission);
       return this.checkPermission(user, permission, request);
     });
-    const results = await Promise.all(checks);
-    return results.every(Boolean);
   }
 
   private parsePermission(permissionString: string): Permission {
@@ -206,11 +218,7 @@ export class AuthorizationGuard implements CanActivate {
     return { resource, action };
   }
 
-  private async checkPermission(
-    user: { id: string; role: string },
-    permission: Permission,
-    request: { params: Record<string, string> },
-  ): Promise<boolean> {
+  checkPermission(user: AuthUser, permission: Permission, request: AuthRequest): boolean {
     if (user.role === ROLES.SUPER_ADMIN) {
       return true;
     }
@@ -234,16 +242,12 @@ export class AuthorizationGuard implements CanActivate {
     return true;
   }
 
-  private async checkConditions(
-    user: { id: string; role: string },
-    permission: Permission,
-    request: { params: Record<string, string> },
-  ): Promise<boolean> {
+  private checkConditions(user: AuthUser, permission: Permission, request: AuthRequest): boolean {
     if (!permission.conditions || permission.conditions.length === 0) {
       return true;
     }
 
-    const checks = permission.conditions.map(async (condition) => {
+    return permission.conditions.every((condition) => {
       switch (condition) {
         case 'own':
           return this.checkOwnership(user, permission.resource, request);
@@ -251,16 +255,10 @@ export class AuthorizationGuard implements CanActivate {
           return false;
       }
     });
-    const results = await Promise.all(checks);
-    return results.every(Boolean);
   }
 
-  private async checkOwnership(
-    user: { id: string; role: string },
-    resource: string,
-    request: { params: Record<string, string> },
-  ): Promise<boolean> {
-    const resourceId = request.params.id || request.params.userId || request.params.productId;
+  private checkOwnership(user: AuthUser, resource: string, request: AuthRequest): boolean {
+    const resourceId = request.params.id ?? request.params.userId ?? request.params.productId;
 
     if (!resourceId) {
       return false;
@@ -273,14 +271,14 @@ export class AuthorizationGuard implements CanActivate {
 // Decorators for setting required permissions/roles
 export const Permissions =
   (...permissions: string[]) =>
-  (_target: unknown, _propertyKey: string, descriptor: PropertyDescriptor) => {
+  (_target: unknown, _propertyKey: string, descriptor: PropertyDescriptor): PropertyDescriptor => {
     Reflect.defineMetadata('permissions', permissions, descriptor.value);
     return descriptor;
   };
 
 export const Roles =
   (...roles: string[]) =>
-  (_target: unknown, _propertyKey: string, descriptor: PropertyDescriptor) => {
+  (_target: unknown, _propertyKey: string, descriptor: PropertyDescriptor): PropertyDescriptor => {
     Reflect.defineMetadata('roles', roles, descriptor.value);
     return descriptor;
   };

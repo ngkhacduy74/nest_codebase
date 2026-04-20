@@ -17,7 +17,7 @@ class EnvironmentVariablesValidator {
   @IsOptional()
   ALLOWED_HEADERS!: string[];
 
-  @Transform(({ value }) => {
+  @Transform(({ value }: { value: unknown }) => {
     if (value === null || value === undefined || value === '') {
       return undefined;
     }
@@ -28,17 +28,17 @@ class EnvironmentVariablesValidator {
   @IsOptional()
   CORS_CREDENTIALS!: boolean;
 
-  @Transform(({ value }) => {
+  @Transform(({ value }: { value: unknown }) => {
     if (value === null || value === undefined || value === '') {
       return undefined;
     }
-    return parseInt(value, 10);
+    return parseInt(String(value), 10);
   })
   @IsInt()
   @IsOptional()
   CORS_MAX_AGE!: number;
 
-  @Transform(({ value }) => {
+  @Transform(({ value }: { value: unknown }) => {
     if (value === null || value === undefined || value === '') {
       return undefined;
     }
@@ -49,7 +49,7 @@ class EnvironmentVariablesValidator {
   @IsOptional()
   HELMET_CSP!: boolean;
 
-  @Transform(({ value }) => {
+  @Transform(({ value }: { value: unknown }) => {
     if (value === null || value === undefined || value === '') {
       return undefined;
     }
@@ -60,7 +60,7 @@ class EnvironmentVariablesValidator {
   @IsOptional()
   HELMET_HSTS!: boolean;
 
-  @Transform(({ value }) => {
+  @Transform(({ value }: { value: unknown }) => {
     if (value === null || value === undefined || value === '') {
       return undefined;
     }

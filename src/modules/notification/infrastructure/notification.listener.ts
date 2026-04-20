@@ -16,7 +16,7 @@ interface SendAccountUpdateEmailJob {
   userId: string;
   email: string;
   firstName: string;
-  changes: any;
+  changes: Record<string, unknown>;
 }
 
 @Injectable()
@@ -26,7 +26,7 @@ export class NotificationListener {
   constructor(@InjectQueue(NOTIFICATION_QUEUE) private readonly notificationQueue: Queue) {}
 
   @OnEvent('user.created')
-  async handleUserCreated(event: UserCreatedEvent) {
+  async handleUserCreated(event: UserCreatedEvent): Promise<void> {
     this.logger.log(`[Notification] Enqueuing welcome email for ${event.email}`);
 
     const jobData: SendWelcomeEmailJob = {
@@ -44,7 +44,7 @@ export class NotificationListener {
   }
 
   @OnEvent('user.updated')
-  async handleUserUpdated(event: UserUpdatedEvent) {
+  async handleUserUpdated(event: UserUpdatedEvent): Promise<void> {
     this.logger.log(`[Notification] Enqueuing account update alert for ${event.email}`);
 
     const jobData: SendAccountUpdateEmailJob = {

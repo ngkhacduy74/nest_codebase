@@ -94,9 +94,14 @@ export class TransactionService {
   ): Promise<T> {
     const context = this.activeTransactions.get(transactionId);
     if (!context) {
-      throw new ApplicationError(`Transaction context not found: ${transactionId}`, 'INTERNAL_ERROR', 500, {
-        transactionId,
-      });
+      throw new ApplicationError(
+        `Transaction context not found: ${transactionId}`,
+        'INTERNAL_ERROR',
+        500,
+        {
+          transactionId,
+        },
+      );
     }
 
     const logOperation = (operation: string) => {

@@ -9,10 +9,11 @@ import { DatabaseError } from '@/common/errors/infrastructure.error';
 export class PrismaErrorMapper {
   static toApplicationError(error: unknown, context: { entity: string; id?: string }): never {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      const prismaError = error as Prisma.PrismaClientKnownRequestError;
-      const errorCode = prismaError.code;
-      const errorMeta = prismaError.meta;
-      
+      const prismaError = error;
+      const errorCode: string = prismaError.code;
+      const errorMeta: Record<string, unknown> =
+        (prismaError.meta as Record<string, unknown>) ?? {};
+
       switch (errorCode) {
         case 'P2002':
           throw new ConflictError(`${context.entity} already exists`, {

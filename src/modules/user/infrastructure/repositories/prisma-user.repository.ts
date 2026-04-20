@@ -18,9 +18,7 @@ import {
 
 @Injectable()
 export class PrismaUserRepository implements IUserRepository {
-  constructor(
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   private mapToDomain(user: User): UserEntity {
     const firstName = user.firstName ?? '';
