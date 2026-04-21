@@ -52,6 +52,12 @@ describe('AuthService', () => {
           refreshToken: { secret: 'rt-secret', expiresIn: '7d' },
         },
       }),
+      getOrThrow: jest.fn().mockReturnValue({
+        jwt: {
+          accessToken: { secret: 'at-secret', expiresIn: '15m' },
+          refreshToken: { secret: 'rt-secret', expiresIn: '7d' },
+        },
+      }),
     };
     cls = {
       set: jest.fn(),

@@ -61,6 +61,16 @@ import { UserModule } from '@modules/user/user.module';
               'body.key',
               ...redactPaths,
             ],
+            serializers: {
+              req: (req: { id: string; method: string; url: string }) => ({
+                id: req.id,
+                method: req.method,
+                url: req.url,
+              }),
+              res: (res: { statusCode: number }) => ({
+                statusCode: res.statusCode,
+              }),
+            },
             transport: prettyPrint
               ? {
                   target: 'pino-pretty',
@@ -82,7 +92,7 @@ import { UserModule } from '@modules/user/user.module';
 
     BullModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService): any => {
+      useFactory: (config: ConfigService): import('@nestjs/bullmq').BullRootModuleOptions => {
         return {
           connection: {
             host: config.get<string>('redis.host'),

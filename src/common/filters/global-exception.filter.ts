@@ -328,8 +328,6 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       traceId,
       method: request.method,
       url: request.url,
-      userAgent: request.headers['user-agent'],
-      ip: request.ip,
       statusCode: errorResponse.meta.statusCode,
       errorCode: errorResponse.error.code,
     };

@@ -1,4 +1,4 @@
-import { SetMetadata } from '@nestjs/common';
+import { SetMetadata, CustomDecorator } from '@nestjs/common';
 
 export const THROTTLE_KEY = 'throttle:limit';
 export const SKIP_THROTTLE_KEY = 'throttle:skip';
@@ -8,6 +8,7 @@ export interface ThrottleOption {
   ttl: number; // milliseconds
 }
 
-export const Throttle = (option: ThrottleOption) => SetMetadata(THROTTLE_KEY, option);
+export const Throttle = (option: ThrottleOption): CustomDecorator<string> =>
+  SetMetadata(THROTTLE_KEY, option);
 
-export const SkipThrottle = () => SetMetadata(SKIP_THROTTLE_KEY, true);
+export const SkipThrottle = (): CustomDecorator<string> => SetMetadata(SKIP_THROTTLE_KEY, true);

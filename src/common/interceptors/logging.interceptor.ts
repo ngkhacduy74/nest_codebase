@@ -14,14 +14,14 @@ export class LoggingInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest<FastifyRequest>();
     const response = context.switchToHttp().getResponse<FastifyReply>();
 
-    const { method, url, ip, headers } = request;
+    const { method, url } = request;
+    const { headers } = request;
     const requestId = headers['x-request-id'] as string | undefined;
     const traceId = headers['x-trace-id'] as string | undefined;
-    const userAgent = headers['user-agent'];
 
     const user = (request as RequestWithUser).user;
     const userId = user?.id;
-    const sessionId = user?.sessionId;
+    const sessionId = user?.jti;
 
     const metadata: LogMetadata = {
       requestId,
@@ -30,8 +30,6 @@ export class LoggingInterceptor implements NestInterceptor {
       sessionId,
       method,
       url,
-      ip,
-      userAgent: userAgent,
     };
 
     return next.handle().pipe(

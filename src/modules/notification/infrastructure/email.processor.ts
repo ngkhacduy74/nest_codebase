@@ -40,10 +40,7 @@ export class EmailProcessor extends WorkerHost {
       switch (job.name) {
         case NOTIFICATION_JOBS.SEND_WELCOME_EMAIL: {
           const welcomeData = job.data as SendWelcomeEmailJob;
-          await this.emailService.sendWelcomeEmail(
-            welcomeData.email,
-            welcomeData.firstName,
-          );
+          await this.emailService.sendWelcomeEmail(welcomeData.email, welcomeData.firstName);
           result = undefined;
           break;
         }

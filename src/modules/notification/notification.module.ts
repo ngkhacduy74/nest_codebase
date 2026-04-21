@@ -9,8 +9,8 @@ import { NOTIFICATION_QUEUE_NAME } from './notification.constants';
 const MockTemplateServiceProvider = {
   provide: 'TEMPLATE_SERVICE',
   useValue: {
-    render: async (template: string, context: Record<string, unknown>) => {
-      return `rendered ${template} with keys: ${Object.keys(context).join(', ')}`;
+    render: (template: string, context: Record<string, unknown>): Promise<string> => {
+      return Promise.resolve(`rendered ${template} with keys: ${Object.keys(context).join(', ')}`);
     },
   },
 };

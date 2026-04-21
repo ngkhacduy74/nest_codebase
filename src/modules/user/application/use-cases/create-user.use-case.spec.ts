@@ -63,16 +63,15 @@ describe('CreateUserUseCase', () => {
     userRepository.existsByEmail.mockResolvedValue(false);
     userRepository.create.mockResolvedValue({
       id: '1',
-      _email: dto.email,
-      _firstName: dto.firstName,
-      _lastName: dto.lastName,
-      _role: dto.role,
-      _isActive: true,
-      _isEmailVerified: false,
-      _createdAt: new Date(),
-      _updatedAt: new Date(),
-      _deletedAt: null,
-      _passwordHash: 'hashed-password',
+      email: dto.email,
+      firstName: dto.firstName,
+      lastName: dto.lastName,
+      role: dto.role,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      deletedAt: null,
+      passwordHash: 'hashed-password',
     });
 
     // Act

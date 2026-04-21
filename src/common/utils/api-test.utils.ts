@@ -48,7 +48,7 @@ export class ApiTestClient {
     });
 
     const response = await (
-      (this.app as unknown) as { inject: (options: unknown) => Promise<InjectResponse> }
+      this.app as unknown as { inject: (options: unknown) => Promise<InjectResponse> }
     ).inject({
       method: 'GET',
       url,
@@ -81,7 +81,7 @@ export class ApiTestClient {
     });
 
     const response = await (
-      (this.app as unknown) as { inject: (options: unknown) => Promise<InjectResponse> }
+      this.app as unknown as { inject: (options: unknown) => Promise<InjectResponse> }
     ).inject({
       method: 'POST',
       url,
@@ -115,7 +115,7 @@ export class ApiTestClient {
     });
 
     const response = await (
-      (this.app as unknown) as { inject: (options: unknown) => Promise<InjectResponse> }
+      this.app as unknown as { inject: (options: unknown) => Promise<InjectResponse> }
     ).inject({
       method: 'PUT',
       url,
@@ -149,7 +149,7 @@ export class ApiTestClient {
     });
 
     const response = await (
-      (this.app as unknown) as { inject: (options: unknown) => Promise<InjectResponse> }
+      this.app as unknown as { inject: (options: unknown) => Promise<InjectResponse> }
     ).inject({
       method: 'PATCH',
       url,
@@ -181,7 +181,7 @@ export class ApiTestClient {
     });
 
     const response = await (
-      (this.app as unknown) as { inject: (options: unknown) => Promise<InjectResponse> }
+      this.app as unknown as { inject: (options: unknown) => Promise<InjectResponse> }
     ).inject({
       method: 'DELETE',
       url,
@@ -378,14 +378,14 @@ export class ApiTestAssertions {
   private static getNestedValue<T>(obj: T, path: string): unknown {
     return path
       .split('.')
-      .reduce((current: any, key: string) => current?.[key], obj) as unknown;
+      .reduce((current: unknown, key: string) => (current as Record<string, unknown>)?.[key], obj);
   }
 }
 
 export class TestModuleBuilder {
-  private imports: any[] = [];
-  private providers: any[] = [];
-  private controllers: any[] = [];
+  private imports: unknown[] = [];
+  private providers: unknown[] = [];
+  private controllers: unknown[] = [];
 
   static create(): TestModuleBuilder {
     return new TestModuleBuilder();
@@ -408,9 +408,9 @@ export class TestModuleBuilder {
 
   async compile(): Promise<TestingModule> {
     return Test.createTestingModule({
-      imports: [...this.imports],
-      providers: [...this.providers],
-      controllers: [...this.controllers],
+      imports: [...this.imports] as import('@nestjs/common').ModuleMetadata['imports'],
+      providers: [...this.providers] as import('@nestjs/common').ModuleMetadata['providers'],
+      controllers: [...this.controllers] as import('@nestjs/common').ModuleMetadata['controllers'],
     }).compile();
   }
 }

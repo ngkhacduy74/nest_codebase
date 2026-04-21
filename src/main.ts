@@ -133,9 +133,9 @@ async function bootstrap(): Promise<void> {
   logger.log(`🌍 Env: ${nodeEnv}`);
 
   if (nodeEnv !== 'production') {
-    console.log(`\n======================================================`);
-    console.log(`👉 📚 Swagger Docs: http://localhost:${port}/${apiPrefix}/docs`);
-    console.log(`======================================================\n`);
+    logger.log(`\n======================================================`);
+    logger.log(`👉 📚 Swagger Docs: http://localhost:${port}/${apiPrefix}/docs`);
+    logger.log(`======================================================\n`);
   }
 }
 

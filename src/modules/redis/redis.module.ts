@@ -17,7 +17,6 @@ export const REDIS_CLIENT = Symbol('REDIS_CLIENT');
           maxRetriesPerRequest: 3,
           enableReadyCheck: true,
           lazyConnect: false,
-
         });
       },
       inject: [ConfigService],

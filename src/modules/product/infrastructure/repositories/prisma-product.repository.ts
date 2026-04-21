@@ -43,7 +43,7 @@ export class PrismaProductRepository
   }
 
   protected getModelDelegate(): ProductModelDelegate {
-    return (this.prisma as any).product;
+    return (this.prisma as unknown as { product: ProductModelDelegate }).product;
   }
 
   private mapToDomain(product: ProductRow): ProductEntity {
