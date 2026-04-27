@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return */
 import { PrismaService } from '@/modules/prisma/prisma.service';
 import { AppLoggerService } from '@/common/services/logger.service';
-import { Prisma, PrismaClient } from '../../generated/prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 
 export interface TestDatabase {
   reset: () => Promise<void>;

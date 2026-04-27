@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, User, SystemRole } from '@/generated/prisma/client';
+import { Prisma, User, SystemRole } from '@prisma/client';
 import { UserEntity } from '../../domain/entities/user.entity';
 import { Role } from '../../domain/enums/role.enum';
 import {

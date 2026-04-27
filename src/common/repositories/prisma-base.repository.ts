@@ -250,9 +250,7 @@ export abstract class PrismaBaseRepository<T> extends BaseRepository<T> {
       'transaction',
       () =>
         this.prisma.$transaction(
-          callback as (
-            tx: import('@/generated/prisma/client').Prisma.TransactionClient,
-          ) => Promise<R>,
+          callback as (tx: import('@prisma/client').Prisma.TransactionClient) => Promise<R>,
         ),
       metadata,
     );
