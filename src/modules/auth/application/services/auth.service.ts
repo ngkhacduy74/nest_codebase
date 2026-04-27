@@ -5,7 +5,8 @@ import { JwtService } from '@nestjs/jwt';
 import { v4 as uuidv4 } from 'uuid';
 
 import { ClsService } from 'nestjs-cls';
-import type { Role } from '../../../user/domain/enums/role.enum';
+import { Role } from '../../../user/domain/enums/role.enum';
+import { UserEntity } from '../../../user/domain/entities/user.entity';
 import type { AppClsStore } from '@/modules/cls/cls.module';
 import type { IUserRepository } from '../../../user/domain/repositories/user.repository.interface';
 import { type ITokenStore } from '../../infrastructure/token-store/redis-token-store';
@@ -65,6 +66,57 @@ export class AuthService {
 
   private get authConf(): AuthConfig {
     return this.configService.getOrThrow<AuthConfig>(AUTH_CONFIG_KEY);
+  }
+
+  async register(
+    email: string,
+    password: string,
+    fullName: string,
+  ): Promise<{ user: AuthUserPayload; tokens: TokenPair }> {
+    // Check if user already exists
+    const existingUser = await this.userRepository.findByEmail(email);
+    if (existingUser) {
+      throw new Error('User with this email already exists');
+    }
+
+    // Hash password
+    const passwordHash = await this.passwordHasher.hash(password);
+
+    // Split fullName into firstName and lastName
+    const nameParts = fullName.trim().split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+
+    // Create new user with role = 'USER' (default)
+    const newUser = await this.userRepository.create({
+      email,
+      passwordHash,
+      firstName,
+      lastName,
+      role: Role.USER,
+    });
+
+    const userPayload: AuthUserPayload = {
+      id: newUser.id,
+      email: newUser.email,
+      role: newUser.role,
+      isActive: newUser.isActive,
+    };
+
+    // Issue tokens
+    const tokens = await this.issueTokenPair(userPayload);
+
+    this.logger.log(`[Auth] Registration success: userId=${newUser.id} email=${email}`);
+
+    return { user: userPayload, tokens };
+  }
+
+  async getUserById(id: string): Promise<UserEntity> {
+    const user = await this.userRepository.findById(id);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    return user;
   }
 
   async validateUser(email: string, password: string): Promise<AuthUserPayload> {
@@ -163,6 +215,118 @@ export class AuthService {
   async logoutAllDevices(userId: string): Promise<void> {
     await this.tokenStore.revokeAll(userId);
     this.logger.warn(`[Auth] Logout all devices: userId=${userId}`);
+  }
+
+  async forgotPassword(email: string): Promise<void> {
+    const user = await this.userRepository.findByEmail(email);
+    if (!user) {
+      // Don't reveal if email exists or not for security
+      return;
+    }
+
+    // TODO: Implement email sending with reset token
+    // For now, just log the request
+    this.logger.log(`[Auth] Password reset requested: userId=${user.id} email=${email}`);
+
+    // Generate reset token (valid for 1 hour)
+    const resetToken = await this.jwtService.signAsync(
+      {
+        sub: user.id,
+        email: user.email,
+        type: 'password_reset',
+      },
+      {
+        secret: this.authConf.jwt.accessToken.secret,
+        expiresIn: '1h',
+      },
+    );
+
+    // TODO: Send email with reset token
+    // await this.emailService.sendPasswordResetEmail(user.email, resetToken);
+
+    this.logger.log(`[Auth] Reset token generated: userId=${user.id} token=${resetToken}`);
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    try {
+      const payload = await this.jwtService.verifyAsync(token, {
+        secret: this.authConf.jwt.accessToken.secret,
+      });
+
+      // Type guard to ensure payload has required properties
+      if (
+        typeof payload !== 'object' ||
+        payload === null ||
+        !('type' in payload) ||
+        !('sub' in payload) ||
+        typeof payload.type !== 'string' ||
+        typeof payload.sub !== 'string'
+      ) {
+        throw new Error('Invalid token payload');
+      }
+
+      if (payload.type !== 'password_reset') {
+        throw new Error('Invalid token type');
+      }
+
+      const user = await this.userRepository.findById(payload.sub);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      // Hash new password
+      const passwordHash = await this.passwordHasher.hash(newPassword);
+
+      // Update user password using entity method
+      user.setPasswordHash(passwordHash);
+      await this.userRepository.update(user.id, {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+      });
+
+      // Revoke all tokens for security
+      await this.tokenStore.revokeAll(user.id);
+
+      this.logger.log(`[Auth] Password reset successful: userId=${user.id}`);
+    } catch (error) {
+      this.logger.warn(`[Auth] Password reset failed: ${(error as Error).message}`);
+      throw new Error('Invalid or expired reset token');
+    }
+  }
+
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void> {
+    // Get user to verify current password
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Verify current password
+    const isValid = await this.passwordHasher.verify(user.passwordHash ?? '', currentPassword);
+    if (!isValid) {
+      throw new Error('Current password is incorrect');
+    }
+
+    // Hash new password
+    const newPasswordHash = await this.passwordHasher.hash(newPassword);
+
+    // Update password using entity method
+    user.setPasswordHash(newPasswordHash);
+    await this.userRepository.update(userId, {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+    });
+
+    // Revoke all tokens for security (force re-login)
+    await this.tokenStore.revokeAll(userId);
+
+    this.logger.log(`[Auth] Password changed successfully: userId=${userId}`);
   }
 
   private async issueTokenPair(user: AuthUserPayload): Promise<TokenPair> {

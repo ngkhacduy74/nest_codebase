@@ -47,6 +47,7 @@
     "@fastify/compress": "^8.3.1",
     "@fastify/cookie": "^11.0.2",
     "@fastify/helmet": "^13.0.2",
+    "@fastify/rate-limit": "^10.3.0",
     "@fastify/static": "^9.0.0",
     "@nestjs/bullmq": "^11.0.4",
     "@nestjs/cache-manager": "^3.1.0",
@@ -116,6 +117,7 @@
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
+    "tsc-alias": "^1.8.10",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
   },
